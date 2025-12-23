@@ -1,0 +1,17 @@
+{
+  "project": "Nx Studio",
+  "mission": "A client-side webapp that generates structured AI context files (COG Protocols) for founders.",
+  "core_features": [
+    "Project Identity Form (React Hook Form)",
+    "Real-time Protocol Compiler (Template Literals)",
+    "LocalStorage State Persistence",
+    "One-Click Copy Payload"
+  ],
+  "architecture_decisions": {
+    "rendering": "Client Components for Forms / R3F Canvas",
+    "3d_engine": "R3F / Drei (Subtle Background)",
+    "styling": "Tailwind + Shadcn",
+    "icons": "Lucide React"
+  },
+  "current_phase": "Active"
+}
