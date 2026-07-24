@@ -4,11 +4,18 @@ import Link from "next/link";
 import { PhaseDef, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
 import { useWorkspace } from "@/lib/workspace-store";
 import { PhaseIcon } from "@/components/phase-icon";
-import { MoreIcon } from "@/components/icons";
+import { MoreIcon, ExternalLinkIcon, ResetIcon, TrashIcon } from "@/components/icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export function PhaseCard({ phase, index }: { phase: PhaseDef; index: number }) {
-  const { data } = useWorkspace();
+export function PhaseCard({ phase, isCustom = false }: { phase: PhaseDef; isCustom?: boolean }) {
+  const { data, resetPhase, removeCustomStage } = useWorkspace();
   const progress = getPhaseProgress(phase, data);
   const status = getPhaseStatus(progress);
 
@@ -20,25 +27,58 @@ export function PhaseCard({ phase, index }: { phase: PhaseDef; index: number }) 
         : "Not started";
 
   return (
-    <div
-      className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-300"
-      style={{ animationDelay: `${index * 40}ms` }}
-    >
+    <div className="group relative h-full rounded-xl glass p-5 transition-all hover:border-primary/40 hover:shadow-[0_0_0_1px_rgba(139,92,246,0.15),0_8px_28px_-12px_rgba(139,92,246,0.35)]">
+      {/* Stretched link: covers the card for navigation without nesting the
+          dropdown button inside an <a>. */}
       <Link
         href={`/phase/${phase.id}`}
-        className="group block h-full rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/50 hover:shadow-[0_0_0_1px_rgba(139,92,246,0.15)]"
-      >
+        aria-label={`Open ${phase.label}`}
+        className="absolute inset-0 z-0 rounded-xl"
+      />
+
+      {/* Visual content is click-through; only the menu is interactive. */}
+      <div className="pointer-events-none relative z-10">
         <div className="flex items-start justify-between">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-primary">
             <PhaseIcon name={phase.icon} className="h-4.5 w-4.5" />
           </div>
-          <MoreIcon className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Stage options"
+              className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-secondary hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100 data-[state=open]:bg-secondary"
+            >
+              <MoreIcon className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem asChild>
+                <Link href={`/phase/${phase.id}`}>
+                  <ExternalLinkIcon className="h-4 w-4" />
+                  Open
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => resetPhase(phase.id)}>
+                <ResetIcon className="h-4 w-4" />
+                Reset progress
+              </DropdownMenuItem>
+              {isCustom && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => removeCustomStage(phase.id)}
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                    Remove stage
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <h3 className="mt-4 font-semibold">{phase.label}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          {phase.description}
-        </p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{phase.description}</p>
 
         <div className="mt-5">
           <div className="flex items-center justify-between text-xs">
@@ -61,7 +101,7 @@ export function PhaseCard({ phase, index }: { phase: PhaseDef; index: number }) 
             />
           </div>
         </div>
-      </Link>
+      </div>
     </div>
   );
 }
