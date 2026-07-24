@@ -5,6 +5,7 @@ import {
   LayersIcon,
   PlayIcon,
   RocketIcon,
+  SparklesIcon,
 } from "@/components/icons";
 
 const MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -14,6 +15,7 @@ const MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   layers: LayersIcon,
   play: PlayIcon,
   rocket: RocketIcon,
+  sparkles: SparklesIcon,
 };
 
 export function PhaseIcon({

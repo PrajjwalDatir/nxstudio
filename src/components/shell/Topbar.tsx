@@ -9,7 +9,7 @@ import { ChevronRightIcon, SearchIcon, BellIcon } from "@/components/icons";
 
 export function Topbar() {
   const pathname = usePathname();
-  const { data } = useWorkspace();
+  const { data, customStages } = useWorkspace();
   const { open } = useCommand();
 
   // Breadcrumb: Workspaces › Product 1 › [Phase]
@@ -28,7 +28,9 @@ export function Topbar() {
   };
   if (phaseMatch) {
     const phase = getPhase(phaseMatch[1]);
+    const custom = customStages.find((s) => s.id === phaseMatch[1]);
     if (phase) crumbs.push({ label: phase.label });
+    else if (custom) crumbs.push({ label: custom.label });
   } else if (SECTION[pathname]) {
     crumbs.push({ label: SECTION[pathname] });
   }

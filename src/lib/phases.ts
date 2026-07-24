@@ -112,6 +112,25 @@ export function getPhase(id: string): PhaseDef | undefined {
   return PHASES.find((p) => p.id === id);
 }
 
+/** Adapt a founder-defined custom stage to the PhaseDef shape the UI expects. */
+export function customStageToPhase(stage: {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  steps: { id: string; label: string }[];
+}): PhaseDef {
+  return {
+    id: stage.id as PhaseId,
+    label: stage.label,
+    workspaceTitle: stage.label,
+    description: stage.description,
+    icon: stage.icon,
+    total: stage.steps.length,
+    steps: stage.steps.map((s) => ({ id: s.id, label: s.label, description: "" })),
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /* Progress                                                           */
 /* ------------------------------------------------------------------ */

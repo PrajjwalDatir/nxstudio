@@ -9,7 +9,7 @@ import React, {
   useState,
 } from "react";
 import { getStoredValue, setStoredValue } from "./storage";
-import { IdeaData, TechStackInput, WorkspaceData } from "./types";
+import { CustomStage, IdeaData, TechStackInput, WorkspaceData } from "./types";
 
 /* ------------------------------------------------------------------ */
 /* Model                                                              */
@@ -54,6 +54,7 @@ function newWorkspaceData(name: string): WorkspaceData {
       richGraphics: false,
     },
     checklist: {},
+    customStages: [],
   };
 }
 
@@ -83,6 +84,7 @@ function hydrateData(stored: Partial<WorkspaceData> | undefined, name: string): 
     brand: { ...base.brand, ...stored.brand },
     tech: { ...base.tech, ...stored.tech },
     checklist: stored.checklist ?? {},
+    customStages: stored.customStages ?? [],
   };
 }
 
@@ -110,6 +112,14 @@ interface WorkspaceContextType {
   updateTech: <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) => void;
   toggleChecklist: (phaseId: string, stepId: string) => void;
   isStepDone: (phaseId: string, stepId: string) => boolean;
+  resetPhase: (phaseId: string) => void;
+
+  // Custom stages (founder-defined phases)
+  customStages: CustomStage[];
+  addCustomStage: (label: string) => string;
+  removeCustomStage: (id: string) => void;
+  addCustomStep: (stageId: string, label: string) => void;
+  removeCustomStep: (stageId: string, stepId: string) => void;
 
   // GitHub connection (per project)
   github: GitHubConnection;
@@ -254,6 +264,62 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [activeProject]
   );
 
+  const resetPhase = useCallback(
+    (phaseId: string) =>
+      patchData((d) => ({ ...d, checklist: { ...d.checklist, [phaseId]: [] } })),
+    [patchData]
+  );
+
+  /* --- custom stages --- */
+  const addCustomStage = useCallback(
+    (label: string) => {
+      const id = `custom_${Math.random().toString(36).slice(2, 10)}`;
+      patchData((d) => ({
+        ...d,
+        customStages: [
+          ...d.customStages,
+          { id, label: label || "Untitled Stage", description: "Custom stage.", icon: "sparkles", steps: [] },
+        ],
+      }));
+      return id;
+    },
+    [patchData]
+  );
+
+  const removeCustomStage = useCallback(
+    (id: string) =>
+      patchData((d) => {
+        const { [id]: _removed, ...checklist } = d.checklist;
+        return { ...d, customStages: d.customStages.filter((s) => s.id !== id), checklist };
+      }),
+    [patchData]
+  );
+
+  const addCustomStep = useCallback(
+    (stageId: string, label: string) =>
+      patchData((d) => ({
+        ...d,
+        customStages: d.customStages.map((s) =>
+          s.id === stageId
+            ? { ...s, steps: [...s.steps, { id: `step_${Math.random().toString(36).slice(2, 8)}`, label }] }
+            : s
+        ),
+      })),
+    [patchData]
+  );
+
+  const removeCustomStep = useCallback(
+    (stageId: string, stepId: string) =>
+      patchData((d) => ({
+        ...d,
+        customStages: d.customStages.map((s) =>
+          s.id === stageId ? { ...s, steps: s.steps.filter((st) => st.id !== stepId) } : s
+        ),
+        checklist: { ...d.checklist, [stageId]: (d.checklist[stageId] ?? []).filter((x) => x !== stepId) },
+      })),
+    [patchData]
+  );
+
   const setRepo = useCallback(
     (repo: string | null, branch = "main") => patchActive((p) => ({ ...p, github: { repo, branch } })),
     [patchActive]
@@ -288,6 +354,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         updateTech,
         toggleChecklist,
         isStepDone,
+        resetPhase,
+        customStages: activeProject.data.customStages,
+        addCustomStage,
+        removeCustomStage,
+        addCustomStep,
+        removeCustomStep,
         github: activeProject.github,
         setRepo,
         setDueDate,
