@@ -30,26 +30,29 @@ export interface BrandDNA {
 /* Tech Stack — founder input (the wizard collects this)              */
 /* ------------------------------------------------------------------ */
 
-export type PlatformTargetId =
-  | "web-app"
-  | "web-landing"
-  | "ios"
-  | "android"
-  | "mobile-both"
-  | "apple-ecosystem";
+/** The surfaces a product can ship to. The engine derives a stack from the set. */
+export type Surface = "web" | "ios" | "android" | "desktop";
 
-export type BuildStrategyId = "native" | "cross-platform";
+/** What the product must do. Drives the backend + libraries, not the frontend. */
+export type Capability =
+  | "auth"
+  | "database"
+  | "realtime"
+  | "multiplayer"
+  | "payments"
+  | "storage"
+  | "push"
+  | "ai"
+  | "graphics";
 
-/** Raw founder selections. The engine turns these into a CompiledStack. */
+/**
+ * Raw founder intent. The founder never picks a framework — they pick the
+ * surfaces they want and what the product must do, and the engine derives the
+ * concrete stack (see platform-engine.ts::compileStack).
+ */
 export interface TechStackInput {
-  target: PlatformTargetId | "";
-  /** Only meaningful when multiple platforms are in play. */
-  strategy: BuildStrategyId | "";
-  needsAuth: boolean;
-  needsDatabase: boolean;
-  needsRealtime: boolean;
-  /** Rich/3D marketing surfaces → pulls in Three.js. */
-  richGraphics: boolean;
+  surfaces: Surface[];
+  capabilities: Capability[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -61,23 +64,17 @@ export interface StackSlot {
   value: string; // e.g. "Next.js"
 }
 
-export interface SetupPrompt {
-  id: string;
-  title: string;
-  description: string;
-  command: string;
-}
-
 export interface CompiledStack {
-  platform: string; // "WebApp (PWA)"
-  frontend: string; // "Next.js"
-  backend: string; // "Next.js API Routes"
-  database: string; // "PostgreSQL"
+  platform: string; // human label of the surface set, e.g. "Web + iOS + Android"
+  frontend: string; // "Flutter"
+  backend: string; // "Supabase" | "SpacetimeDB" | "None (client-only)"
+  database: string; // "PostgreSQL (Supabase)"
   hosting: string; // "Vercel"
-  language: string; // "TypeScript"
+  language: string; // "Dart"
+  /** Extra libraries pulled in by capabilities (payments, AI, 3D…). */
+  libraries: string[];
   /** Human-readable reason the engine chose this framework. */
   rationale: string;
-  setupPrompts: SetupPrompt[];
 }
 
 /* ------------------------------------------------------------------ */

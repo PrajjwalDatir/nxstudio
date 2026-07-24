@@ -5,7 +5,14 @@
 
 const NAMESPACE = "nx-studio";
 
-type StorageKey = "projects" | "workspace" | "project" | "builder" | "protocols" | "profile";
+type StorageKey =
+  | "projects"
+  | "activeProject"
+  | "workspace"
+  | "project"
+  | "builder"
+  | "protocols"
+  | "profile";
 
 function getKey(key: StorageKey): string {
   return `${NAMESPACE}:${key}`;

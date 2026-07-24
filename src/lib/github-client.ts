@@ -3,7 +3,7 @@
  * beyond the one-time paste into connect().
  */
 
-import type { ParsedNxHuman } from "./nxhuman-compiler";
+import type { ParsedNx } from "./nx-compiler";
 
 export interface GitHubStatus {
   connected: boolean;
@@ -15,7 +15,7 @@ export interface GitHubStatus {
 export interface SyncResult {
   repo: string;
   branch: string;
-  context: ParsedNxHuman;
+  context: ParsedNx;
   commits: { sha: string; message: string; author: string; avatar: string | null; date: string }[];
   issues: { number: number; title: string; state: string; url: string; labels: string[] }[];
   contributors: { login: string; avatar: string; commits: number }[];

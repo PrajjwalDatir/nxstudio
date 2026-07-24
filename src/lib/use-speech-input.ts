@@ -6,7 +6,7 @@
  * transcript chunks via the callback; the caller decides how to append them.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 interface SpeechAlternative {
   readonly transcript: string;
@@ -45,17 +45,27 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+const emptySubscribe = () => () => {};
+
 export function useSpeechInput(onFinalText: (text: string) => void) {
-  const [supported, setSupported] = useState(false);
+  // Browser capability: false on the server (and first hydration render), the
+  // real value on the client — read via useSyncExternalStore, no set-in-effect.
+  const supported = useSyncExternalStore(
+    emptySubscribe,
+    () => getRecognitionCtor() !== null,
+    () => false
+  );
   const [listening, setListening] = useState(false);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const cbRef = useRef(onFinalText);
-  cbRef.current = onFinalText;
 
+  // Keep the callback ref current without touching refs during render.
   useEffect(() => {
-    setSupported(getRecognitionCtor() !== null);
-    return () => recRef.current?.stop();
-  }, []);
+    cbRef.current = onFinalText;
+  });
+
+  // Stop any active recognition on unmount.
+  useEffect(() => () => recRef.current?.stop(), []);
 
   const toggle = useCallback(() => {
     if (recRef.current) {

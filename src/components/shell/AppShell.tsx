@@ -13,7 +13,13 @@ import { NxLogo } from "@/components/icons";
  * removes both the "Product 1 → real project" flash and the Radix useId
  * hydration mismatch that came from rendering menus before hydration.
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  userEmail,
+}: {
+  children: React.ReactNode;
+  userEmail: string;
+}) {
   const { isHydrated } = useWorkspace();
 
   if (!isHydrated) {
@@ -26,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <Sidebar />
+      <Sidebar userEmail={userEmail} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar />
         <main className="flex-1 overflow-y-auto">{children}</main>

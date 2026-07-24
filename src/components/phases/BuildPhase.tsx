@@ -1,197 +1,144 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
-import { buildBuildPrompts, buildScaffoldPrompt } from "@/lib/prompts";
+import { buildMasterPrompt, buildDepthPrompts, DepthPrompt } from "@/lib/prompts";
 import { compileStack } from "@/lib/platform-engine";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import {
-  RocketIcon,
   BadgeCheckIcon,
-  DownloadIcon,
+  LockIcon,
+  ZapIcon,
+  UsersIcon,
+  RocketIcon,
+  WandIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  FolderIcon,
-  WrenchIcon,
-  WandIcon,
+  LayersIcon,
 } from "@/components/icons";
 
-const STEP_ICONS = [FolderIcon, WrenchIcon, WandIcon];
+const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
+  qa: BadgeCheckIcon,
+  security: LockIcon,
+  performance: ZapIcon,
+  accessibility: UsersIcon,
+  deploy: RocketIcon,
+};
 
 export function BuildPhase() {
   const { data } = useWorkspace();
   const stack = compileStack(data.tech);
-  const prompts = useMemo(() => buildBuildPrompts(data), [data]);
-  const [open, setOpen] = useState<string | null>(null);
+  const masterPrompt = useMemo(() => buildMasterPrompt(data), [data]);
+  const depthPrompts = useMemo(() => buildDepthPrompts(data), [data]);
 
-  const downloadAll = () => {
-    // Prompts only — the IDE creates files, not nx-studio.
-    const body =
-      `===== PROMPT 0: Scaffold .nxhuman context (run first) =====\n${buildScaffoldPrompt(data)}` +
-      "\n\n" +
-      prompts.map((p) => `===== BUILD PROMPT ${p.order}: ${p.title} =====\n${p.prompt}`).join("\n\n");
-    const blob = new Blob([body], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(data.productName || "product").toLowerCase().replace(/\s+/g, "-")}-build-prompts.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const [showMaster, setShowMaster] = useState(false);
+  const [openDepth, setOpenDepth] = useState<string | null>(null);
+
+  if (!stack) {
+    return (
+      <>
+        <PhaseHeader title="Build" status="in-progress" phaseId="build" />
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <LayersIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
+          <p className="mt-3 text-sm text-muted-foreground">
+            Pick your surfaces in the{" "}
+            <Link href="/phase/tech-stack" className="text-primary hover:underline">
+              Tech Stack
+            </Link>{" "}
+            phase first — the build prompt is generated from your derived stack.
+          </p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <PhaseHeader title="Build Phase" status="ready" phaseId="build" />
+      <PhaseHeader title="Build" status="ready" phaseId="build" />
 
-      {/* Ready banner */}
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
-            <RocketIcon className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Current Focus
+      {/* The one build prompt — the hero */}
+      <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <WandIcon className="h-5 w-5" />
             </div>
-            <div className="font-semibold">READY TO BUILD</div>
+            <div>
+              <h2 className="text-xl font-semibold">Your build prompt</h2>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                One prompt. Paste it into your AI IDE — it creates your{" "}
+                <span className="font-mono text-primary">.nx/</span> context and builds the{" "}
+                {stack.frontend} foundation in a single run.
+              </p>
+            </div>
           </div>
+          <CopyButton value={masterPrompt} label="Copy prompt" variant="solid" className="shrink-0" />
         </div>
+
+        <button
+          onClick={() => setShowMaster((v) => !v)}
+          className="mt-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+          {showMaster ? "Hide" : "Preview"} the full prompt
+        </button>
+        {showMaster && (
+          <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+            {masterPrompt}
+          </pre>
+        )}
       </div>
 
-      {/* Generated banner */}
-      <div className="mt-4 rounded-xl border border-border bg-card p-6">
-        <div className="mb-4 h-0.5 w-full rounded-full bg-gradient-to-r from-primary to-primary/20" />
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-            <BadgeCheckIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold">Build Prompts Generated</h2>
-            <p className="text-sm text-muted-foreground">
-              Structure optimized for{" "}
-              <span className="font-mono text-primary">.nxhuman/</span> standard.
-            </p>
-          </div>
-        </div>
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          The build sequence is split into 3 core phases to ensure maximum context preservation for
-          AI agents. All prompts reference the{" "}
-          <span className="font-mono text-primary">.nxhuman/</span> directory for architectural
-          rules, UI guidelines, and technical decisions
-          {stack ? ` (${stack.frontend} · ${stack.language}).` : "."}
+      <p className="mt-3 text-xs text-muted-foreground">
+        Works in Cursor, Claude Code, or any agentic IDE. Let the run finish, then keep iterating in
+        the editor to get the details right.
+      </p>
+
+      {/* Depth prompts — optional, after it exists */}
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold">Refine after it&apos;s built</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Optional. Paste any of these into your project once it exists — each reads your{" "}
+          <span className="font-mono text-primary">.nx/</span> context and reviews one dimension
+          in depth.
         </p>
-      </div>
 
-      {/* Master prompts */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Master Build Prompts</h2>
-          <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">
-            {prompts.length} PROMPTS AVAILABLE
-          </span>
-        </div>
-
-        <div className="mt-4 space-y-4">
-          {prompts.map((p, i) => {
-            const Icon = STEP_ICONS[i] ?? FolderIcon;
-            const isOpen = open === p.id;
+        <div className="mt-4 space-y-3">
+          {depthPrompts.map((p: DepthPrompt) => {
+            const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
+            const isOpen = openDepth === p.id;
             return (
-              <div key={p.id} className="rounded-xl border border-border bg-card p-5">
+              <div key={p.id} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">
-                        {p.order}. {p.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{p.description}</p>
+                      <div className="font-medium">{p.title}</div>
+                      <div className="text-sm text-muted-foreground">{p.description}</div>
                     </div>
                   </div>
-                  <CopyButton value={p.prompt} label="Copy Prompt" variant="solid" />
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Includes
-                    </div>
-                    <ul className="mt-2 space-y-1.5">
-                      {p.includes.map((inc) => (
-                        <li key={inc} className="flex items-center gap-2 text-sm">
-                          <span className="h-1.5 w-1.5 rounded-full border border-primary" />
-                          {inc}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      References
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {p.references.map((ref) => (
-                        <span
-                          key={ref}
-                          className="rounded-md border border-border bg-background px-2 py-1 font-mono text-[11px] text-muted-foreground"
-                        >
-                          {ref}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <CopyButton value={p.prompt} label="Copy" />
                 </div>
 
                 <button
-                  onClick={() => setOpen(isOpen ? null : p.id)}
-                  className="mt-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                  onClick={() => setOpenDepth(isOpen ? null : p.id)}
+                  className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
-                  {isOpen ? (
-                    <ChevronDownIcon className="h-4 w-4" />
-                  ) : (
-                    <ChevronRightIcon className="h-4 w-4" />
-                  )}
-                  {isOpen ? "Hide" : "View"} Full Prompt Details
+                  {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                  {isOpen ? "Hide" : "Preview"}
                 </button>
                 {isOpen && (
-                  <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed text-muted-foreground">
+                  <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
                     {p.prompt}
                   </pre>
                 )}
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={downloadAll}
-            className="inline-flex items-center gap-2 rounded-lg bg-secondary px-5 py-2.5 text-sm font-medium hover:bg-secondary/70"
-          >
-            <DownloadIcon className="h-4 w-4" />
-            Download All Prompts
-          </button>
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="mt-8 rounded-xl border border-border bg-card p-6">
-        <h3 className="font-semibold">Instructions</h3>
-        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          {[
-            { n: "01", t: "Prepare Files", d: "Ensure the .nxhuman/ folder is at your project root." },
-            { n: "02", t: "Initialize Agent", d: "Open the chat with your AI agent and paste Prompt 1." },
-            { n: "03", t: "Sequential Build", d: "Wait for Prompt 1 to finish before moving to Prompt 2." },
-            { n: "04", t: "Verify Output", d: "Run local tests after each phase to ensure stability." },
-          ].map((s) => (
-            <div key={s.n}>
-              <div className="text-sm font-semibold text-primary">{s.n}</div>
-              <div className="mt-1 text-sm font-medium">{s.t}</div>
-              <div className="text-sm text-muted-foreground">{s.d}</div>
-            </div>
-          ))}
         </div>
       </div>
     </>

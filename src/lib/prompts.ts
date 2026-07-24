@@ -7,44 +7,24 @@
  */
 
 import { compileStack } from "./platform-engine";
-import { compileNxHumanFiles, NXHUMAN_ROOT } from "./nxhuman-compiler";
+import { compileNxFiles, NX_ROOT } from "./nx-compiler";
 import { WorkspaceData } from "./types";
 
-export interface BuildPrompt {
+export interface DepthPrompt {
   id: string;
-  order: number;
   title: string;
   description: string;
-  includes: string[];
-  references: string[];
   prompt: string;
 }
 
-/* ------------------------------------------------------------------ */
-/* Scaffold prompt — tells the IDE to CREATE the .nxhuman/ context     */
-/* ------------------------------------------------------------------ */
-
-export function buildScaffoldPrompt(data: WorkspaceData): string {
-  const files = compileNxHumanFiles(data);
-  const name = data.productName || "the product";
-
-  const fileBlocks = files
+/** Render the .nx/ files as fenced blocks for embedding in a prompt. */
+function renderNxFileBlocks(data: WorkspaceData): string {
+  return compileNxFiles(data)
     .map((f) => {
       const lang = f.path.endsWith(".json") ? "json" : "markdown";
       return `### \`${f.path}\`\n\`\`\`${lang}\n${f.content}\`\`\``;
     })
     .join("\n\n");
-
-  return `You are setting up the project context for "${name}".
-
-Create a \`${NXHUMAN_ROOT}/\` directory at the repo root containing the files
-below, verbatim. This directory is the single source of truth every later
-build prompt reads before writing code. Commit it to the repository.
-
-${fileBlocks}
-
-After creating these files, commit them with the message:
-"chore: initialize .nxhuman context"`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -63,127 +43,115 @@ Return: the 3 riskiest assumptions, who to interview first, and a one-line
 sharpened problem statement.`;
 }
 
-export function buildValidationPrompt(data: WorkspaceData): string {
-  return `Act as a user researcher for "${data.productName}".
-
-Problem: ${data.idea.problem || "(define the problem first)"}
-Target users: ${data.idea.targetUsers || "(define users first)"}
-
-Produce: (1) 2–3 user personas, (2) a 6-question interview script that avoids
-leading questions, (3) a competitor matrix template, and (4) the signal that
-would tell us to proceed vs. pivot.`;
-}
-
-export function buildPrototypePrompts(data: WorkspaceData): {
-  title: string;
-  subtitle: string;
-  prompt: string;
-}[] {
-  const problem = data.idea.problem || "the core problem";
-  const users = data.idea.targetUsers || "your target users";
-  return [
-    {
-      title: "Prototype the core user flow",
-      subtitle: "Registration → first value, as clickable screens",
-      prompt: `Design a low-fidelity, clickable prototype for "${data.productName}".
-Users: ${users}
-Problem solved: ${problem}
-Vibe: ${data.brand.vibe}. Primary color: ${data.brand.primaryColor}. Radius: ${data.brand.radius}.
-Produce the core screens for the primary flow (registration → first value),
-each described well enough to hand to a design/codegen tool.`,
-    },
-    {
-      title: "Landing page",
-      subtitle: "High-conversion first impression",
-      prompt: `Write a high-conversion landing page for "${data.productName}".
-Headline should speak to: ${problem}
-Audience: ${users}
-Sections: hero, problem, solution, social proof, pricing, CTA.
-Brand vibe: ${data.brand.vibe}.`,
-    },
-  ];
-}
-
-export function buildLaunchPrompt(data: WorkspaceData): string {
-  const stack = compileStack(data.tech);
-  return `Act as a launch engineer for "${data.productName}".
-Stack: ${stack ? `${stack.frontend} · ${stack.hosting}` : "(configure Tech Stack first)"}.
-
-Produce a launch checklist prompt-by-prompt: production deploy to ${stack?.hosting ?? "the host"},
-domain + DNS, analytics wiring, a waitlist/signup capture, and a Product Hunt
-launch post draft.`;
-}
-
 /* ------------------------------------------------------------------ */
-/* Build phase — the sequenced master prompts                         */
+/* Master build prompt — the ONE prompt that builds the foundation     */
 /* ------------------------------------------------------------------ */
 
-export function buildBuildPrompts(data: WorkspaceData): BuildPrompt[] {
+/**
+ * The single hero deliverable. It embeds the entire .nx/ context and
+ * instructs one continuous agentic run to scaffold and build the foundation —
+ * the founder pastes it once, no "come back for step 2".
+ */
+export function buildMasterPrompt(data: WorkspaceData): string {
   const stack = compileStack(data.tech);
   const name = data.productName || "the product";
-  const lang = stack?.language ?? "the chosen language";
+  const problem = data.idea.problem || "the core product experience";
   const fe = stack?.frontend ?? "the chosen framework";
+  const lang = stack?.language ?? "the chosen language";
+  const backendLine =
+    !stack || stack.backend.startsWith("None")
+      ? "5. No backend — keep everything client-side and persist locally."
+      : `5. Stand up ${stack.backend} and wire the capabilities in \`${NX_ROOT}/memory.json\` (auth, database, realtime as listed).`;
+  const libsLine = stack && stack.libraries.length
+    ? `\n6. Integrate: ${stack.libraries.join(", ")}.`
+    : "";
 
-  const preamble = `You are the Lead Engineer for "${name}".
-Before writing any code you MUST read the referenced ${NXHUMAN_ROOT}/ files to load
-the architecture, brand, and constraints. Do not restate them — follow them.
-Stack: ${fe} (${lang}).`;
+  return `You are the lead engineer building "${name}" in one continuous agentic run.
+Stack: ${fe} (${lang}). Research any API or library you're unsure about before you use it.
+
+## Step 0 — Establish the context
+Create a \`${NX_ROOT}/\` directory at the repo root with these files, verbatim.
+This is your single source of truth — re-read it before each step and follow it exactly.
+
+${renderNxFileBlocks(data)}
+
+## Step 1 — Build the foundation, end to end
+Do NOT stop between steps. Work through them in order, verifying as you go:
+
+1. Scaffold ${fe} per \`${NX_ROOT}/decisions/tech-stack.md\`.
+2. Apply the brand tokens from \`${NX_ROOT}/ui/brand-guide.md\` (color, radius, font) as the theme.
+3. Build the atomic UI components (Button, Card, Input, etc.) on those tokens.
+4. Lay out the folder structure and shared utilities; propose it, then proceed.
+${backendLine}
+7. Implement the core product flow that solves: ${problem}.${libsLine}
+
+After each feature, run the project's checks before moving on. When the foundation
+is complete, commit it and summarise what was built and what remains.`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Depth prompts — optional, paste into a project that ALREADY has     */
+/* .nx/. Meta-cognitive reviews, not part of the initial build.   */
+/* ------------------------------------------------------------------ */
+
+export function buildDepthPrompts(data: WorkspaceData): DepthPrompt[] {
+  const stack = compileStack(data.tech);
+  const name = data.productName || "the product";
+  const host = stack?.hosting ?? "the chosen host";
+  const ctx = `Read \`${NX_ROOT}/\` first to load the architecture, brand, and constraints.`;
 
   return [
     {
-      id: "foundation",
-      order: 1,
-      title: "Project Foundation & Setup",
-      description: "Establish environment, workspace structure, and core shared utilities.",
-      includes: [
-        "Project scaffolding & config",
-        "Theme & design-token integration",
-        "Base UI components (Atomic)",
-      ],
-      references: [`${NXHUMAN_ROOT}/decisions/tech-stack.md`, `${NXHUMAN_ROOT}/ui/brand-guide.md`],
-      prompt: `${preamble}
+      id: "qa",
+      title: "QA & test coverage",
+      description: "Find broken states and cover the core flows with tests.",
+      prompt: `${ctx}
 
-## Phase 1 — Project Foundation & Setup
-1. Scaffold the project per ${NXHUMAN_ROOT}/decisions/tech-stack.md.
-2. Integrate the theme from ${NXHUMAN_ROOT}/ui/brand-guide.md (primary color, radius, font).
-3. Build the atomic base UI components (Button, Card, Input) using those tokens.
-4. Set up the folder structure and shared utilities.
-
-Propose the file structure first and wait for confirmation before generating files.`,
+Act as the QA engineer for "${name}". Exercise the core user flows, enumerate the
+edge cases and broken/empty/error states, and write automated tests that cover
+them. Fix the bugs you surface. Report a short coverage summary and any risks left.`,
     },
     {
-      id: "core",
-      order: 2,
-      title: "Core Features Implementation",
-      description: "Develop logic, data models, and the main interactive modules.",
-      includes: [
-        `Database schema & migrations${data.tech.needsDatabase ? "" : " (skipped — no DB)"}`,
-        `Authentication & RBAC${data.tech.needsAuth ? "" : " (skipped — no auth)"}`,
-        "Main application logic",
-      ],
-      references: [`${NXHUMAN_ROOT}/specs/api-routes.md`, `${NXHUMAN_ROOT}/decisions/db-schema.md`],
-      prompt: `${preamble}
+      id: "security",
+      title: "Security review",
+      description: "Audit auth, input handling, secrets, and dependencies.",
+      prompt: `${ctx}
 
-## Phase 2 — Core Features Implementation
-${data.tech.needsDatabase ? "1. Implement the schema & migrations from " + NXHUMAN_ROOT + "/decisions/db-schema.md.\n" : ""}${data.tech.needsAuth ? "2. Implement authentication & role-based access control.\n" : ""}3. Build the API surface from ${NXHUMAN_ROOT}/specs/api-routes.md.
-4. Implement the main interactive modules and wire them to the data layer.
-
-Build feature by feature. Run local checks after each feature before moving on.`,
+Act as an application security reviewer for "${name}". Audit: authentication and
+session handling, authorization / object-level access, input validation and
+injection, secrets or keys exposed to the client, and dependency CVEs. Fix what is
+safe to fix and produce a prioritised list of what needs human review.`,
     },
     {
-      id: "polish",
-      order: 3,
-      title: "Polish & Deployment",
-      description: "Final styling, optimization, and production pipeline setup.",
-      includes: ["Performance optimization", "SEO & meta tags", "CI/CD & deployment config"],
-      references: [`${NXHUMAN_ROOT}/hosting.md`],
-      prompt: `${preamble}
+      id: "performance",
+      title: "Performance pass",
+      description: "Profile and fix slow renders, bundles, and queries.",
+      prompt: `${ctx}
 
-## Phase 3 — Polish & Deployment
-1. Optimize performance (bundle size, lazy-loading, images).
-2. Add SEO & meta tags where applicable.
-3. Configure CI/CD and deployment per ${NXHUMAN_ROOT}/hosting.md (target: ${stack?.hosting ?? "TBD"}).
-4. Verify a clean production build and ship.`,
+Profile "${name}" and improve performance: slow renders and re-renders, oversized
+bundles, unoptimised images/assets, and N+1 or slow queries. Apply the fixes and
+report before/after numbers for the metrics you moved.`,
+    },
+    {
+      id: "accessibility",
+      title: "Accessibility audit",
+      description: "Get the UI to WCAG AA.",
+      prompt: `${ctx}
+
+Audit "${name}" against WCAG 2.2 AA: keyboard navigation and focus order, colour
+contrast, form labels and error messaging, and screen-reader semantics. Fix the
+issues directly in the components and note anything that needs design input.`,
+    },
+    {
+      id: "deploy",
+      title: "Ship to production",
+      description: `Set up CI/CD and deploy to ${host}.`,
+      prompt: `${ctx}
+
+Set up production deployment for "${name}" to ${host}: CI/CD on push to \`main\`,
+environment variables and secrets, preview builds for pull requests, framework-native
+analytics/telemetry (structured logging + page/event tracking), and a post-deploy
+smoke test. Write the runbook into \`${NX_ROOT}/hosting.md\`.`,
     },
   ];
 }
