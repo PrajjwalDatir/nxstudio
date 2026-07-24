@@ -81,6 +81,23 @@ export interface CompiledStack {
 }
 
 /* ------------------------------------------------------------------ */
+/* Custom stages — founder-defined phases beyond the six built-ins    */
+/* ------------------------------------------------------------------ */
+
+export interface CustomStageStep {
+  id: string;
+  label: string;
+}
+
+export interface CustomStage {
+  id: string; // "custom_xxxx"
+  label: string;
+  description: string;
+  icon: string; // PhaseIcon key
+  steps: CustomStageStep[];
+}
+
+/* ------------------------------------------------------------------ */
 /* Workspace — the whole product's state                              */
 /* ------------------------------------------------------------------ */
 
@@ -94,6 +111,8 @@ export interface WorkspaceData {
    * like Validation). Data-driven phases compute progress from their data.
    */
   checklist: Record<string, string[]>;
+  /** Founder-defined stages that render on the Canvas after the built-ins. */
+  customStages: CustomStage[];
 }
 
 export interface PhaseProgress {
