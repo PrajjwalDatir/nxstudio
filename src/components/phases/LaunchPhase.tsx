@@ -21,7 +21,7 @@ export function LaunchPhase() {
 
   return (
     <>
-      <PhaseHeader title="Launch" status="in-progress" meta="Due Oct 24" showTeam />
+      <PhaseHeader title="Launch" status="in-progress" phaseId="launch" showTeam />
 
       {/* Launch prompt */}
       <div className="mb-6 flex items-center gap-4 rounded-xl border border-border bg-card p-4">
