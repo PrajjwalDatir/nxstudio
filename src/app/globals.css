@@ -47,56 +47,57 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* Lilac Monolith Theme - Always Dark */
+/* Dark Studio Theme with Violet Accent (matches Figma) */
 :root {
-  --radius: 0.5rem;
-  /* Zinc-950 Background */
-  --background: #09090B;
+  --radius: 0.625rem;
+
+  /* Near-black canvas */
+  --background: #08080A;
   --foreground: #FAFAFA;
-  
-  /* Lilac-500 Primary */
-  --lilac: #A855F7;
-  --primary: #A855F7;
-  --primary-foreground: #FAFAFA;
-  
-  /* Cards & Surfaces */
-  --card: #18181B;
+
+  /* Violet primary */
+  --lilac: #8B5CF6;
+  --primary: #8B5CF6;
+  --primary-foreground: #FFFFFF;
+
+  /* Cards & surfaces — slightly lifted from the canvas */
+  --card: #121214;
   --card-foreground: #FAFAFA;
-  --popover: #18181B;
+  --popover: #161618;
   --popover-foreground: #FAFAFA;
-  
-  /* Secondary - Zinc-800 */
-  --secondary: #27272A;
+
+  /* Secondary — elevated surface */
+  --secondary: #1C1C20;
   --secondary-foreground: #FAFAFA;
-  
-  /* Muted - Zinc-700 */
-  --muted: #3F3F46;
-  --muted-foreground: #A1A1AA;
-  
-  /* Accent - Lilac tinted */
-  --accent: #27272A;
-  --accent-foreground: #A855F7;
-  
+
+  /* Muted */
+  --muted: #1C1C20;
+  --muted-foreground: #8B8B93;
+
+  /* Accent — subtle violet tint used for selected states */
+  --accent: #1E1633;
+  --accent-foreground: #C4B5FD;
+
   --destructive: #EF4444;
-  --border: #27272A;
-  --input: #27272A;
-  --ring: #A855F7;
-  
-  /* Charts - Lilac spectrum */
-  --chart-1: #A855F7;
-  --chart-2: #C084FC;
-  --chart-3: #D8B4FE;
+  --border: #26262B;
+  --input: #26262B;
+  --ring: #8B5CF6;
+
+  /* Charts — violet spectrum */
+  --chart-1: #8B5CF6;
+  --chart-2: #A78BFA;
+  --chart-3: #C4B5FD;
   --chart-4: #7C3AED;
   --chart-5: #6D28D9;
-  
-  --sidebar: #18181B;
-  --sidebar-foreground: #FAFAFA;
-  --sidebar-primary: #A855F7;
-  --sidebar-primary-foreground: #FAFAFA;
-  --sidebar-accent: #27272A;
-  --sidebar-accent-foreground: #A855F7;
-  --sidebar-border: #27272A;
-  --sidebar-ring: #A855F7;
+
+  --sidebar: #0B0B0D;
+  --sidebar-foreground: #E4E4E7;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1A1A1E;
+  --sidebar-accent-foreground: #C4B5FD;
+  --sidebar-border: #1F1F23;
+  --sidebar-ring: #8B5CF6;
 }
 
 @layer base {
@@ -104,56 +105,56 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 
-/* Terminal Output Styling */
-.terminal-output {
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  background: #0A0A0C;
-  border: 1px solid #27272A;
-}
-
-.terminal-output pre {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* Custom Scrollbar - Cross-browser */
+/* Custom Scrollbar - Dark theme */
 * {
-  /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: #3F3F46 #18181B;
+  scrollbar-color: #2E2E33 #0B0B0D;
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #18181B;
+  background: #0B0B0D;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3F3F46;
-  border-radius: 4px;
-  transition: background 0.2s ease;
+  background: #2E2E33;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A855F7;
+  background: #8B5CF6;
 }
 
-/* Selection - High contrast for readability */
+/* Selection */
 ::selection {
-  background: rgba(168, 85, 247, 0.4);
+  background: rgba(139, 92, 246, 0.3);
   color: #FAFAFA;
 }
 
 ::-moz-selection {
-  background: rgba(168, 85, 247, 0.4);
+  background: rgba(139, 92, 246, 0.3);
   color: #FAFAFA;
 }
 
+/* Option Card Hover */
+.option-card {
+  transition: all 0.2s ease;
+}
+
+.option-card:hover {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25);
+}
+
+.option-card.selected {
+  border-color: #8B5CF6;
+  background: var(--accent);
+}

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { WorkspaceProvider } from "@/lib/workspace-store";
+import { SyncProvider } from "@/lib/sync-store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nx Studio | Context Compiler",
-  description: "Generate structured AI context files (COG Protocols) for founders.",
+  title: "nxstudio | Product Studio",
+  description:
+    "Founder-mode product studio — move an idea through validation, prototype, tech stack, build, and launch.",
 };
 
 export default function RootLayout({
@@ -23,11 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <WorkspaceProvider>
+          <SyncProvider>{children}</SyncProvider>
+        </WorkspaceProvider>
       </body>
     </html>
   );
