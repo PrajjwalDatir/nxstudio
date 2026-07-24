@@ -24,7 +24,7 @@ export function ValidationPhase() {
 
   return (
     <>
-      <PhaseHeader title="Validation Phase" status="in-progress" meta="Due Oct 24" showTeam />
+      <PhaseHeader title="Validation Phase" status="in-progress" phaseId="validation" showTeam />
 
       {/* Focus / Next */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

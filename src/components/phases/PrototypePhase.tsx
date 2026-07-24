@@ -16,7 +16,7 @@ export function PrototypePhase() {
 
   return (
     <>
-      <PhaseHeader title="Prototype" status="in-progress" meta="Due Oct 24" />
+      <PhaseHeader title="Prototype" status="in-progress" phaseId="prototype" />
 
       {/* Strategy / Planning */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -50,12 +50,7 @@ export function TechStackPhase() {
 
     return (
       <>
-        <PhaseHeader
-          title="Tech Stack"
-          status="in-progress"
-          meta="Finished on Oct 24, 2023"
-          finished
-        />
+        <PhaseHeader title="Tech Stack" status="in-progress" phaseId="tech-stack" />
 
         {/* Stack configured card */}
         <div className="rounded-xl border border-border bg-card p-6">
@@ -186,7 +181,7 @@ export function TechStackPhase() {
 
   return (
     <>
-      <PhaseHeader title="Tech Stack" status="in-progress" meta="Due Oct 24" />
+      <PhaseHeader title="Tech Stack" status="in-progress" phaseId="tech-stack" />
 
       {/* Configuring / Next suggested */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

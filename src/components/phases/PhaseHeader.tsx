@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeftIcon, CalendarIcon, MoreIcon, BadgeCheckIcon } from "@/components/icons";
+import { ArrowLeftIcon, MoreIcon, BadgeCheckIcon } from "@/components/icons";
 import { useSync } from "@/lib/sync-store";
+import { useWorkspace } from "@/lib/workspace-store";
+import { DueDatePicker } from "@/components/ui/due-date";
 import { cn } from "@/lib/utils";
 
 type Status = "in-progress" | "ready" | "complete";
@@ -22,18 +24,23 @@ const STATUS_LABEL: Record<Status, string> = {
 export function PhaseHeader({
   title,
   status = "in-progress",
+  phaseId,
   meta,
   finished,
   showTeam = false,
 }: {
   title: string;
   status?: Status;
+  /** When set, renders a pickable due date bound to the project's dueDates. */
+  phaseId?: string;
   meta?: string;
   finished?: boolean;
   showTeam?: boolean;
 }) {
   const { result } = useSync();
+  const { activeProject, setDueDate } = useWorkspace();
   const contributors = showTeam ? result?.contributors ?? [] : [];
+  const due = phaseId ? activeProject.dueDates[phaseId] ?? "" : "";
   return (
     <div className="mb-8">
       <Link
@@ -57,14 +64,23 @@ export function PhaseHeader({
               {STATUS_LABEL[status]}
             </span>
           </div>
-          {meta && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-              {finished ? (
-                <BadgeCheckIcon className="h-4 w-4" />
-              ) : (
-                <CalendarIcon className="h-4 w-4" />
+          {(phaseId || meta) && (
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              {phaseId && (
+                <DueDatePicker
+                  label={`${title} due date`}
+                  value={due ? due.slice(0, 10) : null}
+                  onChange={(ymd) =>
+                    setDueDate(phaseId, ymd ? new Date(ymd).toISOString() : "")
+                  }
+                />
               )}
-              {meta}
+              {meta && (
+                <span className="flex items-center gap-2">
+                  {finished && <BadgeCheckIcon className="h-4 w-4" />}
+                  {meta}
+                </span>
+              )}
             </div>
           )}
         </div>

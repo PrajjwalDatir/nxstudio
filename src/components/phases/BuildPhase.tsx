@@ -42,7 +42,7 @@ export function BuildPhase() {
 
   return (
     <>
-      <PhaseHeader title="Build Phase" status="ready" meta="Finished on Oct 24, 2023" finished />
+      <PhaseHeader title="Build Phase" status="ready" phaseId="build" />
 
       {/* Ready banner */}
       <div className="rounded-xl border border-border bg-card p-5">
