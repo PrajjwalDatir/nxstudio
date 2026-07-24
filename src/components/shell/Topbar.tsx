@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace-store";
 import { getPhase } from "@/lib/phases";
 import { useCommand } from "@/components/shell/CommandPalette";
-import { ChevronRightIcon, SearchIcon, BellIcon } from "@/components/icons";
+import { Notifications } from "@/components/shell/Notifications";
+import { ChevronRightIcon, SearchIcon } from "@/components/icons";
 
 export function Topbar() {
   const pathname = usePathname();
@@ -74,9 +75,7 @@ export function Topbar() {
           Search tasks, phases...
           <kbd className="ml-auto rounded border border-border px-1.5 py-0.5 text-[10px]">⌘K</kbd>
         </button>
-        <button className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-          <BellIcon className="h-4 w-4" />
-        </button>
+        <Notifications />
       </div>
     </header>
   );

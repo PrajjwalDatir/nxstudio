@@ -70,9 +70,7 @@ export function PhaseHeader({
                 <DueDatePicker
                   label={`${title} due date`}
                   value={due ? due.slice(0, 10) : null}
-                  onChange={(ymd) =>
-                    setDueDate(phaseId, ymd ? new Date(ymd).toISOString() : "")
-                  }
+                  onChange={(ymd) => setDueDate(phaseId, ymd || "")}
                 />
               )}
               {meta && (

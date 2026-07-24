@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSync } from "@/lib/sync-store";
 import { Button } from "@/components/ui/button";
+import { BillingSection } from "@/components/billing/BillingSection";
 import { GithubIcon, CheckCircleIcon, LoaderIcon, ExternalLinkIcon } from "@/components/icons";
 
 function Field({
@@ -31,7 +32,7 @@ function Field({
 }
 
 export default function SettingsPage() {
-  const { data, github, setProductName, updateBrand, setRepo, resetActive } = useWorkspace();
+  const { data, github, setProductName, setRepo, resetActive } = useWorkspace();
   const sync = useSync();
 
   const [token, setToken] = useState("");
@@ -77,7 +78,7 @@ export default function SettingsPage() {
           <h2 className="font-semibold">GitHub Sync</h2>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Connect a repo so nxstudio reads your <span className="font-mono text-primary">.nxhuman/</span>{" "}
+          Connect a repo so nxstudio reads your <span className="font-mono text-primary">.nx/</span>{" "}
           context and build activity back from GitHub.
         </p>
 
@@ -144,7 +145,7 @@ export default function SettingsPage() {
               </Button>
               <span className="text-sm text-muted-foreground">
                 {sync.status === "ok" && sync.result
-                  ? `${sync.result.context.exists ? ".nxhuman found" : ".nxhuman not found"} · ${sync.result.commits.length} commits`
+                  ? `${sync.result.context.exists ? ".nx found" : ".nx not found"} · ${sync.result.commits.length} commits`
                   : sync.status === "no-repo"
                     ? "No repo linked"
                     : sync.status === "error"
@@ -156,23 +157,8 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {/* Brand DNA */}
-      <section className="mt-6 rounded-xl border border-border bg-card p-6">
-        <h2 className="font-semibold">Brand DNA</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Locked into every generated prompt to prevent style drift.
-        </p>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Vibe" value={data.brand.vibe} onChange={(v) => updateBrand("vibe", v)} />
-          <Field
-            label="Primary color"
-            value={data.brand.primaryColor}
-            onChange={(v) => updateBrand("primaryColor", v)}
-          />
-          <Field label="Border radius" value={data.brand.radius} onChange={(v) => updateBrand("radius", v)} />
-          <Field label="Font" value={data.brand.font} onChange={(v) => updateBrand("font", v)} />
-        </div>
-      </section>
+      {/* Subscription */}
+      <BillingSection />
 
       {/* Danger */}
       <section className="mt-6 rounded-xl border border-red-500/30 bg-red-500/5 p-6">

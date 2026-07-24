@@ -1,347 +1,236 @@
 /**
- * Platform Engine — the invisible "Staff Engineer".
+ * Platform Engine — the invisible Staff Engineer.
  *
- * There is NO reasoning layer here. Every framework decision is a hardcoded
- * lookup from the founder's form input. The founder picks intent (platform,
- * native vs cross-platform, backend needs); this file deterministically
- * resolves the concrete stack.
+ * The founder never picks a framework. They pick the SURFACES they want to ship
+ * to and the CAPABILITIES the product needs; this file derives the concrete
+ * stack deterministically. No reasoning at runtime — just researched rules.
  *
- * Core rules (as specified):
- *   - iOS + Android together        → Flutter (single cross-platform codebase)
- *   - Native iOS only               → Swift / SwiftUI
- *   - Apple ecosystem (iOS/iPad/Mac)→ Swift / SwiftUI (Multiplatform)
- *   - Native Android only           → Kotlin / Jetpack Compose
- *   - Web app                       → Next.js
- *   - Web landing (rich/3D)         → Next.js + Three.js
+ * Frontend rules (surfaces → framework), in priority order:
+ *   iOS + Android (± web/desktop) ............ Flutter        (one codebase, all stores; Flutter Web + desktop)
+ *   Desktop + one mobile ..................... Flutter        (only single codebase spanning desktop + mobile)
+ *   Web + one mobile ......................... Expo (RN)      (web + iOS/Android from one TS codebase)
+ *   iOS only ................................. SwiftUI        (most native feel)
+ *   Android only ............................. Jetpack Compose(modern native baseline)
+ *   Desktop + Web ............................ Next.js + Tauri(shared React: web + native desktop)
+ *   Desktop only ............................. Tauri          (lightweight native desktop, Rust core)
+ *   Web only ................................. Next.js (PWA)
+ *
+ * Backend rules (capabilities → services):
+ *   Multiplayer/shared-live-state on a TS frontend .. SpacetimeDB (DB + server logic + realtime sync in one)
+ *   Any of auth/db/realtime/storage/push ............ Supabase    (Postgres + Auth + Realtime + Storage)
+ *   Nothing that needs a server ..................... client-only
  */
 
-import {
-  CompiledStack,
-  PlatformTargetId,
-  SetupPrompt,
-  TechStackInput,
-} from "./types";
+import { Capability, CompiledStack, StackSlot, Surface, TechStackInput } from "./types";
 
 /* ------------------------------------------------------------------ */
-/* Platform options shown in the wizard                               */
+/* Form metadata                                                      */
 /* ------------------------------------------------------------------ */
 
-export interface PlatformOption {
-  id: PlatformTargetId;
+export interface SurfaceOption {
+  id: Surface;
   label: string;
   description: string;
-  icon: string; // emoji, matches the Figma's icon slots
-  /** Whether a native-vs-cross-platform choice is relevant for this target. */
-  offersStrategy: boolean;
+  icon: string; // emoji
 }
 
-export const PLATFORM_OPTIONS: PlatformOption[] = [
-  {
-    id: "web-app",
-    label: "Web App (PWA)",
-    description: "Installable web application, one codebase, no app store.",
-    icon: "🌐",
-    offersStrategy: false,
-  },
-  {
-    id: "web-landing",
-    label: "Landing / Marketing Site",
-    description: "High-conversion marketing site, optionally rich & animated.",
-    icon: "🖼️",
-    offersStrategy: false,
-  },
-  {
-    id: "ios",
-    label: "iOS App",
-    description: "Native application for the Apple App Store.",
-    icon: "",
-    offersStrategy: false,
-  },
-  {
-    id: "android",
-    label: "Android App",
-    description: "Native application for the Google Play ecosystem.",
-    icon: "🤖",
-    offersStrategy: false,
-  },
-  {
-    id: "mobile-both",
-    label: "iOS + Android",
-    description: "Ship to both mobile app stores.",
-    icon: "📱",
-    offersStrategy: true,
-  },
-  {
-    id: "apple-ecosystem",
-    label: "Apple Ecosystem",
-    description: "iPhone, iPad, and Mac from a single Apple-native codebase.",
-    icon: "",
-    offersStrategy: false,
-  },
+export const SURFACE_OPTIONS: SurfaceOption[] = [
+  { id: "web", label: "Web", description: "Runs in the browser, installable as a PWA.", icon: "🌐" },
+  { id: "ios", label: "iOS", description: "iPhone & iPad, the Apple App Store.", icon: "🍎" },
+  { id: "android", label: "Android", description: "Phones & tablets on Google Play.", icon: "🤖" },
+  { id: "desktop", label: "Desktop", description: "Windows, macOS & Linux apps.", icon: "🖥️" },
 ];
 
-export function getPlatformOption(
-  id: PlatformTargetId | ""
-): PlatformOption | undefined {
-  return PLATFORM_OPTIONS.find((p) => p.id === id);
+export interface CapabilityOption {
+  id: Capability;
+  label: string;
+  description: string;
+  icon: string;
 }
 
-/** The platform NX recommends by default, surfaced in the wizard footer. */
-export const RECOMMENDED_TARGET: PlatformTargetId = "web-app";
-export const RECOMMENDED_REASON =
-  "PWA — a single codebase, instant deployments, cross-device support, minimal cost, and no app store dependency.";
+export const CAPABILITY_OPTIONS: CapabilityOption[] = [
+  { id: "auth", label: "Accounts & auth", description: "Sign-up, login, and sessions.", icon: "🔑" },
+  { id: "database", label: "Database", description: "Persist users, content, and records.", icon: "🗄️" },
+  { id: "realtime", label: "Realtime updates", description: "Live data & presence as it happens.", icon: "⚡" },
+  { id: "multiplayer", label: "Multiplayer / shared state", description: "Many users on one live state — games, collaboration.", icon: "👥" },
+  { id: "payments", label: "Payments & subscriptions", description: "Charge users and manage plans.", icon: "💳" },
+  { id: "storage", label: "File storage", description: "Uploads, images, and documents.", icon: "📎" },
+  { id: "push", label: "Push notifications", description: "Re-engage users on their device.", icon: "🔔" },
+  { id: "ai", label: "AI / LLM features", description: "Generative or intelligent features.", icon: "✨" },
+  { id: "graphics", label: "3D / rich graphics", description: "Immersive or animated surfaces.", icon: "🎨" },
+];
 
 /* ------------------------------------------------------------------ */
-/* Setup-prompt builders (per framework)                              */
+/* Derivation                                                         */
 /* ------------------------------------------------------------------ */
 
-function nextSetupPrompts(input: TechStackInput): SetupPrompt[] {
-  const prompts: SetupPrompt[] = [
-    {
-      id: "init",
-      title: "Initialize Project",
-      description: "Scaffold the Next.js app with TypeScript, Tailwind & ESLint.",
-      command: "npx create-next-app@latest --typescript --tailwind --eslint",
-    },
-  ];
-  if (input.needsDatabase) {
-    prompts.push({
-      id: "db",
-      title: "Configure Database",
-      description: "Set up Prisma schema with a PostgreSQL provider and connection strings.",
-      command: "npm i prisma @prisma/client && npx prisma init --datasource-provider postgresql",
-    });
-  }
-  if (input.needsAuth) {
-    prompts.push({
-      id: "auth",
-      title: "Setup Authentication",
-      description: "Configure NextAuth.js with standard providers and session management.",
-      command: "npm i next-auth && npx auth secret",
-    });
-  }
-  if (input.richGraphics) {
-    prompts.push({
-      id: "three",
-      title: "Add 3D / WebGL Layer",
-      description: "Install React Three Fiber and Drei for animated hero scenes.",
-      command: "npm i three @react-three/fiber @react-three/drei",
-    });
-  }
-  return prompts;
+interface Frontend {
+  frontend: string;
+  language: string;
+  hosting: string;
+  rationale: string;
 }
 
-function flutterSetupPrompts(input: TechStackInput): SetupPrompt[] {
-  const prompts: SetupPrompt[] = [
-    {
-      id: "init",
-      title: "Initialize Project",
-      description: "Scaffold the Flutter app targeting iOS and Android.",
-      command: "flutter create --platforms=ios,android my_app",
-    },
-    {
-      id: "state",
-      title: "Add State & Routing",
-      description: "Wire up Riverpod for state management and go_router for navigation.",
-      command: "flutter pub add flutter_riverpod go_router",
-    },
-  ];
-  if (input.needsDatabase || input.needsAuth || input.needsRealtime) {
-    prompts.push({
-      id: "supabase",
-      title: "Connect Backend",
-      description: "Add Supabase for auth, Postgres, and realtime channels.",
-      command: "flutter pub add supabase_flutter",
-    });
+function deriveFrontend(web: boolean, ios: boolean, android: boolean, desktop: boolean): Frontend {
+  const mobileCount = (ios ? 1 : 0) + (android ? 1 : 0);
+
+  if (ios && android) {
+    const extra = web || desktop ? ", and reaches the same code to web and desktop" : "";
+    return {
+      frontend: "Flutter",
+      language: "Dart",
+      hosting: "App Store + Google Play" + (web ? " + Vercel (web)" : ""),
+      rationale: `iOS and Android from one codebase — Flutter is the default when you need both stores${extra}.`,
+    };
   }
-  return prompts;
+  if (desktop && mobileCount === 1) {
+    return {
+      frontend: "Flutter",
+      language: "Dart",
+      hosting: "App stores + native installers",
+      rationale: "Flutter is the only single codebase that cleanly spans mobile and desktop.",
+    };
+  }
+  if (web && mobileCount === 1) {
+    return {
+      frontend: "Expo (React Native)",
+      language: "TypeScript",
+      hosting: "EAS (mobile) + Vercel (web)",
+      rationale: "Expo (React Native) ships web, iOS, and Android from one TypeScript codebase.",
+    };
+  }
+  if (mobileCount === 1) {
+    return ios
+      ? {
+          frontend: "SwiftUI",
+          language: "Swift",
+          hosting: "App Store",
+          rationale: "A single Apple target — SwiftUI gives the most native feel with the least overhead.",
+        }
+      : {
+          frontend: "Jetpack Compose",
+          language: "Kotlin",
+          hosting: "Google Play",
+          rationale: "A single Android target — Kotlin + Jetpack Compose is the modern native baseline.",
+        };
+  }
+  if (desktop && web) {
+    return {
+      frontend: "Next.js + Tauri",
+      language: "TypeScript + Rust",
+      hosting: "Vercel (web) + native installers",
+      rationale: "Shared React across web and desktop — Next.js on the web, wrapped by Tauri for a lightweight native desktop app.",
+    };
+  }
+  if (desktop) {
+    return {
+      frontend: "Tauri",
+      language: "TypeScript + Rust",
+      hosting: "Native installers (GitHub Releases)",
+      rationale: "A lightweight native desktop app — a web UI with a fast Rust core, far smaller than Electron.",
+    };
+  }
+  // web only
+  return {
+    frontend: "Next.js (PWA)",
+    language: "TypeScript",
+    hosting: "Vercel",
+    rationale: "A single web codebase installs as a PWA across every device — instant deploys, no app-store gatekeeping.",
+  };
 }
 
-function swiftSetupPrompts(input: TechStackInput, apple: boolean): SetupPrompt[] {
-  const prompts: SetupPrompt[] = [
-    {
-      id: "init",
-      title: "Create Xcode Project",
-      description: apple
-        ? "Start a SwiftUI Multiplatform app (iOS, iPadOS, macOS)."
-        : "Start a SwiftUI iOS app in Xcode.",
-      command: apple
-        ? "# Xcode › New Project › Multiplatform › App (SwiftUI)"
-        : "# Xcode › New Project › iOS › App (SwiftUI)",
-    },
-    {
-      id: "spm",
-      title: "Add Dependencies (SPM)",
-      description: "Use Swift Package Manager for networking and persistence.",
-      command: "# File › Add Packages… › add supabase-swift / Alamofire",
-    },
-  ];
-  if (input.needsDatabase || input.needsAuth) {
-    prompts.push({
-      id: "backend",
-      title: "Wire Backend",
-      description: "Connect Supabase for auth and a Postgres data layer.",
-      command: "# Add https://github.com/supabase/supabase-swift via SPM",
-    });
-  }
-  return prompts;
+function graphicsLib(frontend: string): string {
+  if (frontend.startsWith("Flutter")) return "Flame (2D/3D game engine)";
+  if (frontend === "SwiftUI") return "SceneKit / RealityKit";
+  if (frontend === "Jetpack Compose") return "OpenGL / Filament";
+  return "Three.js + React Three Fiber";
 }
 
-function kotlinSetupPrompts(input: TechStackInput): SetupPrompt[] {
-  const prompts: SetupPrompt[] = [
-    {
-      id: "init",
-      title: "Create Android Project",
-      description: "Start a Jetpack Compose app in Android Studio.",
-      command: "# Android Studio › New Project › Empty Activity (Compose)",
-    },
-    {
-      id: "deps",
-      title: "Add Dependencies",
-      description: "Add Hilt for DI and Coroutines for async work in build.gradle.",
-      command: "// implementation 'com.google.dagger:hilt-android'",
-    },
-  ];
-  if (input.needsDatabase || input.needsAuth) {
-    prompts.push({
-      id: "backend",
-      title: "Wire Backend",
-      description: "Connect Firebase Auth + Firestore, or Supabase Postgres.",
-      command: "// implementation platform('com.google.firebase:firebase-bom')",
-    });
-  }
-  return prompts;
+function pushLib(frontend: string): string {
+  if (frontend.startsWith("Expo")) return "Expo Notifications";
+  if (frontend.startsWith("Next")) return "Web Push";
+  return "Firebase Cloud Messaging (FCM)";
 }
-
-/* ------------------------------------------------------------------ */
-/* The decision table                                                 */
-/* ------------------------------------------------------------------ */
 
 /**
- * Resolve founder input into a concrete stack. Pure, deterministic, hardcoded.
- * Returns null until enough has been chosen to decide.
+ * Resolve founder input into a concrete stack. Pure and deterministic.
+ * Returns null until at least one surface is chosen.
  */
 export function compileStack(input: TechStackInput): CompiledStack | null {
-  if (!input.target) return null;
+  const surfaces = new Set(input.surfaces);
+  if (surfaces.size === 0) return null;
 
-  const db = input.needsDatabase ? "PostgreSQL" : "None (client-side)";
+  const web = surfaces.has("web");
+  const ios = surfaces.has("ios");
+  const android = surfaces.has("android");
+  const desktop = surfaces.has("desktop");
 
-  switch (input.target) {
-    /* ---------------- Web ---------------- */
-    case "web-app":
-      return {
-        platform: "WebApp (PWA)",
-        frontend: "Next.js",
-        backend: input.needsRealtime
-          ? "Next.js API Routes + Supabase Realtime"
-          : "Next.js API Routes",
-        database: input.needsDatabase ? "PostgreSQL (Prisma)" : "None (client-side)",
-        hosting: "Vercel",
-        language: "TypeScript",
-        rationale:
-          "A single web codebase installs as a PWA across every device — instant deploys, no app-store gatekeeping.",
-        setupPrompts: nextSetupPrompts(input),
-      };
+  const { frontend, language, hosting, rationale } = deriveFrontend(web, ios, android, desktop);
+  const isTs = language.startsWith("TypeScript");
 
-    case "web-landing":
-      return {
-        platform: "Landing Site",
-        frontend: input.richGraphics ? "Next.js + Three.js" : "Next.js",
-        backend: "Edge Functions",
-        database: input.needsDatabase ? "PostgreSQL (Supabase)" : "None",
-        hosting: "Vercel",
-        language: "TypeScript",
-        rationale: input.richGraphics
-          ? "Marketing surface with an animated WebGL hero — Next.js SSR for SEO, Three.js for the wow."
-          : "SEO-first marketing site on Next.js SSR, deployed to the edge.",
-        setupPrompts: nextSetupPrompts(input),
-      };
+  const caps = new Set(input.capabilities);
+  const serverCaps: Capability[] = ["auth", "database", "realtime", "multiplayer", "storage", "push"];
+  const needsBackend = serverCaps.some((c) => caps.has(c));
 
-    /* ---------------- Mobile: both stores → Flutter ---------------- */
-    case "mobile-both":
-      // Founder can force fully-native dual builds; default is cross-platform.
-      if (input.strategy === "native") {
-        return {
-          platform: "iOS + Android (Native)",
-          frontend: "SwiftUI + Jetpack Compose",
-          backend: "Supabase",
-          database: db,
-          hosting: "Supabase",
-          language: "Swift + Kotlin",
-          rationale:
-            "Two fully-native codebases for maximum per-platform fidelity — pick this only when native feel outweighs shared code.",
-          setupPrompts: [
-            ...swiftSetupPrompts(input, false),
-            ...kotlinSetupPrompts(input),
-          ],
-        };
-      }
-      return {
-        platform: "iOS + Android",
-        frontend: "Flutter",
-        backend: "Supabase",
-        database: db,
-        hosting: "Supabase",
-        language: "Dart",
-        rationale:
-          "Both stores from one codebase — Flutter is the default when you need iOS and Android without maintaining two native apps.",
-        setupPrompts: flutterSetupPrompts(input),
-      };
+  let backend: string;
+  let database: string;
+  let backendRationale = "";
 
-    /* ---------------- iOS native ---------------- */
-    case "ios":
-      // Even if the founder toggled cross-platform, an iOS-only target
-      // stays Apple-native (SwiftUI) — cross-platform only matters with Android.
-      return {
-        platform: "iOS (Native)",
-        frontend: "SwiftUI",
-        backend: "Supabase",
-        database: db,
-        hosting: "Supabase",
-        language: "Swift",
-        rationale:
-          "One target, the Apple platform — SwiftUI gives the most native feel with the least overhead.",
-        setupPrompts: swiftSetupPrompts(input, false),
-      };
-
-    /* ---------------- Apple ecosystem ---------------- */
-    case "apple-ecosystem":
-      return {
-        platform: "Apple Ecosystem",
-        frontend: "SwiftUI (Multiplatform)",
-        backend: "Supabase",
-        database: db,
-        hosting: "Supabase / CloudKit",
-        language: "Swift",
-        rationale:
-          "iPhone, iPad, and Mac from one Apple-native codebase — Swift/SwiftUI Multiplatform, no cross-platform runtime needed.",
-        setupPrompts: swiftSetupPrompts(input, true),
-      };
-
-    /* ---------------- Android native ---------------- */
-    case "android":
-      return {
-        platform: "Android (Native)",
-        frontend: "Jetpack Compose",
-        backend: "Firebase / Supabase",
-        database: input.needsDatabase ? "Firestore / PostgreSQL" : "Room (local)",
-        hosting: "Firebase",
-        language: "Kotlin",
-        rationale:
-          "One target, Google Play — Kotlin + Jetpack Compose is the modern native Android baseline.",
-        setupPrompts: kotlinSetupPrompts(input),
-      };
-
-    default:
-      return null;
+  if (caps.has("multiplayer") && isTs) {
+    backend = "SpacetimeDB";
+    database = "SpacetimeDB (relational, in-database logic)";
+    backendRationale =
+      " Multiplayer state is authoritative and synced in realtime by SpacetimeDB — the database runs your app logic and pushes state to every client, so there's no separate server.";
+  } else if (needsBackend) {
+    backend = "Supabase";
+    database = caps.has("database") || caps.has("auth") || caps.has("multiplayer")
+      ? "PostgreSQL (Supabase)"
+      : "PostgreSQL (Supabase, minimal)";
+    if (caps.has("multiplayer")) {
+      // Multiplayer requested but on a non-TS frontend (Flutter/native) with no SpacetimeDB SDK.
+      backendRationale =
+        " Multiplayer runs on Supabase Realtime — SpacetimeDB has no Dart/Swift/Kotlin client SDK, so it isn't a fit for this frontend.";
+    }
+  } else {
+    backend = "None (client-only)";
+    database = "None (local device storage)";
   }
+
+  const libraries: string[] = [];
+  if (caps.has("payments")) libraries.push("Razorpay (payments & subscriptions)");
+  if (caps.has("ai")) libraries.push(isTs ? "Vercel AI SDK" : "Provider AI SDK");
+  if (caps.has("graphics")) libraries.push(graphicsLib(frontend));
+  if (caps.has("push")) libraries.push(pushLib(frontend));
+  if (caps.has("storage") && backend !== "Supabase" && backend !== "SpacetimeDB") {
+    libraries.push("Supabase Storage");
+  }
+
+  return {
+    platform: surfaceLabel(input.surfaces),
+    frontend,
+    backend,
+    database,
+    hosting,
+    language,
+    libraries,
+    rationale: rationale + backendRationale,
+  };
 }
 
-/** Convenience: the 5 stack slots the summary card renders. */
-export function stackSlots(stack: CompiledStack) {
+/** Human label for the chosen surface set, in a stable order. */
+export function surfaceLabel(surfaces: Surface[]): string {
+  const order: Surface[] = ["web", "ios", "android", "desktop"];
+  const names: Record<Surface, string> = { web: "Web", ios: "iOS", android: "Android", desktop: "Desktop" };
+  const picked = order.filter((s) => surfaces.includes(s));
+  return picked.length ? picked.map((s) => names[s]).join(" + ") : "—";
+}
+
+/** The stack slots the summary renders. */
+export function stackSlots(stack: CompiledStack): StackSlot[] {
   return [
-    { label: "Platform", value: stack.platform },
+    { label: "Surfaces", value: stack.platform },
     { label: "Frontend", value: stack.frontend },
+    { label: "Language", value: stack.language },
     { label: "Backend", value: stack.backend },
     { label: "Database", value: stack.database },
     { label: "Hosting", value: stack.hosting },

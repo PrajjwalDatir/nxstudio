@@ -6,87 +6,39 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { getStoredValue, setStoredValue } from "./storage";
+import { createClient } from "@/lib/supabase/client";
 import { CustomStage, IdeaData, TechStackInput, WorkspaceData } from "./types";
+import {
+  GitHubConnection,
+  Project,
+  hydrateData,
+  newProject,
+  newWorkspaceData,
+  projectToRow,
+  serializeProject,
+} from "./projects";
 
-/* ------------------------------------------------------------------ */
-/* Model                                                              */
-/* ------------------------------------------------------------------ */
-
-export interface GitHubConnection {
-  /** "owner/name" of the connected repo, or null if not yet chosen. */
-  repo: string | null;
-  branch: string;
-}
-
-export interface Project {
-  id: string;
-  createdAt: string;
-  data: WorkspaceData;
-  github: GitHubConnection;
-  /** Optional per-phase due dates (ISO). */
-  dueDates: Record<string, string>;
-}
+// Re-export the model types so existing importers keep working.
+export type { GitHubConnection, Project } from "./projects";
 
 interface Store {
   projects: Project[];
   activeId: string;
 }
 
-function newWorkspaceData(name: string): WorkspaceData {
-  return {
-    productName: name,
-    idea: { problem: "", targetUsers: "", currentSolutions: "", differentiation: "" },
-    brand: {
-      vibe: "Cyber-Physical, Clean, Architectural",
-      primaryColor: "Lilac-500 (#A855F7)",
-      radius: "0.5rem (rounded-lg)",
-      font: "Geist Sans / Geist Mono",
-    },
-    tech: {
-      target: "",
-      strategy: "",
-      needsAuth: false,
-      needsDatabase: false,
-      needsRealtime: false,
-      richGraphics: false,
-    },
-    checklist: {},
-    customStages: [],
-  };
-}
-
-function newProject(name: string): Project {
-  return {
-    id: `p_${Math.random().toString(36).slice(2, 10)}`,
-    createdAt: new Date().toISOString(),
-    data: newWorkspaceData(name),
-    github: { repo: null, branch: "main" },
-    dueDates: {},
-  };
-}
-
-function defaultStore(): Store {
+function initStore(initial: Project[]): Store {
+  if (initial.length > 0) return { projects: initial, activeId: initial[0].id };
+  // Brand-new user: start with one project in memory; the reconciler inserts it.
   const p = newProject("Product 1");
   return { projects: [p], activeId: p.id };
 }
 
-/** Merge a possibly-partial stored WorkspaceData onto fresh defaults. */
-function hydrateData(stored: Partial<WorkspaceData> | undefined, name: string): WorkspaceData {
-  const base = newWorkspaceData(name);
-  if (!stored) return base;
-  return {
-    ...base,
-    ...stored,
-    idea: { ...base.idea, ...stored.idea },
-    brand: { ...base.brand, ...stored.brand },
-    tech: { ...base.tech, ...stored.tech },
-    checklist: stored.checklist ?? {},
-    customStages: stored.customStages ?? [],
-  };
-}
+/** How long we wait after the last edit before writing to Supabase. */
+const SAVE_DEBOUNCE_MS = 700;
 
 /* ------------------------------------------------------------------ */
 /* Context                                                            */
@@ -125,8 +77,8 @@ interface WorkspaceContextType {
   github: GitHubConnection;
   setRepo: (repo: string | null, branch?: string) => void;
 
-  // Due dates
-  setDueDate: (phaseId: string, iso: string) => void;
+  // Due dates — value is a yyyy-mm-dd string (date-only), "" clears it.
+  setDueDate: (phaseId: string, date: string) => void;
 
   resetActive: () => void;
 }
@@ -142,49 +94,132 @@ export function useWorkspace() {
 // Alias for clarity at call sites that manage projects.
 export const useProjects = useWorkspace;
 
-export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const [store, setStore] = useState<Store>(defaultStore);
+export function WorkspaceProvider({
+  children,
+  initialProjects,
+  userId,
+}: {
+  children: React.ReactNode;
+  /** Projects loaded on the server (source of truth on first paint). */
+  initialProjects: Project[];
+  userId: string;
+}) {
+  const [store, setStore] = useState<Store>(() => initStore(initialProjects));
   const [isHydrated, setIsHydrated] = useState(false);
 
+  // --- persistence bookkeeping ---
+  const storeRef = useRef(store);
   useEffect(() => {
-    const stored = getStoredValue<Store | null>("projects", null);
-    if (stored && Array.isArray(stored.projects) && stored.projects.length > 0) {
-      // Rehydrate each project's data onto current defaults.
-      const projects = stored.projects.map((p) => ({
-        ...newProject(p.data?.productName || "Product"),
-        ...p,
-        data: hydrateData(p.data, p.data?.productName || "Product"),
-        github: { repo: p.github?.repo ?? null, branch: p.github?.branch ?? "main" },
-        dueDates: p.dueDates ?? {},
-      }));
-      const activeId = projects.find((p) => p.id === stored.activeId)?.id ?? projects[0].id;
-      setStore({ projects, activeId });
-    } else {
-      // Migrate a legacy single "workspace" blob if present.
-      const legacy = getStoredValue<WorkspaceData | null>("workspace", null);
-      if (legacy && legacy.productName !== undefined) {
-        const p = newProject(legacy.productName || "Product 1");
-        p.data = hydrateData(legacy, legacy.productName || "Product 1");
-        setStore({ projects: [p], activeId: p.id });
+    storeRef.current = store;
+  }, [store]);
+
+  // What Supabase already holds, keyed by id → serialized snapshot. Seeded from
+  // the server data so we only write projects that actually changed.
+  const savedRef = useRef<Map<string, string>>(new Map());
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Reconcile in-memory projects with Supabase: upsert changed, delete removed. */
+  const flush = useCallback(async () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const supabase = createClient();
+    const projects = storeRef.current.projects;
+    const currentIds = new Set(projects.map((p) => p.id));
+
+    const changed = projects.filter((p) => savedRef.current.get(p.id) !== serializeProject(p));
+    const removed = [...savedRef.current.keys()].filter((id) => !currentIds.has(id));
+
+    try {
+      if (changed.length > 0) {
+        const { error } = await supabase
+          .from("projects")
+          .upsert(changed.map((p) => projectToRow(p, userId)));
+        if (!error) changed.forEach((p) => savedRef.current.set(p.id, serializeProject(p)));
+      }
+      if (removed.length > 0) {
+        const { error } = await supabase.from("projects").delete().in("id", removed);
+        if (!error) removed.forEach((id) => savedRef.current.delete(id));
+      }
+    } catch {
+      // Leave savedRef untouched so the next edit retries these writes.
+    }
+  }, [userId]);
+
+  // Hydrate device-local bits (active project, legacy migration) once on mount.
+  useEffect(() => {
+    // Seed savedRef with what the server already persisted.
+    const saved = new Map<string, string>();
+    for (const p of initialProjects) saved.set(p.id, serializeProject(p));
+    savedRef.current = saved;
+
+    // One-time migration: if the account has no projects yet but this browser
+    // has a legacy localStorage workspace, import it (the reconciler uploads it).
+    if (initialProjects.length === 0) {
+      const legacy = getStoredValue<{ projects?: Project[] } | null>("projects", null);
+      if (legacy?.projects?.length) {
+        const migrated = legacy.projects.map((p) => ({
+          ...newProject(p.data?.productName || "Product"),
+          ...p,
+          data: hydrateData(p.data, p.data?.productName || "Product"),
+          github: { repo: p.github?.repo ?? null, branch: p.github?.branch ?? "main" },
+          dueDates: p.dueDates ?? {},
+        }));
+        setStore({ projects: migrated, activeId: migrated[0].id });
       }
     }
+
+    // Restore the active-project preference (kept per-device, not in Supabase).
+    const storedActive = getStoredValue<string | null>("activeProject", null);
+    if (storedActive) {
+      setStore((s) =>
+        s.projects.some((p) => p.id === storedActive) ? { ...s, activeId: storedActive } : s
+      );
+    }
+
     setIsHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Debounced autosave: collapse bursts of edits into a single write per project.
   useEffect(() => {
-    if (isHydrated) setStoredValue("projects", store);
-  }, [store, isHydrated]);
+    if (!isHydrated) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      void flush();
+    }, SAVE_DEBOUNCE_MS);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [store, isHydrated, flush]);
+
+  // Best-effort flush when the tab is hidden or closed so nothing in the debounce
+  // window is lost.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") void flush();
+    };
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onHide);
+    };
+  }, [flush]);
+
+  // Persist the active-project preference locally (cheap, no round-trip).
+  useEffect(() => {
+    if (isHydrated) setStoredValue("activeProject", store.activeId);
+  }, [store.activeId, isHydrated]);
 
   /* --- helpers to mutate the active project's data --- */
-  const patchActive = useCallback(
-    (fn: (p: Project) => Project) => {
-      setStore((s) => ({
-        ...s,
-        projects: s.projects.map((p) => (p.id === s.activeId ? fn(p) : p)),
-      }));
-    },
-    []
-  );
+  const patchActive = useCallback((fn: (p: Project) => Project) => {
+    setStore((s) => ({
+      ...s,
+      projects: s.projects.map((p) => (p.id === s.activeId ? fn(p) : p)),
+    }));
+  }, []);
 
   const patchData = useCallback(
     (fn: (d: WorkspaceData) => WorkspaceData) => {
@@ -221,14 +256,20 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const deleteProject = useCallback((id: string) => {
     setStore((s) => {
       const remaining = s.projects.filter((p) => p.id !== id);
-      if (remaining.length === 0) return defaultStore();
+      if (remaining.length === 0) {
+        const p = newProject("Product 1");
+        return { projects: [p], activeId: p.id };
+      }
       const activeId = s.activeId === id ? remaining[0].id : s.activeId;
       return { projects: remaining, activeId };
     });
   }, []);
 
   /* --- active data updaters (stable API) --- */
-  const setProductName = useCallback((name: string) => patchData((d) => ({ ...d, productName: name })), [patchData]);
+  const setProductName = useCallback(
+    (name: string) => patchData((d) => ({ ...d, productName: name })),
+    [patchData]
+  );
 
   const updateIdea = useCallback(
     <K extends keyof IdeaData>(field: K, value: IdeaData[K]) =>
@@ -326,13 +367,20 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setDueDate = useCallback(
-    (phaseId: string, iso: string) =>
-      patchActive((p) => ({ ...p, dueDates: { ...p.dueDates, [phaseId]: iso } })),
+    // `date` is a yyyy-mm-dd string (date-only, no timezone), or "" to clear.
+    (phaseId: string, date: string) =>
+      patchActive((p) => ({ ...p, dueDates: { ...p.dueDates, [phaseId]: date } })),
     [patchActive]
   );
 
   const resetActive = useCallback(
-    () => patchActive((p) => ({ ...p, data: newWorkspaceData(p.data.productName), github: { repo: null, branch: "main" }, dueDates: {} })),
+    () =>
+      patchActive((p) => ({
+        ...p,
+        data: newWorkspaceData(p.data.productName),
+        github: { repo: null, branch: "main" },
+        dueDates: {},
+      })),
     [patchActive]
   );
 

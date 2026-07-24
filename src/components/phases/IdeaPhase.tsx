@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSpeechInput } from "@/lib/use-speech-input";
-import { IdeaData } from "@/lib/types";
+import { BrandDNA, IdeaData } from "@/lib/types";
 import { buildIdeaPrompt } from "@/lib/prompts";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
@@ -153,15 +153,26 @@ function QuestionCard({
   );
 }
 
+const BRAND_FIELDS: {
+  field: keyof BrandDNA;
+  label: string;
+  placeholder: string;
+}[] = [
+  { field: "vibe", label: "Vibe", placeholder: "e.g. minimal, playful, editorial" },
+  { field: "primaryColor", label: "Primary color", placeholder: "e.g. #6366F1 or indigo" },
+  { field: "radius", label: "Border radius", placeholder: "e.g. 0.75rem" },
+  { field: "font", label: "Font", placeholder: "e.g. Inter" },
+];
+
 export function IdeaPhase() {
-  const { data, updateIdea } = useWorkspace();
+  const { data, updateIdea, updateBrand } = useWorkspace();
 
   const answered = QUESTIONS.filter((q) => data.idea[q.field].trim().length > 0).length;
   const percent = Math.round((answered / QUESTIONS.length) * 100);
 
   return (
     <>
-      <PhaseHeader title="Ideation" status="in-progress" phaseId="idea" showTeam />
+      <PhaseHeader title="Brief" status="in-progress" phaseId="idea" showTeam />
 
       {/* Progress */}
       <div className="mb-6">
@@ -190,6 +201,27 @@ export function IdeaPhase() {
             onChange={(value) => updateIdea(q.field, value)}
           />
         ))}
+      </div>
+
+      {/* Brand DNA — locked into every generated prompt to prevent style drift */}
+      <div className="mt-4 rounded-xl glass p-5">
+        <label className="font-medium">Brand DNA</label>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Locked into the build prompt so generated code stays visually consistent.
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {BRAND_FIELDS.map((b) => (
+            <label key={b.field} className="block">
+              <span className="text-sm text-muted-foreground">{b.label}</span>
+              <input
+                value={data.brand[b.field]}
+                onChange={(e) => updateBrand(b.field, e.target.value)}
+                placeholder={b.placeholder}
+                className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+              />
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Prompt output */}

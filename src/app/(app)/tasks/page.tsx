@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSync } from "@/lib/sync-store";
-import { PHASES, getPhase, getPhaseProgress } from "@/lib/phases";
+import { PHASES, getPhaseProgress } from "@/lib/phases";
 import { CheckIcon, GithubIcon, ExternalLinkIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 

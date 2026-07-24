@@ -14,6 +14,7 @@ import {
   SettingsIcon,
   PlusIcon,
   PanelLeftIcon,
+  LogOutIcon,
   NxLogo,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-export function Sidebar() {
+export function Sidebar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const { createProject } = useProjects();
@@ -170,6 +171,39 @@ export function Sidebar() {
             </form>
           </PopoverContent>
         </Popover>
+      </div>
+
+      {/* Account + sign out */}
+      <div className={cn("border-t border-sidebar-border", collapsed ? "p-2" : "p-3")}>
+        <form action="/auth/signout" method="post">
+          {collapsed ? (
+            <button
+              type="submit"
+              title={`Sign out (${userEmail})`}
+              aria-label="Sign out"
+              className="flex h-9 w-full items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            >
+              <LogOutIcon className="h-4 w-4" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold uppercase text-sidebar-accent-foreground">
+                {userEmail.charAt(0) || "?"}
+              </div>
+              <span className="min-w-0 flex-1 truncate text-xs text-sidebar-foreground/70" title={userEmail}>
+                {userEmail || "Signed in"}
+              </span>
+              <button
+                type="submit"
+                title="Sign out"
+                aria-label="Sign out"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              >
+                <LogOutIcon className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </form>
       </div>
     </aside>
   );

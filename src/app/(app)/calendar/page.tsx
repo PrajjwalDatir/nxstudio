@@ -14,6 +14,18 @@ const MONTHS = [
 ];
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+// Format a yyyy-mm-dd date-only value without timezone drift. Parsing via
+// `new Date(iso)` treats the string as UTC midnight, which renders as the
+// previous day in negative-offset timezones — so build from local parts.
+function formatDay(ymd: string): string {
+  const [y, m, d] = ymd.slice(0, 10).split("-").map(Number);
+  if (!y || !m || !d) return "";
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function CalendarPage() {
   const { activeProject, setDueDate } = useWorkspace();
   const dueDates = activeProject.dueDates;
@@ -125,9 +137,7 @@ export default function CalendarPage() {
                 <DatePicker
                   aria-label={`${p.label} due date`}
                   value={(dueDates[p.id] ?? "").slice(0, 10)}
-                  onChange={(val) =>
-                    setDueDate(p.id, val ? new Date(val).toISOString() : "")
-                  }
+                  onChange={(val) => setDueDate(p.id, val || "")}
                 />
               </div>
             ))}
@@ -143,10 +153,7 @@ export default function CalendarPage() {
                   <div key={p.id} className="flex items-center justify-between text-sm">
                     <span>{p.label}</span>
                     <span className="text-muted-foreground">
-                      {new Date(dueDates[p.id]).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {formatDay(dueDates[p.id])}
                     </span>
                   </div>
                 ))}

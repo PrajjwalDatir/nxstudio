@@ -4,7 +4,7 @@
  */
 
 // Server-only module: imported exclusively by /api/github/* route handlers.
-import { NXHUMAN_ROOT, parseNxHuman, ParsedNxHuman } from "./nxhuman-compiler";
+import { NX_ROOT, parseNx, ParsedNx } from "./nx-compiler";
 
 const API = "https://api.github.com";
 
@@ -33,7 +33,7 @@ export interface GhIssue {
 export interface RepoSync {
   repo: string;
   branch: string;
-  context: ParsedNxHuman;
+  context: ParsedNx;
   commits: GhCommit[];
   issues: GhIssue[];
   contributors: { login: string; avatar: string; commits: number }[];
@@ -58,7 +58,7 @@ export async function getUser(token: string): Promise<GhUser | null> {
   return (await res.json()) as GhUser;
 }
 
-/** Read the .nxhuman/ tree + recent commits + open issues for a repo. */
+/** Read the .nx/ tree + recent commits + open issues for a repo. */
 export async function syncRepo(
   token: string,
   repo: string,
@@ -67,7 +67,7 @@ export async function syncRepo(
   const [owner, name] = repo.split("/");
   if (!owner || !name) return { error: "Invalid repo. Use owner/name.", status: 400 };
 
-  // 1. Recursive tree to discover which .nxhuman files exist.
+  // 1. Recursive tree to discover which .nx files exist.
   const treeRes = await gh(token, `/repos/${owner}/${name}/git/trees/${branch}?recursive=1`);
   if (treeRes.status === 404) return { error: "Repo or branch not found.", status: 404 };
   if (treeRes.status === 401) return { error: "Invalid or expired token.", status: 401 };
@@ -75,13 +75,13 @@ export async function syncRepo(
 
   const tree = (await treeRes.json()) as { tree?: { path: string; type: string }[] };
   const nxPaths = (tree.tree ?? [])
-    .filter((n) => n.type === "blob" && n.path.startsWith(NXHUMAN_ROOT))
+    .filter((n) => n.type === "blob" && n.path.startsWith(NX_ROOT))
     .map((n) => n.path);
 
   // 2. Fetch memory.json content (the only file we parse) if present.
   const files: Record<string, string> = {};
   for (const p of nxPaths) files[p] = ""; // mark presence
-  const memPath = `${NXHUMAN_ROOT}/memory.json`;
+  const memPath = `${NX_ROOT}/memory.json`;
   if (nxPaths.includes(memPath)) {
     const c = await gh(token, `/repos/${owner}/${name}/contents/${memPath}?ref=${branch}`);
     if (c.ok) {
@@ -91,7 +91,7 @@ export async function syncRepo(
       }
     }
   }
-  const context = parseNxHuman(files);
+  const context = parseNx(files);
 
   // 3. Recent commits.
   let commits: GhCommit[] = [];

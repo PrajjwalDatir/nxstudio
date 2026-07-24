@@ -5,11 +5,8 @@ import Link from "next/link";
 import { getPhase } from "@/lib/phases";
 import { useWorkspace } from "@/lib/workspace-store";
 import { IdeaPhase } from "@/components/phases/IdeaPhase";
-import { ValidationPhase } from "@/components/phases/ValidationPhase";
-import { PrototypePhase } from "@/components/phases/PrototypePhase";
 import { TechStackPhase } from "@/components/phases/TechStackPhase";
 import { BuildPhase } from "@/components/phases/BuildPhase";
-import { LaunchPhase } from "@/components/phases/LaunchPhase";
 import { CustomStagePhase } from "@/components/phases/CustomStagePhase";
 
 export default function PhasePage() {
@@ -32,11 +29,8 @@ export default function PhasePage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
       {params.phaseId === "idea" && <IdeaPhase />}
-      {params.phaseId === "validation" && <ValidationPhase />}
-      {params.phaseId === "prototype" && <PrototypePhase />}
       {params.phaseId === "tech-stack" && <TechStackPhase />}
       {params.phaseId === "build" && <BuildPhase />}
-      {params.phaseId === "launch" && <LaunchPhase />}
       {custom && <CustomStagePhase stageId={custom.id} />}
     </div>
   );

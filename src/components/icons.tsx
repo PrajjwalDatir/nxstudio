@@ -10,6 +10,8 @@ export {
   Save as SaveIcon,
   Trash2 as TrashIcon,
   Plus as PlusIcon,
+  LogOut as LogOutIcon,
+  Mail as MailIcon,
   
   // Navigation & UI
   ChevronDown as ChevronDownIcon,
