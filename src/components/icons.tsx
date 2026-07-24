@@ -62,6 +62,8 @@ export {
   MoreHorizontal as MoreIcon,
   Circle as CircleIcon,
   PlayCircle as PlayIcon,
+  PanelLeft as PanelLeftIcon,
+  RotateCcw as ResetIcon,
 
   // Phase & workspace
   Workflow as WorkflowIcon,
