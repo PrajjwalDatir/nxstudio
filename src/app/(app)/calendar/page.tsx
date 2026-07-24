@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
 import { PHASES } from "@/lib/phases";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
+import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 
 const MONTHS = [
@@ -60,9 +61,10 @@ export default function CalendarPage() {
       <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
       <p className="mt-1 text-muted-foreground">Phase milestones for {activeProject.data.productName}.</p>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="relative mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="canvas-glow" aria-hidden />
         {/* Month grid */}
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="relative z-10 rounded-xl glass p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold">
               {MONTHS[cursor.m]} {cursor.y}
@@ -111,7 +113,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Agenda / set due dates */}
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="relative z-10 rounded-xl glass p-5">
           <h2 className="font-semibold">Milestones</h2>
           <p className="mt-1 text-xs text-muted-foreground">Set a target date per phase.</p>
           <div className="mt-4 space-y-3">
@@ -120,13 +122,12 @@ export default function CalendarPage() {
                 <Link href={`/phase/${p.id}`} className="text-sm hover:text-primary">
                   {p.label}
                 </Link>
-                <input
-                  type="date"
+                <DatePicker
+                  aria-label={`${p.label} due date`}
                   value={(dueDates[p.id] ?? "").slice(0, 10)}
-                  onChange={(e) =>
-                    setDueDate(p.id, e.target.value ? new Date(e.target.value).toISOString() : "")
+                  onChange={(val) =>
+                    setDueDate(p.id, val ? new Date(val).toISOString() : "")
                   }
-                  className="rounded-lg border border-border bg-secondary/40 px-2 py-1 text-xs outline-none focus:border-ring"
                 />
               </div>
             ))}
