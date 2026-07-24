@@ -1,11 +1,14 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
+import { useSpeechInput } from "@/lib/use-speech-input";
 import { IdeaData } from "@/lib/types";
 import { buildIdeaPrompt } from "@/lib/prompts";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { PaperclipIcon, MicIcon, WandIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 const QUESTIONS: {
   field: keyof IdeaData;
@@ -34,6 +37,122 @@ const QUESTIONS: {
   },
 ];
 
+/** True for files whose text we can inline into the answer. */
+function isTextLike(file: File): boolean {
+  return (
+    file.type.startsWith("text/") ||
+    /\.(txt|md|markdown|csv|json|ya?ml|log)$/i.test(file.name)
+  );
+}
+
+function append(existing: string, addition: string): string {
+  const a = addition.trim();
+  if (!a) return existing;
+  return existing.trim() ? `${existing.trim()}\n\n${a}` : a;
+}
+
+function QuestionCard({
+  title,
+  placeholder,
+  value,
+  onChange,
+}: {
+  title: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const { supported: voiceSupported, listening, toggle } = useSpeechInput((text) =>
+    onChange(append(value, text))
+  );
+
+  const onFiles = async (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    let next = value;
+    const skipped: string[] = [];
+    for (const file of Array.from(list)) {
+      if (isTextLike(file)) {
+        try {
+          const text = await file.text();
+          next = append(next, text);
+        } catch {
+          skipped.push(file.name);
+        }
+      } else {
+        skipped.push(file.name);
+      }
+    }
+    onChange(next);
+    setNote(
+      skipped.length
+        ? `Couldn't inline ${skipped.join(", ")} — only text files can be added to the answer.`
+        : null
+    );
+  };
+
+  return (
+    <div className="rounded-xl glass p-5">
+      <label className="font-medium">{title}</label>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={3}
+        className="mt-3 w-full resize-none rounded-lg border border-border bg-secondary/30 p-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+      />
+      <div className="mt-3 flex items-center gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept=".txt,.md,.markdown,.csv,.json,.yaml,.yml,.log,text/*"
+          className="hidden"
+          onChange={(e) => {
+            onFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <PaperclipIcon className="h-3.5 w-3.5" />
+          Attach files
+        </button>
+
+        {voiceSupported && (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-pressed={listening}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors",
+              listening
+                ? "bg-primary/15 text-primary"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MicIcon className="h-3.5 w-3.5" />
+            {listening ? (
+              <span className="flex items-center gap-1.5">
+                Listening
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              </span>
+            ) : (
+              "Voice input"
+            )}
+          </button>
+        )}
+      </div>
+
+      {note && <p className="mt-2 text-xs text-amber-400/80">{note}</p>}
+    </div>
+  );
+}
+
 export function IdeaPhase() {
   const { data, updateIdea } = useWorkspace();
 
@@ -42,7 +161,7 @@ export function IdeaPhase() {
 
   return (
     <>
-      <PhaseHeader title="Ideation" status="in-progress" meta="Due Oct 24" showTeam />
+      <PhaseHeader title="Ideation" status="in-progress" phaseId="idea" showTeam />
 
       {/* Progress */}
       <div className="mb-6">
@@ -63,31 +182,18 @@ export function IdeaPhase() {
       {/* Questions */}
       <div className="space-y-4">
         {QUESTIONS.map((q) => (
-          <div key={q.field} className="rounded-xl border border-border bg-card p-5">
-            <label className="font-medium">{q.title}</label>
-            <textarea
-              value={data.idea[q.field]}
-              onChange={(e) => updateIdea(q.field, e.target.value)}
-              placeholder={q.placeholder}
-              rows={3}
-              className="mt-3 w-full resize-none rounded-lg border border-border bg-secondary/30 p-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
-            />
-            <div className="mt-3 flex gap-2">
-              <button className="inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
-                <PaperclipIcon className="h-3.5 w-3.5" />
-                Attach files
-              </button>
-              <button className="inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
-                <MicIcon className="h-3.5 w-3.5" />
-                Voice input
-              </button>
-            </div>
-          </div>
+          <QuestionCard
+            key={q.field}
+            title={q.title}
+            placeholder={q.placeholder}
+            value={data.idea[q.field]}
+            onChange={(value) => updateIdea(q.field, value)}
+          />
         ))}
       </div>
 
       {/* Prompt output */}
-      <div className="mt-6 flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+      <div className="mt-6 flex items-center gap-4 rounded-xl glass p-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
           <WandIcon className="h-4 w-4" />
         </div>
