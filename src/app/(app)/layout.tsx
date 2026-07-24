@@ -1,6 +1,6 @@
-import { Sidebar } from "@/components/shell/Sidebar";
-import { Topbar } from "@/components/shell/Topbar";
 import { CommandProvider } from "@/components/shell/CommandPalette";
+import { SidebarProvider } from "@/components/shell/sidebar-context";
+import { AppShell } from "@/components/shell/AppShell";
 
 export default function AppLayout({
   children,
@@ -9,13 +9,9 @@ export default function AppLayout({
 }) {
   return (
     <CommandProvider>
-      <div className="flex h-screen overflow-hidden bg-background text-foreground">
-        <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Topbar />
-          <main className="flex-1 overflow-y-auto">{children}</main>
-        </div>
-      </div>
+      <SidebarProvider>
+        <AppShell>{children}</AppShell>
+      </SidebarProvider>
     </CommandProvider>
   );
 }
