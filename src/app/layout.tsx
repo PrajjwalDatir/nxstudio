@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "nxstudio | Product Studio",
   description:
     "Founder-mode product studio — move an idea through validation, prototype, tech stack, build, and launch.",
+  // nxstudio already ships its own dark theme, so tell Dark Reader to leave the
+  // page alone. Without this the extension injects data-darkreader-* attributes
+  // on <html> and every icon <svg> after SSR, tripping React hydration.
+  other: { "darkreader-lock": "true" },
 };
 
 export default function RootLayout({
@@ -26,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <WorkspaceProvider>
           <SyncProvider>{children}</SyncProvider>
