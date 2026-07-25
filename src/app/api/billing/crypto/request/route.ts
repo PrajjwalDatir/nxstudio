@@ -1,0 +1,60 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createPaymentRequest } from "@/lib/solana/client";
+import { solana } from "@/lib/solana/config";
+
+// @solana/web3.js needs the Node runtime (crypto/Buffer). Do not switch to edge.
+export const runtime = "nodejs";
+
+/**
+ * Start (or resume) a crypto payment. Generates a Solana Pay reference bound to
+ * this user's subscription row and returns the transfer URL for the QR / deep
+ * link. Idempotent: if the row already holds a pending reference, we rebuild the
+ * URL for that same reference so a returning user sees the same request and
+ * "I've paid" keeps working.
+ */
+export async function POST() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+
+  try {
+    const admin = createAdminClient();
+
+    const { data: existing } = await admin
+      .from("subscriptions")
+      .select("pending_reference")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    // Resume an in-flight reference, or mint a fresh one.
+    const payment = createPaymentRequest(existing?.pending_reference ?? undefined);
+
+    // Persist the reference (+ what we're charging) before returning it.
+    const { error } = await admin.from("subscriptions").upsert(
+      {
+        user_id: user.id,
+        provider: "crypto",
+        pending_reference: payment.reference,
+        pending_amount: payment.amount,
+        pending_mint: solana.usdcMint(),
+      },
+      { onConflict: "user_id" }
+    );
+    if (error) return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+
+    return NextResponse.json({
+      reference: payment.reference,
+      url: payment.url,
+      amount: payment.amount,
+      wallet: solana.walletAddress(),
+      cycleDays: solana.cycleDays(),
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to start crypto payment.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
