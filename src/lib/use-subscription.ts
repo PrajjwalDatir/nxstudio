@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { AccessState, deriveAccessState, isPremium as premiumOf } from "@/lib/subscription-status";
 
 export interface Subscription {
+  provider: string | null;
   status: string;
   current_end: string | null;
+  current_period_end: string | null;
   plan_id: string | null;
 }
 
@@ -13,9 +16,6 @@ interface Loaded {
   subscription: Subscription | null;
   email: string;
 }
-
-// Statuses where the user has paid access.
-const ACTIVE_STATUSES = new Set(["active", "authenticated", "completed"]);
 
 /** Fetch the current user's subscription. Pure read — never touches state. */
 async function loadSubscription(): Promise<Loaded> {
@@ -27,7 +27,7 @@ async function loadSubscription(): Promise<Loaded> {
 
   const { data } = await supabase
     .from("subscriptions")
-    .select("status, current_end, plan_id")
+    .select("provider, status, current_end, current_period_end, plan_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -35,8 +35,9 @@ async function loadSubscription(): Promise<Loaded> {
 }
 
 /**
- * Reads the signed-in user's subscription row (RLS restricts it to their own).
- * `isActive` is the single flag to gate premium features on.
+ * Reads the signed-in user's subscription (RLS restricts it to their own row) and
+ * derives access with the same pure logic the server uses. `isActive` (active OR
+ * grace) is the single flag to gate premium features on.
  */
 export function useSubscription() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -63,7 +64,8 @@ export function useSubscription() {
     setLoading(false);
   }, []);
 
-  const isActive = subscription ? ACTIVE_STATUSES.has(subscription.status) : false;
+  const state: AccessState = deriveAccessState(subscription);
+  const isActive = premiumOf(state);
 
-  return { subscription, email, isActive, loading, refresh };
+  return { subscription, email, state, isActive, loading, refresh };
 }

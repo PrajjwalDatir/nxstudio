@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
-import { buildMasterPrompt, buildDepthPrompts, DepthPrompt } from "@/lib/prompts";
+import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
+import { CompiledPrompt } from "@/lib/prompts";
 import { compileStack } from "@/lib/platform-engine";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
+import { PremiumDialog } from "@/components/billing/PremiumDialog";
 import {
   BadgeCheckIcon,
   LockIcon,
@@ -17,6 +19,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   LayersIcon,
+  LoaderIcon,
 } from "@/components/icons";
 
 const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
@@ -30,11 +33,13 @@ const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
 export function BuildPhase() {
   const { data } = useWorkspace();
   const stack = compileStack(data.tech);
-  const masterPrompt = useMemo(() => buildMasterPrompt(data), [data]);
-  const depthPrompts = useMemo(() => buildDepthPrompts(data), [data]);
+  const { prompts, locked, loading, refresh } = useCompiledPrompts();
 
   const [showMaster, setShowMaster] = useState(false);
   const [openDepth, setOpenDepth] = useState<string | null>(null);
+  const [payOpen, setPayOpen] = useState(false);
+
+  const openPaywall = () => setPayOpen(true);
 
   if (!stack) {
     return (
@@ -54,9 +59,14 @@ export function BuildPhase() {
     );
   }
 
+  const masterPrompt = prompts?.master.prompt ?? "";
+  const depthPrompts: CompiledPrompt[] = prompts?.depth ?? [];
+
   return (
     <>
       <PhaseHeader title="Build" status="ready" phaseId="build" />
+
+      <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => { setPayOpen(false); refresh(); }} />
 
       {/* The one build prompt — the hero */}
       <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6">
@@ -74,20 +84,36 @@ export function BuildPhase() {
               </p>
             </div>
           </div>
-          <CopyButton value={masterPrompt} label="Copy prompt" variant="solid" className="shrink-0" />
+          {locked ? (
+            <CopyButton value="" label="Unlock" variant="solid" className="shrink-0" locked onLockedClick={openPaywall} />
+          ) : (
+            <CopyButton value={masterPrompt} label="Copy prompt" variant="solid" className="shrink-0" />
+          )}
         </div>
 
-        <button
-          onClick={() => setShowMaster((v) => !v)}
-          className="mt-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-          {showMaster ? "Hide" : "Preview"} the full prompt
-        </button>
-        {showMaster && (
-          <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-            {masterPrompt}
-          </pre>
+        {locked ? (
+          <button
+            onClick={openPaywall}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-background/60 p-6 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <LockIcon className="h-4 w-4" />
+            Premium unlocks your full build prompt — tap to subscribe with crypto.
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => setShowMaster((v) => !v)}
+              className="mt-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+              {showMaster ? "Hide" : "Preview"} the full prompt
+            </button>
+            {showMaster && (
+              <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                {loading && !masterPrompt ? "Compiling…" : masterPrompt}
+              </pre>
+            )}
+          </>
         )}
       </div>
 
@@ -106,7 +132,7 @@ export function BuildPhase() {
         </p>
 
         <div className="mt-4 space-y-3">
-          {depthPrompts.map((p: DepthPrompt) => {
+          {(locked ? DEPTH_PLACEHOLDERS : depthPrompts).map((p) => {
             const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
             const isOpen = openDepth === p.id;
             return (
@@ -121,26 +147,48 @@ export function BuildPhase() {
                       <div className="text-sm text-muted-foreground">{p.description}</div>
                     </div>
                   </div>
-                  <CopyButton value={p.prompt} label="Copy" />
+                  {locked ? (
+                    <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
+                  ) : (
+                    <CopyButton value={p.prompt} label="Copy" />
+                  )}
                 </div>
 
-                <button
-                  onClick={() => setOpenDepth(isOpen ? null : p.id)}
-                  className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-                  {isOpen ? "Hide" : "Preview"}
-                </button>
-                {isOpen && (
-                  <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                    {p.prompt}
-                  </pre>
+                {!locked && (
+                  <>
+                    <button
+                      onClick={() => setOpenDepth(isOpen ? null : p.id)}
+                      className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                      {isOpen ? "Hide" : "Preview"}
+                    </button>
+                    {isOpen && (
+                      <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                        {p.prompt}
+                      </pre>
+                    )}
+                  </>
                 )}
               </div>
             );
           })}
+          {loading && !prompts && !locked && (
+            <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
+              <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
+            </div>
+          )}
         </div>
       </div>
     </>
   );
 }
+
+/** Titles/descriptions shown to free users (no prompt bodies — those stay server-side). */
+const DEPTH_PLACEHOLDERS: CompiledPrompt[] = [
+  { id: "qa", title: "QA & test coverage", description: "Find broken states and cover the core flows with tests.", prompt: "" },
+  { id: "security", title: "Security review", description: "Audit auth, input handling, secrets, and dependencies.", prompt: "" },
+  { id: "performance", title: "Performance pass", description: "Profile and fix slow renders, bundles, and queries.", prompt: "" },
+  { id: "accessibility", title: "Accessibility audit", description: "Get the UI to WCAG AA.", prompt: "" },
+  { id: "deploy", title: "Ship to production", description: "Set up CI/CD and deploy to your host.", prompt: "" },
+];
