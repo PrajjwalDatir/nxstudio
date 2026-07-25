@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CopyIcon, CheckIcon } from "@/components/icons";
+import { CopyIcon, CheckIcon, LockIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export function CopyButton({
@@ -9,15 +9,24 @@ export function CopyButton({
   label,
   className,
   variant = "ghost",
+  locked = false,
+  onLockedClick,
 }: {
   value: string;
   label?: string;
   className?: string;
   variant?: "ghost" | "solid";
+  /** When true, clicking never copies — it calls `onLockedClick` (e.g. open the paywall). */
+  locked?: boolean;
+  onLockedClick?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
   const copy = useCallback(async () => {
+    if (locked) {
+      onLockedClick?.();
+      return;
+    }
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
@@ -25,7 +34,7 @@ export function CopyButton({
     } catch {
       /* clipboard unavailable */
     }
-  }, [value]);
+  }, [value, locked, onLockedClick]);
 
   return (
     <button
@@ -38,12 +47,14 @@ export function CopyButton({
         className
       )}
     >
-      {copied ? (
+      {locked ? (
+        <LockIcon className="h-4 w-4" />
+      ) : copied ? (
         <CheckIcon className="h-4 w-4 text-emerald-400" />
       ) : (
         <CopyIcon className="h-4 w-4" />
       )}
-      {label && <span>{copied ? "Copied" : label}</span>}
+      {label && <span>{locked ? label : copied ? "Copied" : label}</span>}
     </button>
   );
 }

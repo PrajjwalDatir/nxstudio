@@ -3,10 +3,11 @@
 import { useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSpeechInput } from "@/lib/use-speech-input";
+import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
 import { BrandDNA, IdeaData } from "@/lib/types";
-import { buildIdeaPrompt } from "@/lib/prompts";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
+import { PremiumDialog } from "@/components/billing/PremiumDialog";
 import { PaperclipIcon, MicIcon, WandIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -166,6 +167,8 @@ const BRAND_FIELDS: {
 
 export function IdeaPhase() {
   const { data, updateIdea, updateBrand } = useWorkspace();
+  const { prompts, locked, refresh } = useCompiledPrompts();
+  const [payOpen, setPayOpen] = useState(false);
 
   const answered = QUESTIONS.filter((q) => data.idea[q.field].trim().length > 0).length;
   const percent = Math.round((answered / QUESTIONS.length) * 100);
@@ -173,6 +176,8 @@ export function IdeaPhase() {
   return (
     <>
       <PhaseHeader title="Brief" status="in-progress" phaseId="idea" showTeam />
+
+      <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => { setPayOpen(false); refresh(); }} />
 
       {/* Progress */}
       <div className="mb-6">
@@ -235,7 +240,11 @@ export function IdeaPhase() {
             Riskiest assumptions, who to interview, a sharpened problem statement
           </div>
         </div>
-        <CopyButton value={buildIdeaPrompt(data)} label="Copy" variant="solid" />
+        {locked ? (
+          <CopyButton value="" label="Unlock" variant="solid" locked onLockedClick={() => setPayOpen(true)} />
+        ) : (
+          <CopyButton value={prompts?.idea.prompt ?? ""} label="Copy" variant="solid" />
+        )}
       </div>
     </>
   );
