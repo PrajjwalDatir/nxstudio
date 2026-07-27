@@ -303,3 +303,18 @@
   border-color: #8B5CF6;
   background: var(--accent);
 }
+
+/* Entrance reveal — CSS-driven on purpose. The hero copy must be visible even
+   when JS is slow or fails (heavy three.js chunk on mobile), so the resting
+   state is opacity:1 and the animation is a pure CSS enhancement that runs from
+   parse without waiting on framer-motion. Stagger via inline animation-delay. */
+@keyframes reveal-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal-rise {
+  animation: reveal-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-rise { animation: none; }
+}
