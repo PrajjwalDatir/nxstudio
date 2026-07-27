@@ -11,15 +11,16 @@ export const runtime = "nodejs";
 const SUPPORT_EMAIL = "support@nxstudio.dev";
 
 /**
- * Compiles a project's prompts server-side. The idea prompt and the depth
- * prompts are FREE — they compile and return for any signed-in user. The master
- * build prompt is the paid unlock: for non-premium users its prose is stripped
- * before serialization (never leaves the server) and `locked: true` drives the
- * upsell UI. The derived stack is non-secret and already available client-side.
+ * Compiles a project's prompts server-side. The idea (pressure-test) prompt is
+ * FREE — it compiles and returns for any signed-in user. The master build prompt
+ * and the depth (refine) prompts are the paid unlock: for non-premium users
+ * their prose is stripped before serialization (never leaves the server, titles
+ * and descriptions stay so the UI can preview them) and `locked: true` drives the
+ * upsell. The derived stack is non-secret and already available client-side.
  *
  * The founder's workspace data is sent in the body — it's their own input, and
- * the value we protect is the master TEMPLATE prose, not the data. This avoids
- * any save/refetch race.
+ * the value we protect is the TEMPLATE prose, not the data. This avoids any
+ * save/refetch race.
  */
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -38,10 +39,11 @@ export async function POST(request: Request) {
 
   try {
     const prompts = await compilePromptsForProject(workspace);
-    // Strip the master build prompt prose for non-premium users — it stays
-    // server-side. Idea + depth prose ship to everyone.
+    // Strip the master build prompt and depth prompt prose for non-premium
+    // users — they stay server-side. Only the idea prompt ships to everyone.
     if (!access.isPremium) {
       prompts.master = { ...prompts.master, prompt: "" };
+      prompts.depth = prompts.depth.map((d) => ({ ...d, prompt: "" }));
     }
     return NextResponse.json({ ...prompts, locked: !access.isPremium, support: SUPPORT_EMAIL });
   } catch (e) {

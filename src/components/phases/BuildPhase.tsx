@@ -147,20 +147,28 @@ export function BuildPhase() {
                       <div className="text-sm text-muted-foreground">{p.description}</div>
                     </div>
                   </div>
-                  <CopyButton value={p.prompt} label="Copy" />
+                  {locked ? (
+                    <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
+                  ) : (
+                    <CopyButton value={p.prompt} label="Copy" />
+                  )}
                 </div>
 
-                <button
-                  onClick={() => setOpenDepth(isOpen ? null : p.id)}
-                  className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-                  {isOpen ? "Hide" : "Preview"}
-                </button>
-                {isOpen && (
-                  <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                    {p.prompt}
-                  </pre>
+                {!locked && (
+                  <>
+                    <button
+                      onClick={() => setOpenDepth(isOpen ? null : p.id)}
+                      className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                      {isOpen ? "Hide" : "Preview"}
+                    </button>
+                    {isOpen && (
+                      <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                        {p.prompt}
+                      </pre>
+                    )}
+                  </>
                 )}
               </div>
             );
