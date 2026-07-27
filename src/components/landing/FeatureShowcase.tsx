@@ -9,7 +9,22 @@ import {
   ArrowRightIcon,
   PlusIcon,
   CommandIcon,
+  GlobeIcon,
+  AppleIcon,
+  SmartphoneIcon,
+  MonitorIcon,
+  BoxIcon,
 } from "@/components/icons";
+import { compileStack, SURFACE_OPTIONS } from "@/lib/platform-engine";
+import type { Capability, CompiledStack, Surface } from "@/lib/types";
+
+/** Real (Lucide) icons for each surface — no emoji in the marketing UI. */
+const SURFACE_ICON: Record<Surface, typeof GlobeIcon> = {
+  web: GlobeIcon,
+  ios: AppleIcon,
+  android: SmartphoneIcon,
+  desktop: MonitorIcon,
+};
 
 /**
  * Features, shown *and* played. Each cell is a small, real slice of the product
@@ -18,10 +33,32 @@ import {
  * component: all state is local and trivial, nothing leaves the card.
  */
 
-// The stack the platform-engine actually derives for a web read-later app with
-// auth + database (see lib/platform-engine.ts): Next.js (PWA) / TypeScript /
-// Supabase / PostgreSQL / Vercel. No invented tools — these are engine output.
-const STACK = ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Vercel"];
+// Baseline capabilities for the Acme Reader demo — a web read-later app always
+// needs accounts + a database, so the backend stays Supabase. The visitor drives
+// the SURFACES (and an optional 3D toggle); everything else is engine output.
+const BASE_CAPS: Capability[] = ["auth", "database"];
+
+// Which library string counts as the "3D surface" line, per frontend. Matches
+// what platform-engine::graphicsLib emits (Three.js, Flame, SceneKit, …).
+const GFX_RE = /Three\.js|Flame|SceneKit|RealityKit|Filament|OpenGL/;
+
+/** Compile the founder's picks into the exact build-prompt.md the agent gets. */
+function buildPrompt(stack: CompiledStack): string {
+  const lines = [
+    "# Build: Acme Reader",
+    `Stack: ${stack.frontend} · ${stack.language} · ${stack.backend}`,
+    `Target: ${stack.platform} · ${stack.hosting}`,
+  ];
+  if (stack.libraries.length) lines.push(`Libraries: ${stack.libraries.join(" · ")}`);
+  lines.push("", "## Scaffold", "- Read `.nx/` for architecture + brand");
+  if (stack.backend.startsWith("Supabase")) lines.push("- Supabase auth + `profiles` table");
+  else if (stack.backend.startsWith("SpacetimeDB")) lines.push("- SpacetimeDB module + realtime sync");
+  else lines.push("- Local-first persistence on device");
+  lines.push("- Reading view with saved highlights");
+  const gfx = stack.libraries.find((l) => GFX_RE.test(l));
+  if (gfx) lines.push(`- Animated 3D surface (${gfx})`);
+  return lines.join("\n");
+}
 
 const PALETTE = [
   { icon: ArrowRightIcon, label: "Go to Tech Stack", hint: "↵" },
@@ -36,15 +73,6 @@ const INITIAL_PHASES = [
   { label: "Tech Stack", done: 2, total: 5, tone: "bg-primary" },
   { label: "Build", done: 0, total: 3, tone: "bg-muted-foreground/40" },
 ];
-
-const PROMPT = `# Build: Acme Reader
-Stack: Next.js · TypeScript · Supabase
-Target: Web (PWA) · Vercel
-
-## Scaffold
-- Read \`.nx/\` for architecture + brand
-- Supabase auth + \`profiles\` table
-- Reading view with saved highlights`;
 
 function CardShell({
   title,
@@ -69,10 +97,45 @@ function CardShell({
 }
 
 export function FeatureShowcase() {
+  // The visitor's picks live here so the Stack selector (right) and the
+  // build-prompt.md (left) read the same engine output — change a surface and
+  // the prompt recompiles through the real platform-engine.
+  const [surfaces, setSurfaces] = useState<Set<Surface>>(() => new Set<Surface>(["web"]));
+  const [graphics, setGraphics] = useState(false);
+
+  const toggleSurface = useCallback((id: Surface) => {
+    setSurfaces((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        if (next.size > 1) next.delete(id); // always keep at least one surface
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  // Non-null: we guarantee ≥1 surface above, and compileStack only returns null
+  // when no surface is chosen.
+  const stack = useMemo(
+    () =>
+      compileStack({
+        surfaces: [...surfaces],
+        capabilities: [...BASE_CAPS, ...(graphics ? (["graphics"] as Capability[]) : [])],
+      })!,
+    [surfaces, graphics]
+  );
+
   return (
     <div className="mt-12 grid gap-4 lg:grid-cols-6">
-      <PromptCard className="lg:col-span-4" />
-      <StackCard className="lg:col-span-2" />
+      <PromptCard className="lg:col-span-4" stack={stack} />
+      <StackCard
+        className="lg:col-span-2"
+        surfaces={surfaces}
+        onToggleSurface={toggleSurface}
+        graphics={graphics}
+        onToggleGraphics={() => setGraphics((g) => !g)}
+      />
       <PaletteCard className="lg:col-span-2" />
       <PhasesCard className="lg:col-span-2" />
       <SyncCard className="lg:col-span-2" />
@@ -80,14 +143,15 @@ export function FeatureShowcase() {
   );
 }
 
-/* ── One build prompt — with a Copy button that actually copies ─────────────── */
-function PromptCard({ className }: { className?: string }) {
+/* ── One build prompt — recompiled live from the Stack picks ────────────────── */
+function PromptCard({ className, stack }: { className?: string; stack: CompiledStack }) {
+  const promptText = useMemo(() => buildPrompt(stack), [stack]);
   const [copied, setCopied] = useState(false);
   const copy = useCallback(() => {
-    navigator.clipboard?.writeText(PROMPT).catch(() => {});
+    navigator.clipboard?.writeText(promptText).catch(() => {});
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
-  }, []);
+  }, [promptText]);
 
   return (
     <CardShell
@@ -112,65 +176,66 @@ function PromptCard({ className }: { className?: string }) {
           </button>
         </div>
         <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[11.5px] leading-relaxed text-foreground/80">
-          <span className="text-primary"># Build: Acme Reader</span>
-          {"\n"}Stack: Next.js · TypeScript · Supabase
-          {"\n"}Target: Web (PWA) · Vercel
-          {"\n\n"}
-          <span className="text-primary">## Scaffold</span>
-          {"\n"}- Read `.nx/` for architecture + brand
-          {"\n"}- Supabase auth + `profiles` table
-          {"\n"}- Reading view with saved highlights
+          {promptText.split("\n").map((ln, i) => (
+            <span key={i} className={ln.startsWith("#") ? "text-primary" : undefined}>
+              {ln}
+              {"\n"}
+            </span>
+          ))}
         </pre>
       </div>
     </CardShell>
   );
 }
 
-/* ── Derived stack — chips you can select / deselect ────────────────────────── */
-function StackCard({ className }: { className?: string }) {
-  const [selected, setSelected] = useState<Set<string>>(() => new Set(STACK.slice(0, 3)));
-  const toggle = useCallback((s: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(s)) next.delete(s);
-      else next.add(s);
-      return next;
-    });
-  }, []);
+/* ── Surfaces you pick — the engine derives the stack, live ─────────────────── */
+function StackCard({
+  className,
+  surfaces,
+  onToggleSurface,
+  graphics,
+  onToggleGraphics,
+}: {
+  className?: string;
+  surfaces: Set<Surface>;
+  onToggleSurface: (id: Surface) => void;
+  graphics: boolean;
+  onToggleGraphics: () => void;
+}) {
+  const chip = (on: boolean) =>
+    `inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+      on
+        ? "border-primary/40 bg-primary/15 text-foreground"
+        : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
+    }`;
 
   return (
     <CardShell
-      title="Stack, derived"
-      line="Opinionated defaults from your brief — tap to include or drop."
+      title="Pick surfaces, get a stack"
+      line="Choose where it ships — the engine derives the rest."
       className={className}
     >
       <div className="flex flex-wrap gap-2">
-        {STACK.map((s) => {
-          const on = selected.has(s);
+        {SURFACE_OPTIONS.map((s) => {
+          const on = surfaces.has(s.id);
+          const Icon = SURFACE_ICON[s.id];
           return (
             <button
-              key={s}
-              onClick={() => toggle(s)}
+              key={s.id}
+              onClick={() => onToggleSurface(s.id)}
               aria-pressed={on}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                on
-                  ? "border-primary/40 bg-primary/15 text-foreground"
-                  : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              }`}
+              className={chip(on)}
             >
-              <span
-                className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                  on ? "bg-primary" : "bg-muted-foreground/50"
-                }`}
-              />
-              {s}
+              <Icon className="h-3.5 w-3.5" />
+              {s.label}
             </button>
           );
         })}
+        <button onClick={onToggleGraphics} aria-pressed={graphics} className={chip(graphics)}>
+          <BoxIcon className="h-3.5 w-3.5" />
+          3D / graphics
+        </button>
       </div>
-      <p className="mt-3 font-mono text-[11px] text-muted-foreground">
-        {selected.size} of {STACK.length} in the build
-      </p>
     </CardShell>
   );
 }
