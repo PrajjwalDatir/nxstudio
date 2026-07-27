@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { NxLogo } from "@/components/icons";
 import { GitHubSignIn } from "./github-signin";
 
@@ -38,7 +39,15 @@ export default async function LoginPage({
           )}
           <GitHubSignIn redirectTo={safeRedirect} />
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            By continuing you agree to the terms of service and privacy policy.
+            By continuing you agree to the{" "}
+            <Link href="/terms" className="text-foreground underline underline-offset-2 hover:text-primary">
+              terms of service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="text-foreground underline underline-offset-2 hover:text-primary">
+              privacy policy
+            </Link>
+            .
           </p>
         </div>
       </div>
