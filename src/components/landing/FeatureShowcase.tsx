@@ -18,7 +18,10 @@ import {
  * component: all state is local and trivial, nothing leaves the card.
  */
 
-const STACK = ["Next.js", "Supabase", "Tailwind", "React Three Fiber", "Vercel"];
+// The stack the platform-engine actually derives for a web read-later app with
+// auth + database (see lib/platform-engine.ts): Next.js (PWA) / TypeScript /
+// Supabase / PostgreSQL / Vercel. No invented tools — these are engine output.
+const STACK = ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Vercel"];
 
 const PALETTE = [
   { icon: ArrowRightIcon, label: "Go to Tech Stack", hint: "↵" },
@@ -35,13 +38,13 @@ const INITIAL_PHASES = [
 ];
 
 const PROMPT = `# Build: Acme Reader
-Stack: Next.js · Supabase · Tailwind
-Target: Web · mobile-first · dark
+Stack: Next.js · TypeScript · Supabase
+Target: Web (PWA) · Vercel
 
 ## Scaffold
-- GitHub OAuth + \`profiles\` table
-- Reading view with saved highlights
-- ⌘K command palette`;
+- Read \`.nx/\` for architecture + brand
+- Supabase auth + \`profiles\` table
+- Reading view with saved highlights`;
 
 function CardShell({
   title,
@@ -110,13 +113,13 @@ function PromptCard({ className }: { className?: string }) {
         </div>
         <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[11.5px] leading-relaxed text-foreground/80">
           <span className="text-primary"># Build: Acme Reader</span>
-          {"\n"}Stack: Next.js · Supabase · Tailwind
-          {"\n"}Target: Web · mobile-first · dark
+          {"\n"}Stack: Next.js · TypeScript · Supabase
+          {"\n"}Target: Web (PWA) · Vercel
           {"\n\n"}
           <span className="text-primary">## Scaffold</span>
-          {"\n"}- GitHub OAuth + `profiles` table
+          {"\n"}- Read `.nx/` for architecture + brand
+          {"\n"}- Supabase auth + `profiles` table
           {"\n"}- Reading view with saved highlights
-          {"\n"}- ⌘K command palette
         </pre>
       </div>
     </CardShell>
@@ -279,7 +282,7 @@ function SyncCard({ className }: { className?: string }) {
           <GitBranchIcon className="h-4 w-4 text-foreground/80" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-mono text-xs text-foreground/90">acme/reader</p>
+          <p className="truncate font-mono text-xs text-foreground/90">nx-studio/nxstudio</p>
           <p className="text-[11px] text-muted-foreground">main · updated 2m ago</p>
         </div>
         <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400">

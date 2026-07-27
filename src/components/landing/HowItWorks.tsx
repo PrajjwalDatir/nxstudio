@@ -75,7 +75,7 @@ const STEPS = [
         </div>
         <pre className="px-4 py-3 font-mono text-[11px] leading-relaxed text-foreground/80">
           <span className="text-primary"># Build: Acme Reader</span>
-          {"\n"}Stack: Next.js · Supabase · Tailwind
+          {"\n"}Stack: Next.js · TypeScript · Supabase
           {"\n"}Offline-first · highlights · no Notion
         </pre>
       </div>
@@ -146,12 +146,17 @@ export function HowItWorks() {
         </div>
 
         <div className="grid gap-8 pb-20 md:grid-cols-2 md:gap-14 md:pb-28">
-          {/* Stage — pinned, so the shape stays in frame for the whole story */}
-          <div className="sticky top-20 z-10 -mx-5 h-[240px] bg-background/80 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[460px] md:bg-transparent md:backdrop-blur-none">
+          {/* Stage — pinned and vertically centred in the viewport, so the unit
+              holds frame the whole way down while only the story column scrolls.
+              A tall sticky box (not a short top-anchored one) is what keeps the
+              machine at eye level instead of riding up under the section title. */}
+          <div
+            className="sticky top-16 z-10 -mx-5 flex h-[50vh] items-center justify-center bg-background/70 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[calc(100dvh-7rem)] md:bg-transparent md:backdrop-blur-none"
+          >
             <div ref={stageRef} aria-hidden className="canvas-bleed h-full w-full">
               <AssemblyScene step={active} paused={!stageInView} />
             </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center gap-1.5 md:bottom-4">
+            <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center gap-1.5 md:bottom-8">
               {STEPS.map((s, i) => (
                 <span
                   key={s.title}
@@ -179,7 +184,7 @@ export function HowItWorks() {
                 ref={(el) => {
                   stepRefs.current[i] = el;
                 }}
-                className="relative flex min-h-[58vh] flex-col justify-center py-10 pl-10 md:min-h-[70vh]"
+                className="relative flex min-h-[64vh] flex-col justify-center py-10 pl-10 md:min-h-[88vh]"
               >
                 {/* numbered node on the spine — the only 'chrome' the step has */}
                 <span

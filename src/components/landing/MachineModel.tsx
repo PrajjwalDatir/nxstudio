@@ -17,9 +17,25 @@
  * nothing to load.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+
+/**
+ * Per-frame animation values the "how it works" stage feeds the unit. These are
+ * driven by a Theatre.js sequence (see AssemblyScene) and read here inside the
+ * frame loop, so the assembly, colour reveal, eye glow and the closing dance all
+ * stay smooth independent of React renders. The hero never passes this — it just
+ * leaves the unit fully built at rest.
+ */
+export interface MachineDynamics {
+  /** 0 = parts scattered, 1 = seated. */
+  build: number;
+  /** Emissive intensity target for the eyes. */
+  eye: number;
+  /** 0 = still, 1 = full dance. */
+  dance: number;
+}
 
 export const ACCENT = "#8B5CF6";
 
@@ -217,12 +233,19 @@ export function Machine({
   onPoke,
   pose = "ready",
   build = 1,
+  dynamicsRef,
 }: {
   reduce: boolean;
   onPoke?: () => void;
   pose?: MachinePose;
   /** 0 = parts scattered/exploded, 1 = fully assembled. Hero leaves it at 1. */
   build?: number;
+  /**
+   * Optional live values driven per-frame (by Theatre.js on the "how it works"
+   * stage). When present they override `build` and the pose's eye brightness and
+   * add the closing dance. Absent on the hero, so it stays a still, built unit.
+   */
+  dynamicsRef?: MutableRefObject<MachineDynamics>;
 }) {
   const group = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
@@ -231,6 +254,7 @@ export function Machine({
   const arms = useRef<(THREE.Group | null)[]>([]);
   const legs = useRef<(THREE.Group | null)[]>([]);
   const buildCur = useRef(build);
+  const danceCur = useRef(0);
   const recoil = useRef(0);
 
   /** Kick the unit back briefly when poked, then settle. */
@@ -249,10 +273,22 @@ export function Machine({
     const a = 1 - Math.exp(-delta * 2.8);
     const drift = reduce ? 0 : 1;
 
+    // Live values (Theatre.js) when the stage supplies them, else the static
+    // props. Ease `dance` in so the unit doesn't snap into the beat.
+    const dyn = dynamicsRef?.current;
+    danceCur.current += ((dyn ? dyn.dance : 0) - danceCur.current) * a;
+    const dance = danceCur.current;
+    // A steady four-on-the-floor tempo the whole unit locks onto when online.
+    const beat = t * 7.2;
+    const bob = Math.abs(Math.sin(beat)) * dance; // 0..1 bounce envelope
+    const sway = Math.sin(beat * 0.5) * dance;
+
     if (group.current) {
       // Idle sway — heavy and slow, like something powered down but not off.
-      group.current.position.y = Math.sin(t * 0.6) * 0.06 - 0.1 + jolt * 0.12;
-      group.current.rotation.y = Math.sin(t * 0.25) * 0.12;
+      // The dance adds an upward bounce and a hip sway on top of the idle.
+      group.current.position.y = Math.sin(t * 0.6) * 0.06 - 0.1 + jolt * 0.12 + bob * 0.16;
+      group.current.rotation.y = Math.sin(t * 0.25) * 0.12 + sway * 0.18;
+      group.current.rotation.z = -0.035 + sway * 0.1;
     }
     if (torso.current) {
       torso.current.rotation.x = THREE.MathUtils.lerp(
@@ -278,24 +314,35 @@ export function Machine({
       );
     }
     // Eyes brighten as the unit comes up — the clearest read on its state.
+    // The stage drives them directly (dyn.eye); on the beat they pulse.
+    const eyeTarget = (dyn ? dyn.eye : target.eye) + bob * 0.55 * dance;
     eyes.current.forEach((m) => {
-      if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, target.eye, a);
+      if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, eyeTarget, a);
     });
 
     // Assembly: parts ease from scattered → seated as `build` rises. Every
     // offset is `apart * k`, so at build=1 (apart=0) they resolve to zero and
-    // the hero unit is untouched. Legs keep their prop x/z — only y is offset.
-    buildCur.current += (build - buildCur.current) * a;
+    // the hero unit is untouched. Offsets are deliberately tight so even fully
+    // scattered the unit reads as one centred cluster — never flinging a part
+    // into the section header or off the edge of the frame. Legs keep their
+    // prop x/z — only y is offset.
+    const buildTarget = dyn ? dyn.build : build;
+    buildCur.current += (buildTarget - buildCur.current) * a;
     const apart = 1 - buildCur.current;
-    const wob = Math.sin(t * 1.4) * 0.04 * apart;
-    if (head.current) head.current.position.y = 1.42 + apart * (0.95 + wob);
+    const wob = Math.sin(t * 1.4) * 0.045 * apart;
+    // Head lifts and the limbs drift out into a loose exploded-diagram cluster
+    // — clearly "in pieces", but sized to stay inside the centred frame rather
+    // than flinging a part off-screen or up into the section header.
+    if (head.current) head.current.position.y = 1.42 + apart * (0.72 + wob);
     arms.current.forEach((g, i) => {
       if (!g) return;
-      g.position.x = apart * (i === 0 ? -0.95 : 0.95);
-      g.position.y = apart * (0.45 + wob);
+      g.position.x = apart * (i === 0 ? -0.82 : 0.82);
+      g.position.y = apart * (0.42 + wob);
+      // Dance: the arms lift and wave in opposition, in time with the bounce.
+      g.rotation.z = Math.sin(beat + (i === 0 ? 0 : Math.PI)) * 0.5 * dance;
     });
     legs.current.forEach((g) => {
-      if (g) g.position.y = apart * (-0.75 - wob);
+      if (g) g.position.y = apart * (-0.6 - wob);
     });
   });
 

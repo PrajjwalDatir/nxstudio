@@ -206,7 +206,7 @@ export default function LandingPage() {
               ))}
             </div>
             <p className="mx-auto mt-6 max-w-md text-center text-xs text-muted-foreground">
-              Cancel anytime — access runs to the end of your paid cycle. See{" "}
+              Cancel anytime. <br/> See{" "}
               <Link href="/refund" className="text-foreground/80 underline underline-offset-2">
                 Refunds &amp; Billing
               </Link>
