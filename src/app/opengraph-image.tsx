@@ -12,6 +12,10 @@ export const contentType = "image/png";
  * right, over an architectural grid + violet glow. Drawn as flat vector so it
  * matches the low-poly 3D unit without needing a WebGL render, and regenerated
  * at build time so copy stays in sync with siteConfig.
+ *
+ * The unit is shown *online* — the moment the site is built around: eyes
+ * blazing behind soft halos, and a wash of the brand's violet/teal/magenta
+ * reveal creeping across the shell, mirroring the "watch it come online" beat.
  */
 export default function OpengraphImage() {
   const violet = "#8B5CF6";
@@ -19,26 +23,57 @@ export default function OpengraphImage() {
   // The unit, as flat geometry (the OG runtime can't render the WebGL model).
   const unitSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 440">
     <defs>
-      <radialGradient id="eye" cx="50%" cy="45%" r="55%">
-        <stop offset="0%" stop-color="#DDD6FE"/>
-        <stop offset="55%" stop-color="#7C3AED"/>
+      <radialGradient id="eye" cx="50%" cy="42%" r="58%">
+        <stop offset="0%" stop-color="#FFFFFF"/>
+        <stop offset="38%" stop-color="#DDD6FE"/>
+        <stop offset="72%" stop-color="#7C3AED"/>
         <stop offset="100%" stop-color="#5B21B6"/>
+      </radialGradient>
+      <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(196,181,253,0.95)"/>
+        <stop offset="45%" stop-color="rgba(139,92,246,0.5)"/>
+        <stop offset="100%" stop-color="rgba(139,92,246,0)"/>
+      </radialGradient>
+      <radialGradient id="tip" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(221,214,254,0.95)"/>
+        <stop offset="40%" stop-color="rgba(124,58,237,0.6)"/>
+        <stop offset="100%" stop-color="rgba(124,58,237,0)"/>
+      </radialGradient>
+      <radialGradient id="tealWash" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(34,211,238,0.32)"/>
+        <stop offset="100%" stop-color="rgba(34,211,238,0)"/>
+      </radialGradient>
+      <radialGradient id="magWash" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(244,114,182,0.30)"/>
+        <stop offset="100%" stop-color="rgba(244,114,182,0)"/>
+      </radialGradient>
+      <radialGradient id="vioWash" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(167,139,250,0.34)"/>
+        <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
       </radialGradient>
     </defs>
     <line x1="188" y1="58" x2="206" y2="22" stroke="#4E4E58" stroke-width="7" stroke-linecap="round"/>
-    <circle cx="208" cy="18" r="9" fill="#7C3AED"/>
-    <circle cx="123" cy="108" r="30" fill="#7C3AED" opacity="0.22"/>
-    <circle cx="177" cy="108" r="30" fill="#7C3AED" opacity="0.22"/>
+    <circle cx="208" cy="18" r="22" fill="url(#tip)"/>
+    <circle cx="208" cy="18" r="9" fill="#C4B5FD"/>
     <circle cx="150" cy="105" r="72" fill="#6E6E78"/>
     <path d="M96 78 a72 72 0 0 1 108 0" fill="none" stroke="#565660" stroke-width="8"/>
-    <circle cx="123" cy="108" r="16" fill="url(#eye)"/>
-    <circle cx="177" cy="108" r="16" fill="url(#eye)"/>
+    <circle cx="110" cy="88" r="66" fill="url(#tealWash)"/>
+    <circle cx="196" cy="120" r="72" fill="url(#magWash)"/>
+    <circle cx="150" cy="150" r="150" fill="url(#vioWash)"/>
+    <circle cx="123" cy="108" r="36" fill="url(#eyeGlow)"/>
+    <circle cx="177" cy="108" r="36" fill="url(#eyeGlow)"/>
+    <circle cx="123" cy="108" r="17" fill="url(#eye)"/>
+    <circle cx="177" cy="108" r="17" fill="url(#eye)"/>
+    <circle cx="123" cy="103" r="5.5" fill="#FFFFFF"/>
+    <circle cx="177" cy="103" r="5.5" fill="#FFFFFF"/>
     <rect x="134" y="172" width="32" height="26" rx="7" fill="#4E4E58"/>
     <circle cx="96" cy="212" r="22" fill="#565660"/>
     <circle cx="204" cy="212" r="22" fill="#565660"/>
     <rect x="80" y="212" width="26" height="118" rx="13" fill="#6E6E78"/>
     <rect x="194" y="212" width="26" height="118" rx="13" fill="#6E6E78"/>
     <path d="M110 196 h80 l16 140 h-112 z" fill="#6E6E78"/>
+    <circle cx="118" cy="250" r="60" fill="url(#tealWash)"/>
+    <circle cx="188" cy="300" r="60" fill="url(#magWash)"/>
     <rect x="100" y="262" width="100" height="16" rx="4" fill="#4E4E58"/>
     <rect x="128" y="216" width="44" height="7" rx="3" fill="#4E4E58"/>
     <rect x="128" y="230" width="44" height="7" rx="3" fill="#4E4E58"/>
@@ -47,6 +82,16 @@ export default function OpengraphImage() {
     <rect x="150" y="332" width="24" height="82" rx="10" fill="#6E6E78"/>
     <rect x="118" y="408" width="36" height="16" rx="6" fill="#565660"/>
     <rect x="146" y="408" width="36" height="16" rx="6" fill="#565660"/>
+    <g stroke-linecap="round">
+      <g stroke="#C4B5FD" stroke-width="2.4"><line x1="52" y1="52" x2="52" y2="74"/><line x1="41" y1="63" x2="63" y2="63"/></g>
+      <circle cx="52" cy="63" r="3.4" fill="#DDD6FE"/>
+      <g stroke="#22D3EE" stroke-width="2.2"><line x1="246" y1="150" x2="246" y2="168"/><line x1="237" y1="159" x2="255" y2="159"/></g>
+      <circle cx="246" cy="159" r="3" fill="#67E8F9"/>
+      <g stroke="#F472B6" stroke-width="2.2"><line x1="252" y1="300" x2="252" y2="318"/><line x1="243" y1="309" x2="261" y2="309"/></g>
+      <circle cx="252" cy="309" r="3" fill="#FBCFE8"/>
+      <g stroke="#A78BFA" stroke-width="2"><line x1="60" y1="300" x2="60" y2="314"/><line x1="53" y1="307" x2="67" y2="307"/></g>
+      <circle cx="60" cy="307" r="2.6" fill="#DDD6FE"/>
+    </g>
   </svg>`;
   const unitSrc = `data:image/svg+xml;base64,${Buffer.from(unitSvg).toString("base64")}`;
 
