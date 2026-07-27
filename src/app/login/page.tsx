@@ -16,7 +16,7 @@ export default async function LoginPage({
   const safeRedirect =
     redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
       ? redirectTo
-      : "/";
+      : "/canvas";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background px-6 text-foreground">

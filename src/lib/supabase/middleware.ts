@@ -26,6 +26,20 @@ function isPublic(pathname: string): boolean {
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
+  /**
+   * Fast path for the marketing page. Almost everyone hitting "/" is signed
+   * out, and `getUser()` is a network call to Supabase Auth — running it on
+   * every landing hit would put a round-trip in front of the page we most care
+   * about being fast. If no Supabase auth cookie is even present there is
+   * definitely no session, so pass straight through.
+   */
+  if (request.nextUrl.pathname === "/") {
+    const hasAuthCookie = request.cookies
+      .getAll()
+      .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+    if (!hasAuthCookie) return supabaseResponse;
+  }
+
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {
       getAll() {
@@ -57,10 +71,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Already authenticated but sitting on /login → send to the app.
-  if (user && pathname === "/login") {
+  // Already authenticated but sitting on /login or the marketing page → the
+  // signed-in user wants the app, not the pitch.
+  if (user && (pathname === "/login" || pathname === "/")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/canvas";
     url.search = "";
     return NextResponse.redirect(url);
   }

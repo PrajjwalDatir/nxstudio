@@ -5,21 +5,22 @@ import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace-store";
 import { getPhase } from "@/lib/phases";
 import { useCommand } from "@/components/shell/CommandPalette";
+import { ProductNameCrumb } from "@/components/shell/ProductNameCrumb";
 import { Notifications } from "@/components/shell/Notifications";
 import { ChevronRightIcon, SearchIcon } from "@/components/icons";
 
 export function Topbar() {
   const pathname = usePathname();
-  const { data, customStages } = useWorkspace();
+  const { customStages } = useWorkspace();
   const { open } = useCommand();
 
-  // Breadcrumb: Workspaces › Product 1 › [Phase]
+  // Breadcrumb: Workspaces › [editable product name] › [Phase]
+  // "Workspaces" points at the board, not "/" — "/" is the marketing page now.
   const crumbs: { label: string; href?: string }[] = [
-    { label: "Workspaces" },
-    { label: data.productName, href: "/" },
+    { label: "Workspaces", href: "/canvas" },
   ];
 
-  const phaseMatch = pathname.match(/^\/phase\/([^/]+)/);
+  const phaseMatch = pathname.match(/^\/canvas\/([^/]+)/);
   const SECTION: Record<string, string> = {
     "/projects": "Projects",
     "/team": "Team",
@@ -38,29 +39,23 @@ export function Topbar() {
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-sidebar px-5">
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs. The project name sits between "Workspaces" and the
+          optional phase crumb, and renames in place rather than navigating. */}
       <nav className="flex items-center gap-2 text-sm min-w-0">
-        {crumbs.map((c, i) => (
-          <span key={i} className="flex items-center gap-2 min-w-0">
-            {i > 0 && <ChevronRightIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-            {c.href && i < crumbs.length - 1 ? (
-              <Link
-                href={c.href}
-                className="text-muted-foreground hover:text-foreground transition-colors truncate"
-              >
-                {c.label}
-              </Link>
-            ) : (
-              <span
-                className={
-                  i === crumbs.length - 1
-                    ? "font-medium text-foreground truncate"
-                    : "text-muted-foreground truncate"
-                }
-              >
-                {c.label}
-              </span>
-            )}
+        <Link
+          href="/canvas"
+          className="truncate text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Workspaces
+        </Link>
+
+        <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <ProductNameCrumb isLast={crumbs.length === 1} />
+
+        {crumbs.slice(1).map((c) => (
+          <span key={c.label} className="flex min-w-0 items-center gap-2">
+            <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate font-medium text-foreground">{c.label}</span>
           </span>
         ))}
       </nav>

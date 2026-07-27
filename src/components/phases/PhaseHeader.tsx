@@ -44,7 +44,7 @@ export function PhaseHeader({
   return (
     <div className="mb-8">
       <Link
-        href="/"
+        href="/canvas"
         className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeftIcon className="h-4 w-4" />

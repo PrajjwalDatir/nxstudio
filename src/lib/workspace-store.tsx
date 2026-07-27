@@ -13,28 +13,33 @@ import { getStoredValue, setStoredValue } from "./storage";
 import { createClient } from "@/lib/supabase/client";
 import { CustomStage, IdeaData, TechStackInput, WorkspaceData } from "./types";
 import {
+  Collection,
   GitHubConnection,
   Project,
+  collectionToRow,
   hydrateData,
+  newCollection,
   newProject,
   newWorkspaceData,
   projectToRow,
+  serializeCollection,
   serializeProject,
 } from "./projects";
 
 // Re-export the model types so existing importers keep working.
-export type { GitHubConnection, Project } from "./projects";
+export type { Collection, GitHubConnection, Project } from "./projects";
 
 interface Store {
   projects: Project[];
+  collections: Collection[];
   activeId: string;
 }
 
-function initStore(initial: Project[]): Store {
-  if (initial.length > 0) return { projects: initial, activeId: initial[0].id };
+function initStore(initial: Project[], collections: Collection[]): Store {
+  if (initial.length > 0) return { projects: initial, collections, activeId: initial[0].id };
   // Brand-new user: start with one project in memory; the reconciler inserts it.
   const p = newProject("Product 1");
-  return { projects: [p], activeId: p.id };
+  return { projects: [p], collections, activeId: p.id };
 }
 
 /** How long we wait after the last edit before writing to Supabase. */
@@ -55,6 +60,14 @@ interface WorkspaceContextType {
   switchProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
   deleteProject: (id: string) => void;
+
+  // Collections (product groups)
+  collections: Collection[];
+  createCollection: (name: string) => string;
+  renameCollection: (id: string, name: string) => void;
+  deleteCollection: (id: string) => void;
+  /** Move a product into a collection, or pass null to ungroup it. */
+  assignToCollection: (projectId: string, collectionId: string | null) => void;
 
   // Active project data (stable API used by every phase)
   data: WorkspaceData;
@@ -97,14 +110,17 @@ export const useProjects = useWorkspace;
 export function WorkspaceProvider({
   children,
   initialProjects,
+  initialCollections = [],
   userId,
 }: {
   children: React.ReactNode;
   /** Projects loaded on the server (source of truth on first paint). */
   initialProjects: Project[];
+  /** Collections loaded on the server. */
+  initialCollections?: Collection[];
   userId: string;
 }) {
-  const [store, setStore] = useState<Store>(() => initStore(initialProjects));
+  const [store, setStore] = useState<Store>(() => initStore(initialProjects, initialCollections));
   const [isHydrated, setIsHydrated] = useState(false);
 
   // --- persistence bookkeeping ---
@@ -116,22 +132,44 @@ export function WorkspaceProvider({
   // What Supabase already holds, keyed by id → serialized snapshot. Seeded from
   // the server data so we only write projects that actually changed.
   const savedRef = useRef<Map<string, string>>(new Map());
+  const savedCollectionsRef = useRef<Map<string, string>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Reconcile in-memory projects with Supabase: upsert changed, delete removed. */
+  /**
+   * Reconcile in-memory state with Supabase: upsert changed, delete removed.
+   * Order matters for the projects.collection_id foreign key — new collections
+   * are written before projects that reference them, and deleted only after the
+   * referencing projects have been updated (or removed).
+   */
   const flush = useCallback(async () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
     const supabase = createClient();
-    const projects = storeRef.current.projects;
+    const { projects, collections } = storeRef.current;
     const currentIds = new Set(projects.map((p) => p.id));
+    const currentCollectionIds = new Set(collections.map((c) => c.id));
 
     const changed = projects.filter((p) => savedRef.current.get(p.id) !== serializeProject(p));
     const removed = [...savedRef.current.keys()].filter((id) => !currentIds.has(id));
+    const changedCollections = collections.filter(
+      (c) => savedCollectionsRef.current.get(c.id) !== serializeCollection(c)
+    );
+    const removedCollections = [...savedCollectionsRef.current.keys()].filter(
+      (id) => !currentCollectionIds.has(id)
+    );
 
     try {
+      if (changedCollections.length > 0) {
+        const { error } = await supabase
+          .from("collections")
+          .upsert(changedCollections.map((c) => collectionToRow(c, userId)));
+        if (!error)
+          changedCollections.forEach((c) =>
+            savedCollectionsRef.current.set(c.id, serializeCollection(c))
+          );
+      }
       if (changed.length > 0) {
         const { error } = await supabase
           .from("projects")
@@ -142,8 +180,12 @@ export function WorkspaceProvider({
         const { error } = await supabase.from("projects").delete().in("id", removed);
         if (!error) removed.forEach((id) => savedRef.current.delete(id));
       }
+      if (removedCollections.length > 0) {
+        const { error } = await supabase.from("collections").delete().in("id", removedCollections);
+        if (!error) removedCollections.forEach((id) => savedCollectionsRef.current.delete(id));
+      }
     } catch {
-      // Leave savedRef untouched so the next edit retries these writes.
+      // Leave the saved refs untouched so the next edit retries these writes.
     }
   }, [userId]);
 
@@ -153,6 +195,10 @@ export function WorkspaceProvider({
     const saved = new Map<string, string>();
     for (const p of initialProjects) saved.set(p.id, serializeProject(p));
     savedRef.current = saved;
+
+    const savedCollections = new Map<string, string>();
+    for (const c of initialCollections) savedCollections.set(c.id, serializeCollection(c));
+    savedCollectionsRef.current = savedCollections;
 
     // One-time migration: if the account has no projects yet but this browser
     // has a legacy localStorage workspace, import it (the reconciler uploads it).
@@ -166,7 +212,7 @@ export function WorkspaceProvider({
           github: { repo: p.github?.repo ?? null, branch: p.github?.branch ?? "main" },
           dueDates: p.dueDates ?? {},
         }));
-        setStore({ projects: migrated, activeId: migrated[0].id });
+        setStore((s) => ({ ...s, projects: migrated, activeId: migrated[0].id }));
       }
     }
 
@@ -236,7 +282,7 @@ export function WorkspaceProvider({
   /* --- projects --- */
   const createProject = useCallback((name: string) => {
     const p = newProject(name || "Untitled");
-    setStore((s) => ({ projects: [...s.projects, p], activeId: p.id }));
+    setStore((s) => ({ ...s, projects: [...s.projects, p], activeId: p.id }));
     return p.id;
   }, []);
 
@@ -258,11 +304,45 @@ export function WorkspaceProvider({
       const remaining = s.projects.filter((p) => p.id !== id);
       if (remaining.length === 0) {
         const p = newProject("Product 1");
-        return { projects: [p], activeId: p.id };
+        return { ...s, projects: [p], activeId: p.id };
       }
       const activeId = s.activeId === id ? remaining[0].id : s.activeId;
-      return { projects: remaining, activeId };
+      return { ...s, projects: remaining, activeId };
     });
+  }, []);
+
+  /* --- collections (product groups) --- */
+  const createCollection = useCallback((name: string) => {
+    const c = newCollection(name, 0);
+    // sort = append to the end (kept small to fit the integer column).
+    setStore((s) => ({
+      ...s,
+      collections: [...s.collections, { ...c, sort: s.collections.length }],
+    }));
+    return c.id;
+  }, []);
+
+  const renameCollection = useCallback((id: string, name: string) => {
+    setStore((s) => ({
+      ...s,
+      collections: s.collections.map((c) => (c.id === id ? { ...c, name: name || "Untitled" } : c)),
+    }));
+  }, []);
+
+  const deleteCollection = useCallback((id: string) => {
+    // Remove the group; its products stay, just ungrouped (mirrors on-delete-set-null).
+    setStore((s) => ({
+      ...s,
+      collections: s.collections.filter((c) => c.id !== id),
+      projects: s.projects.map((p) => (p.collectionId === id ? { ...p, collectionId: null } : p)),
+    }));
+  }, []);
+
+  const assignToCollection = useCallback((projectId: string, collectionId: string | null) => {
+    setStore((s) => ({
+      ...s,
+      projects: s.projects.map((p) => (p.id === projectId ? { ...p, collectionId } : p)),
+    }));
   }, []);
 
   /* --- active data updaters (stable API) --- */
@@ -395,6 +475,11 @@ export function WorkspaceProvider({
         switchProject,
         renameProject,
         deleteProject,
+        collections: store.collections,
+        createCollection,
+        renameCollection,
+        deleteCollection,
+        assignToCollection,
         data: activeProject.data,
         setProductName,
         updateIdea,

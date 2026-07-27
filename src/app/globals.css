@@ -109,16 +109,22 @@
   }
 }
 
-/* Glassmorphism surface — translucent card + blur + top highlight.
-   Reads against the near-black canvas thanks to the violet glow layer. */
+/* Frosted surface for cards and panels.
+ *
+ * Elevation on a near-black canvas comes from *contrast and a light top edge*,
+ * not from big black drop shadows (black-on-black just reads as a muddy blur).
+ * So: a mostly-opaque surface that stays neutral (low saturate, no violet
+ * cast), one hairline border, a crisp top highlight to catch the "light from
+ * above", and a shadow that's tight + soft rather than large + heavy. */
 @utility glass {
-  background: color-mix(in oklab, var(--card) 55%, transparent);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid color-mix(in oklab, white 7%, transparent);
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  backdrop-filter: blur(20px) saturate(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(1.05);
+  border: 1px solid color-mix(in oklab, white 6%, transparent);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, white 6%, transparent),
-    0 8px 24px -12px rgb(0 0 0 / 0.7);
+    inset 0 1px 0 0 color-mix(in oklab, white 7%, transparent),
+    0 1px 1px 0 rgb(0 0 0 / 0.35),
+    0 10px 30px -22px rgb(0 0 0 / 0.5);
 }
 
 /* Ambient violet glow used behind glass grids so the blur has something to
@@ -184,6 +190,103 @@
 ::-moz-selection {
   background: rgba(139, 92, 246, 0.3);
   color: #FAFAFA;
+}
+
+/* ── Landing / marketing surfaces ──────────────────────────────────────── */
+
+/* Faint architectural grid that fades toward the edges — the "cyber-physical"
+   backdrop behind the hero. Purely decorative. */
+@utility grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(139, 92, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/**
+ * WebGL canvases clip hard at their element box, so anything the scene draws
+ * near the edge (particles, glow, stray geometry) ends in a visible rectangular
+ * cut. Dissolve the canvas into the page instead, so the viewport is the only
+ * edge the eye ever reads.
+ */
+@utility canvas-bleed {
+  -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 45%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 45%, transparent 100%);
+}
+
+/* Violet gradient wordmark accent. */
+@utility text-gradient {
+  background-image: linear-gradient(120deg, #C4B5FD 0%, #8B5CF6 45%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Big centered ambient glow for full-bleed marketing sections. */
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  top: -220px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 620px;
+  border-radius: 9999px;
+  filter: blur(140px);
+  opacity: 0.45;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.5), transparent 68%);
+}
+
+/* Legal / long-form prose (privacy, terms, refund). No typography plugin, so
+   element styles are defined here and applied via the .legal-prose wrapper. */
+.legal-prose {
+  color: color-mix(in oklab, var(--foreground) 82%, transparent);
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+.legal-prose h2 {
+  color: var(--foreground);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.legal-prose h3 {
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+.legal-prose p { margin-bottom: 1rem; }
+.legal-prose ul {
+  margin: 0 0 1rem 0;
+  padding-left: 1.15rem;
+  list-style: disc;
+}
+.legal-prose li { margin-bottom: 0.4rem; }
+.legal-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-prose strong { color: var(--foreground); font-weight: 600; }
+.legal-prose code {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.85em;
+  background: var(--secondary);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.35rem;
 }
 
 /* Option Card Hover */

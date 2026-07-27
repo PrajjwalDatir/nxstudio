@@ -1,0 +1,51 @@
+# nxstudio
+
+> nxstudio is a founder-mode build tool that turns a product brief into a
+> derived tech stack and one production-ready build prompt for AI coding agents.
+> Hosted at https://nx.prajj.in
+
+nxstudio compresses the messy pre-build phase — "I have an idea, what do I
+actually build and how do I tell an AI to build it?" — into a short, guided
+workflow. A founder fills in a Brief (problem, audience, current solutions,
+differentiation), nxstudio derives an opinionated tech stack, and then compiles
+a single, structured build prompt you can hand to Claude Code, Cursor, or any
+AI coding agent to scaffold the product.
+
+## What it does
+
+- **Brief → Tech Stack**: Capture idea, audience, and brand, then derive a
+  platform, framework, and architecture recommendation.
+- **One build prompt**: Compile everything into a single production-ready prompt
+  optimized for AI coding agents — no prompt-engineering expertise required.
+- **Phase tracking**: Move a product from idea to shipped through Brief, Tech
+  Stack, and Build phases, with custom stages for your own workflow.
+
+## Who it is for
+
+Founders, indie hackers, and product builders who use AI coding agents
+(Claude Code, Cursor, and similar) and want to go from a rough idea to a
+concrete, buildable spec and prompt without hand-writing the plan.
+
+## Key concepts
+
+- **Build prompt**: A structured, context-rich prompt that tells an AI coding
+  agent exactly what to build, on what stack, with what constraints.
+- **Derived tech stack**: An opinionated stack recommendation generated from the
+  brief rather than chosen blindly.
+- **Founder mode**: Optimized for one person shipping fast, not for large teams.
+
+## Pricing
+
+- Free: $0 — visual canvas, brief, derived tech stack, and one compiled build prompt.
+- Pro: $50 per 28-day cycle — full server-side prompt compilation, unlimited
+  projects and custom stages. Paid in USDC/USDT on the Solana network and
+  verified on-chain (no card required).
+
+## Links
+
+- Product / landing: https://nx.prajj.in
+- Sign in: https://nx.prajj.in/login
+- Privacy Policy: https://nx.prajj.in/privacy
+- Terms of Service: https://nx.prajj.in/terms
+- Refunds & Billing: https://nx.prajj.in/refund
+- Maker: Prajjwal Datir — https://x.com/prajjwal_datir
