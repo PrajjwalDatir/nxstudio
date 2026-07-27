@@ -8,22 +8,47 @@ export const contentType = "image/png";
 
 /**
  * Premium social-share card (Open Graph + Twitter fallback). Editorial split:
- * value prop on the left, the signature "build-prompt" terminal on the right,
- * over an architectural grid + violet glow — the "Lilac Monolith" identity.
- * Regenerated at build time so copy stays in sync with siteConfig.
+ * value prop on the left, the unit — the site's signature machine — on the
+ * right, over an architectural grid + violet glow. Drawn as flat vector so it
+ * matches the low-poly 3D unit without needing a WebGL render, and regenerated
+ * at build time so copy stays in sync with siteConfig.
  */
 export default function OpengraphImage() {
   const violet = "#8B5CF6";
-  const promptLines = [
-    { t: "# BUILD PROMPT · Acme Reader", c: "#C4B5FD" },
-    { t: "Stack:  Next.js · Supabase · Tailwind", c: "#8B8B93" },
-    { t: "", c: "#8B8B93" },
-    { t: "Build a read-later app for founders.", c: "#E4E4E7" },
-    { t: "1. Auth — GitHub OAuth (Supabase)", c: "#E4E4E7" },
-    { t: "2. Data — articles, highlights, tags", c: "#E4E4E7" },
-    { t: "3. Feed — edge-cached, infinite", c: "#E4E4E7" },
-    { t: "4. Ship — Vercel, RLS on default", c: "#E4E4E7" },
-  ];
+
+  // The unit, as flat geometry (the OG runtime can't render the WebGL model).
+  const unitSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 440">
+    <defs>
+      <radialGradient id="eye" cx="50%" cy="45%" r="55%">
+        <stop offset="0%" stop-color="#DDD6FE"/>
+        <stop offset="55%" stop-color="#7C3AED"/>
+        <stop offset="100%" stop-color="#5B21B6"/>
+      </radialGradient>
+    </defs>
+    <line x1="188" y1="58" x2="206" y2="22" stroke="#4E4E58" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="208" cy="18" r="9" fill="#7C3AED"/>
+    <circle cx="123" cy="108" r="30" fill="#7C3AED" opacity="0.22"/>
+    <circle cx="177" cy="108" r="30" fill="#7C3AED" opacity="0.22"/>
+    <circle cx="150" cy="105" r="72" fill="#6E6E78"/>
+    <path d="M96 78 a72 72 0 0 1 108 0" fill="none" stroke="#565660" stroke-width="8"/>
+    <circle cx="123" cy="108" r="16" fill="url(#eye)"/>
+    <circle cx="177" cy="108" r="16" fill="url(#eye)"/>
+    <rect x="134" y="172" width="32" height="26" rx="7" fill="#4E4E58"/>
+    <circle cx="96" cy="212" r="22" fill="#565660"/>
+    <circle cx="204" cy="212" r="22" fill="#565660"/>
+    <rect x="80" y="212" width="26" height="118" rx="13" fill="#6E6E78"/>
+    <rect x="194" y="212" width="26" height="118" rx="13" fill="#6E6E78"/>
+    <path d="M110 196 h80 l16 140 h-112 z" fill="#6E6E78"/>
+    <rect x="100" y="262" width="100" height="16" rx="4" fill="#4E4E58"/>
+    <rect x="128" y="216" width="44" height="7" rx="3" fill="#4E4E58"/>
+    <rect x="128" y="230" width="44" height="7" rx="3" fill="#4E4E58"/>
+    <rect x="128" y="244" width="44" height="7" rx="3" fill="#4E4E58"/>
+    <rect x="126" y="332" width="24" height="82" rx="10" fill="#6E6E78"/>
+    <rect x="150" y="332" width="24" height="82" rx="10" fill="#6E6E78"/>
+    <rect x="118" y="408" width="36" height="16" rx="6" fill="#565660"/>
+    <rect x="146" y="408" width="36" height="16" rx="6" fill="#565660"/>
+  </svg>`;
+  const unitSrc = `data:image/svg+xml;base64,${Buffer.from(unitSvg).toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -166,42 +191,30 @@ export default function OpengraphImage() {
               </div>
             </div>
 
-            {/* Right: terminal card */}
+            {/* Right: the unit, standing ready on a soft violet pad */}
             <div
               style={{
                 display: "flex",
-                flexDirection: "column",
                 flex: 1,
-                borderRadius: 16,
-                border: "1px solid #26262B",
-                borderLeft: `3px solid ${violet}`,
-                background: "rgba(18,18,20,0.85)",
-                overflow: "hidden",
+                position: "relative",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
+              {/* ground glow under the unit */}
               <div
                 style={{
+                  position: "absolute",
+                  bottom: 8,
                   display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "14px 18px",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  width: 260,
+                  height: 90,
+                  borderRadius: 9999,
+                  background:
+                    "radial-gradient(closest-side, rgba(139,92,246,0.28), rgba(8,8,10,0))",
                 }}
-              >
-                <div style={{ display: "flex", width: 11, height: 11, borderRadius: 9999, background: "#ff5f57" }} />
-                <div style={{ display: "flex", width: 11, height: 11, borderRadius: 9999, background: "#febc2e" }} />
-                <div style={{ display: "flex", width: 11, height: 11, borderRadius: 9999, background: "#28c840" }} />
-                <div style={{ display: "flex", marginLeft: 10, fontSize: 15, color: "#8B8B93" }}>
-                  build-prompt.md
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", padding: 20, gap: 7 }}>
-                {promptLines.map((l, i) => (
-                  <div key={i} style={{ display: "flex", fontSize: 17, color: l.c, minHeight: 10 }}>
-                    {l.t}
-                  </div>
-                ))}
-              </div>
+              />
+              <img src={unitSrc} width={252} height={370} style={{ width: 252, height: 370 }} alt="" />
             </div>
           </div>
 

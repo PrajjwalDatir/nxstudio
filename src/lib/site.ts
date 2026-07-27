@@ -26,7 +26,7 @@ export const siteConfig = {
    * Browser-tab title. Kept deliberately short — a tab crops around ~30 chars,
    * so a long value just reads as a truncated fragment.
    */
-  title: "nxstudio · From brief to build prompt",
+  title: "nxstudio",
   /** Short label for the title template + PWA short_name. */
   shortName: "nxstudio",
   tagline: "From brief to build prompt.",
