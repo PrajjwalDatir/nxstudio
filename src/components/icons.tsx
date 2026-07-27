@@ -31,7 +31,13 @@ export {
   Layers as LayersIcon,
   Palette as PaletteIcon,
   Box as BoxIcon,
-  
+
+  // Surfaces / platforms
+  Globe as GlobeIcon,
+  Apple as AppleIcon,
+  Smartphone as SmartphoneIcon,
+  Monitor as MonitorIcon,
+
   // Builder & Scaffold
   Hammer as HammerIcon,
   LayoutGrid as ScaffoldIcon,
