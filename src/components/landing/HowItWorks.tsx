@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CopyIcon } from "@/components/icons";
 import { SectionKicker } from "./SectionKicker";
+import { useInView } from "./use-in-view";
 
 const AssemblyScene = dynamic(() => import("./AssemblyScene"), { ssr: false });
 
@@ -84,6 +85,7 @@ const STEPS = [
 
 export function HowItWorks() {
   const reduce = useReducedMotion();
+  const { ref: stageRef, inView: stageInView } = useInView<HTMLDivElement>();
   const [active, setActive] = useState(0);
   const stepRefs = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -146,8 +148,8 @@ export function HowItWorks() {
         <div className="grid gap-8 pb-20 md:grid-cols-2 md:gap-14 md:pb-28">
           {/* Stage — pinned, so the shape stays in frame for the whole story */}
           <div className="sticky top-20 z-10 -mx-5 h-[240px] bg-background/80 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[460px] md:bg-transparent md:backdrop-blur-none">
-            <div aria-hidden className="canvas-bleed h-full w-full">
-              <AssemblyScene step={active} />
+            <div ref={stageRef} aria-hidden className="canvas-bleed h-full w-full">
+              <AssemblyScene step={active} paused={!stageInView} />
             </div>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center gap-1.5 md:bottom-4">
               {STEPS.map((s, i) => (

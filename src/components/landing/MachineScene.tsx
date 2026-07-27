@@ -267,15 +267,24 @@ const WALK_SPAN = WALK_MAX - WALK_MIN;
 
 function WalkingUnits({ reduce }: { reduce: boolean }) {
   const refs = useRef<(THREE.Group | null)[]>([]);
-  const units = useMemo(
-    () =>
-      [
-        { z: -3.6, s: 0.6, type: "egg", speed: 0.85, start: 0, bob: 0.08, awake: true },
-        { z: -5.2, s: 0.54, type: "box", speed: 0.62, start: 7, bob: 0.07 },
-        { z: -6.8, s: 0.48, type: "stilt", speed: 1.05, start: 13, bob: 0.05 },
-        { z: -8.2, s: 0.42, type: "egg", speed: 0.5, start: 20, bob: 0.05 },
-        { z: -9.6, s: 0.36, type: "box", speed: 0.72, start: 28, bob: 0.04 },
-      ] as const,
+  const units = useMemo<
+    {
+      z: number;
+      s: number;
+      type: keyof typeof UNIT_TYPES;
+      speed: number;
+      start: number;
+      bob: number;
+      awake?: boolean;
+    }[]
+  >(
+    () => [
+      { z: -3.6, s: 0.6, type: "egg", speed: 0.85, start: 0, bob: 0.08, awake: true },
+      { z: -5.2, s: 0.54, type: "box", speed: 0.62, start: 7, bob: 0.07 },
+      { z: -6.8, s: 0.48, type: "stilt", speed: 1.05, start: 13, bob: 0.05 },
+      { z: -8.2, s: 0.42, type: "egg", speed: 0.5, start: 20, bob: 0.05 },
+      { z: -9.6, s: 0.36, type: "box", speed: 0.72, start: 28, bob: 0.04 },
+    ],
     []
   );
 
@@ -322,7 +331,13 @@ function WalkingUnits({ reduce }: { reduce: boolean }) {
   );
 }
 
-export default function MachineScene({ onPoke }: { onPoke?: () => void }) {
+export default function MachineScene({
+  onPoke,
+  paused = false,
+}: {
+  onPoke?: () => void;
+  paused?: boolean;
+}) {
   const reduce = usePrefersReducedMotion();
   const isDesktop = useIsDesktop();
   // Hero unit stands right-of-centre on desktop (copy owns the left), centred on
@@ -336,6 +351,8 @@ export default function MachineScene({ onPoke }: { onPoke?: () => void }) {
   return (
     <Canvas
       dpr={[1, 1.8]}
+      // Pause the render loop entirely when scrolled out of view.
+      frameloop={paused ? "never" : "always"}
       // Low and close: the unit looks down slightly at the viewer, which reads
       // as presence rather than turntable.
       // Well back: the canvas is full-bleed, so a near camera crops the unit to
