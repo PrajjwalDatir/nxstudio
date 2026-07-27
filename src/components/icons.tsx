@@ -95,4 +95,6 @@ export {
   Wand2 as WandIcon,
   Wrench as WrenchIcon,
   Loader2 as LoaderIcon,
+  Database as DatabaseIcon,
+  CreditCard as CreditCardIcon,
 } from "lucide-react";

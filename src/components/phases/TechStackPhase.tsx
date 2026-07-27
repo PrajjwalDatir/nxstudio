@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
 import {
@@ -10,8 +11,45 @@ import {
 } from "@/lib/platform-engine";
 import { Capability, Surface } from "@/lib/types";
 import { PhaseHeader } from "./PhaseHeader";
-import { CheckIcon, ChevronRightIcon, LayersIcon } from "@/components/icons";
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  LayersIcon,
+  GlobeIcon,
+  MonitorIcon,
+  LockIcon,
+  DatabaseIcon,
+  ZapIcon,
+  UsersIcon,
+  CreditCardIcon,
+  FolderIcon,
+  BellIcon,
+  SparklesIcon,
+  PaletteIcon,
+} from "@/components/icons";
+import { AppleMark, AndroidMark } from "@/components/landing/brand-icons";
 import { cn } from "@/lib/utils";
+
+type IconType = ComponentType<{ className?: string }>;
+
+const SURFACE_ICON: Record<Surface, IconType> = {
+  web: GlobeIcon,
+  ios: AppleMark,
+  android: AndroidMark,
+  desktop: MonitorIcon,
+};
+
+const CAPABILITY_ICON: Record<Capability, IconType> = {
+  auth: LockIcon,
+  database: DatabaseIcon,
+  realtime: ZapIcon,
+  multiplayer: UsersIcon,
+  payments: CreditCardIcon,
+  storage: FolderIcon,
+  push: BellIcon,
+  ai: SparklesIcon,
+  graphics: PaletteIcon,
+};
 
 function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -48,6 +86,7 @@ export function TechStackPhase() {
         <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {SURFACE_OPTIONS.map((opt) => {
             const on = surfaces.includes(opt.id);
+            const Icon = SURFACE_ICON[opt.id];
             return (
               <button
                 key={opt.id}
@@ -66,7 +105,7 @@ export function TechStackPhase() {
                 >
                   <CheckIcon className="h-3 w-3" />
                 </span>
-                <span className="text-2xl">{opt.icon}</span>
+                <Icon className={cn("h-6 w-6", on ? "text-primary" : "text-muted-foreground")} />
                 <span className="mt-1 font-medium">{opt.label}</span>
                 <span className="text-xs text-muted-foreground">{opt.description}</span>
               </button>
@@ -84,6 +123,7 @@ export function TechStackPhase() {
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {CAPABILITY_OPTIONS.map((opt) => {
             const on = capabilities.includes(opt.id);
+            const Icon = CAPABILITY_ICON[opt.id];
             return (
               <button
                 key={opt.id}
@@ -94,7 +134,7 @@ export function TechStackPhase() {
                   on ? "border-primary bg-accent/30" : "border-border hover:border-primary/40"
                 )}
               >
-                <span className="text-lg leading-none">{opt.icon}</span>
+                <Icon className={cn("mt-0.5 h-4.5 w-4.5 shrink-0", on ? "text-primary" : "text-muted-foreground")} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{opt.label}</span>
                   <span className="block text-xs text-muted-foreground">{opt.description}</span>

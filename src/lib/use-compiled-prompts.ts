@@ -6,7 +6,8 @@ import { CompiledPrompts } from "@/lib/prompts";
 
 interface State {
   prompts: CompiledPrompts | null;
-  /** True when the server returned 402 — user isn't premium. */
+  /** True when the master (build) prompt is withheld — user isn't premium.
+   *  Idea + depth prompts still populate for everyone. */
   locked: boolean;
   loading: boolean;
   error: string | null;
@@ -16,10 +17,11 @@ interface State {
 const RECOMPILE_DEBOUNCE_MS = 800;
 
 /**
- * Fetch the active project's server-compiled prompts. The prompt prose is only
- * ever assembled server-side and only for premium users, so a 402 here IS the
- * paywall: `locked` drives the upsell UI. Recompiles (debounced) as the founder
- * edits so premium previews stay live.
+ * Fetch the active project's server-compiled prompts. Prose is assembled
+ * server-side; the idea + depth prompts return for everyone, while the master
+ * build prompt is premium-only — the server sets `locked` when it withholds it,
+ * and that drives the upsell UI. Recompiles (debounced) as the founder edits so
+ * previews stay live.
  */
 export function useCompiledPrompts() {
   const { activeId, data } = useWorkspace();
@@ -51,13 +53,10 @@ export function useCompiledPrompts() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: dataRef.current }),
       });
-      if (res.status === 402) {
-        setState({ prompts: null, locked: true, loading: false, error: null });
-        return;
-      }
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Failed to load prompts.");
-      setState({ prompts: body as CompiledPrompts, locked: false, loading: false, error: null });
+      const { locked = false, support: _support, ...prompts } = body;
+      setState({ prompts: prompts as CompiledPrompts, locked, loading: false, error: null });
     } catch (e) {
       setState({
         prompts: null,

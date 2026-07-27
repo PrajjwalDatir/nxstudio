@@ -132,7 +132,7 @@ export function BuildPhase() {
         </p>
 
         <div className="mt-4 space-y-3">
-          {(locked ? DEPTH_PLACEHOLDERS : depthPrompts).map((p) => {
+          {depthPrompts.map((p) => {
             const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
             const isOpen = openDepth === p.id;
             return (
@@ -147,33 +147,25 @@ export function BuildPhase() {
                       <div className="text-sm text-muted-foreground">{p.description}</div>
                     </div>
                   </div>
-                  {locked ? (
-                    <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
-                  ) : (
-                    <CopyButton value={p.prompt} label="Copy" />
-                  )}
+                  <CopyButton value={p.prompt} label="Copy" />
                 </div>
 
-                {!locked && (
-                  <>
-                    <button
-                      onClick={() => setOpenDepth(isOpen ? null : p.id)}
-                      className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-                      {isOpen ? "Hide" : "Preview"}
-                    </button>
-                    {isOpen && (
-                      <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                        {p.prompt}
-                      </pre>
-                    )}
-                  </>
+                <button
+                  onClick={() => setOpenDepth(isOpen ? null : p.id)}
+                  className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                  {isOpen ? "Hide" : "Preview"}
+                </button>
+                {isOpen && (
+                  <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                    {p.prompt}
+                  </pre>
                 )}
               </div>
             );
           })}
-          {loading && !prompts && !locked && (
+          {loading && !prompts && (
             <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
               <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
             </div>
@@ -183,12 +175,3 @@ export function BuildPhase() {
     </>
   );
 }
-
-/** Titles/descriptions shown to free users (no prompt bodies — those stay server-side). */
-const DEPTH_PLACEHOLDERS: CompiledPrompt[] = [
-  { id: "qa", title: "QA & test coverage", description: "Find broken states and cover the core flows with tests.", prompt: "" },
-  { id: "security", title: "Security review", description: "Audit auth, input handling, secrets, and dependencies.", prompt: "" },
-  { id: "performance", title: "Performance pass", description: "Profile and fix slow renders, bundles, and queries.", prompt: "" },
-  { id: "accessibility", title: "Accessibility audit", description: "Get the UI to WCAG AA.", prompt: "" },
-  { id: "deploy", title: "Ship to production", description: "Set up CI/CD and deploy to your host.", prompt: "" },
-];
