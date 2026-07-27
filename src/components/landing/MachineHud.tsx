@@ -57,11 +57,11 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
 
   return (
     <div className="relative inline-flex max-w-sm items-start gap-2.5 rounded-xl border border-white/8 bg-background/70 py-2.5 pl-3 pr-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_10px_30px_-20px_rgba(0,0,0,0.7)] backdrop-blur-md">
-      {/* Speech tail on the left edge, pointing back toward the unit. */}
+      {/* Speech tail on the right edge, pointing across to the unit beside it. */}
       {tail && (
         <span
           aria-hidden
-          className="absolute left-[-6px] top-8 hidden h-3 w-3 rotate-45 rounded-[2px] border-b border-l border-white/8 bg-background/70 md:block"
+          className="absolute right-[-6px] top-8 hidden h-3 w-3 rotate-45 rounded-[2px] border-r border-t border-white/8 bg-background/70 md:block"
         />
       )}
       {/* Live status lamp — same pulse the "works-with" rail uses, so the unit's

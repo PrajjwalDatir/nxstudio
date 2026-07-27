@@ -178,7 +178,7 @@ export function Hero() {
             everything. */}
         <motion.div
           {...rise(0.4)}
-          className="relative z-20 mt-6 flex justify-center md:absolute md:right-[1%] md:top-[15%] md:mt-0 md:block md:w-auto md:max-w-[16rem]"
+          className="relative z-20 mt-6 flex justify-center md:absolute md:right-[31%] md:top-[28%] md:mt-0 md:block md:w-auto md:max-w-[14rem]"
         >
           <MachineReadout line={line} tail />
         </motion.div>
