@@ -32,9 +32,10 @@ const SURFACE_ICON: Record<Surface, ComponentType<{ className?: string }>> = {
  * component: all state is local and trivial, nothing leaves the card.
  */
 
-// Baseline capabilities for the Acme Reader demo — a web read-later app always
-// needs accounts + a database, so the backend stays Supabase. The visitor drives
-// the SURFACES (and an optional 3D toggle); everything else is engine output.
+// Baseline capabilities for the nxstudio demo — dogfooding our own product, a web
+// app that always needs accounts + a database, so the backend stays Supabase. The
+// visitor drives the SURFACES (and an optional 3D toggle); everything else is
+// engine output.
 const BASE_CAPS: Capability[] = ["auth", "database"];
 
 // Which library string counts as the "3D surface" line, per frontend. Matches
@@ -44,7 +45,7 @@ const GFX_RE = /Three\.js|Flame|SceneKit|RealityKit|Filament|OpenGL/;
 /** Compile the founder's picks into the exact build-prompt.md the agent gets. */
 function buildPrompt(stack: CompiledStack): string {
   const lines = [
-    "# Build: Acme Reader",
+    "# Build: nxstudio",
     `Stack: ${stack.frontend} · ${stack.language} · ${stack.backend}`,
     `Target: ${stack.platform} · ${stack.hosting}`,
   ];
@@ -53,7 +54,7 @@ function buildPrompt(stack: CompiledStack): string {
   if (stack.backend.startsWith("Supabase")) lines.push("- Supabase auth + `profiles` table");
   else if (stack.backend.startsWith("SpacetimeDB")) lines.push("- SpacetimeDB module + realtime sync");
   else lines.push("- Local-first persistence on device");
-  lines.push("- Reading view with saved highlights");
+  lines.push("- Project canvas → derived stack → one build prompt");
   const gfx = stack.libraries.find((l) => GFX_RE.test(l));
   if (gfx) lines.push(`- Animated 3D surface (${gfx})`);
   return lines.join("\n");
