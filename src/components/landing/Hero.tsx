@@ -9,6 +9,7 @@ import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
 import { useMachineAudio } from "./useMachineAudio";
 import { AudioControl, MachineReadout } from "./MachineHud";
 import { AuthButton } from "./AuthOverlay";
+import { useInView } from "./use-in-view";
 
 // WebGL — client only, so the page still prerenders statically.
 const MachineScene = dynamic(() => import("./MachineScene"), { ssr: false });
@@ -30,6 +31,7 @@ const SECTION_TRIGGERS: [string, DialogueTrigger][] = [
  */
 export function Hero() {
   const reduce = useReducedMotion();
+  const { ref: stageRef, inView: stageInView } = useInView<HTMLDivElement>();
   const { enabled: soundOn, playing, toggle: toggleSound, blip, thunk } = useMachineAudio();
   // Deterministic first line: pickLine() is random, and calling it during
   // render would make the server and client disagree.
@@ -103,8 +105,8 @@ export function Hero() {
         aria-hidden
         className="pointer-events-none absolute inset-0 z-0 h-[620px] w-full sm:h-[680px]"
       >
-        <div className="pointer-events-auto h-full w-full cursor-pointer">
-          <MachineScene onPoke={() => say("poke", "thunk")} />
+        <div ref={stageRef} className="pointer-events-auto h-full w-full cursor-pointer">
+          <MachineScene onPoke={() => say("poke", "thunk")} paused={!stageInView} />
         </div>
       </div>
 

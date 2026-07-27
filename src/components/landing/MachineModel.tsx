@@ -216,15 +216,21 @@ export function Machine({
   reduce,
   onPoke,
   pose = "ready",
+  build = 1,
 }: {
   reduce: boolean;
   onPoke?: () => void;
   pose?: MachinePose;
+  /** 0 = parts scattered/exploded, 1 = fully assembled. Hero leaves it at 1. */
+  build?: number;
 }) {
   const group = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
   const torso = useRef<THREE.Group>(null);
   const eyes = useRef<THREE.MeshStandardMaterial[]>([]);
+  const arms = useRef<(THREE.Group | null)[]>([]);
+  const legs = useRef<(THREE.Group | null)[]>([]);
+  const buildCur = useRef(build);
   const recoil = useRef(0);
 
   /** Kick the unit back briefly when poked, then settle. */
@@ -274,6 +280,22 @@ export function Machine({
     // Eyes brighten as the unit comes up — the clearest read on its state.
     eyes.current.forEach((m) => {
       if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, target.eye, a);
+    });
+
+    // Assembly: parts ease from scattered → seated as `build` rises. Every
+    // offset is `apart * k`, so at build=1 (apart=0) they resolve to zero and
+    // the hero unit is untouched. Legs keep their prop x/z — only y is offset.
+    buildCur.current += (build - buildCur.current) * a;
+    const apart = 1 - buildCur.current;
+    const wob = Math.sin(t * 1.4) * 0.04 * apart;
+    if (head.current) head.current.position.y = 1.42 + apart * (0.95 + wob);
+    arms.current.forEach((g, i) => {
+      if (!g) return;
+      g.position.x = apart * (i === 0 ? -0.95 : 0.95);
+      g.position.y = apart * (0.45 + wob);
+    });
+    legs.current.forEach((g) => {
+      if (g) g.position.y = apart * (-0.75 - wob);
     });
   });
 
@@ -401,8 +423,13 @@ export function Machine({
       {([
         { s: -1, shoulderY: 0.7, upper: 0.24, fore: 0.58, curl: 0.85 },
         { s: 1, shoulderY: 0.78, upper: 0.36, fore: 0.72, curl: 1.15 },
-      ] as const).map(({ s, shoulderY, upper, fore, curl }) => (
-        <group key={s}>
+      ] as const).map(({ s, shoulderY, upper, fore, curl }, i) => (
+        <group
+          key={s}
+          ref={(el) => {
+            arms.current[i] = el;
+          }}
+        >
           {/* Pauldron cap over the joint */}
           <mesh position={[s * 0.6, shoulderY + 0.06, 0]} rotation={[0, 0, s * 0.2]}>
             <sphereGeometry args={[0.26, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
@@ -445,8 +472,15 @@ export function Machine({
       {([
         { x: -0.27, z: -0.04, tilt: 0.0, splay: -0.05, len: 0.74 },
         { x: 0.28, z: 0.12, tilt: 0.16, splay: 0.14, len: 0.68 },
-      ] as const).map(({ x, z, tilt, splay, len }) => (
-        <group key={x} position={[x, 0, z]} rotation={[0, splay, 0]}>
+      ] as const).map(({ x, z, tilt, splay, len }, i) => (
+        <group
+          key={x}
+          ref={(el) => {
+            legs.current[i] = el;
+          }}
+          position={[x, 0, z]}
+          rotation={[0, splay, 0]}
+        >
           {/* Hip ball */}
           <mesh position={[0, -0.3, 0]}>
             <sphereGeometry args={[0.16, 12, 10]} />
