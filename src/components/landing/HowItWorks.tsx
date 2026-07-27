@@ -74,9 +74,9 @@ const STEPS = [
           </Button>
         </div>
         <pre className="px-4 py-3 font-mono text-[11px] leading-relaxed text-foreground/80">
-          <span className="text-primary"># Build: Acme Reader</span>
+          <span className="text-primary"># Build: nxstudio</span>
           {"\n"}Stack: Next.js · TypeScript · Supabase
-          {"\n"}Offline-first · highlights · no Notion
+          {"\n"}Visual canvas · derived stack · one build prompt
         </pre>
       </div>
     ),

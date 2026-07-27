@@ -76,7 +76,7 @@ export function CanvasPreview() {
               <div>
                 <h3 className="text-base font-semibold tracking-tight">Project Canvas</h3>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Tracking phases for <span className="text-primary">Acme Reader</span>
+                  Tracking phases for <span className="text-primary">nxstudio</span>
                 </p>
               </div>
               <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
