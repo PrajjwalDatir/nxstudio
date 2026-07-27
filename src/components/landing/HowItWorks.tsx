@@ -145,13 +145,13 @@ export function HowItWorks() {
           </p>
         </div>
 
-        <div className="grid gap-8 pb-20 md:grid-cols-2 md:gap-14 md:pb-28">
+        <div className="grid grid-cols-1 gap-8 pb-20 md:grid-cols-2 md:gap-14 md:pb-28">
           {/* Stage — pinned and vertically centred in the viewport, so the unit
               holds frame the whole way down while only the story column scrolls.
               A tall sticky box (not a short top-anchored one) is what keeps the
               machine at eye level instead of riding up under the section title. */}
           <div
-            className="sticky top-16 z-10 -mx-5 flex h-[50vh] items-center justify-center bg-background/70 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[calc(100dvh-7rem)] md:bg-transparent md:backdrop-blur-none"
+            className="sticky top-16 z-10 -mx-5 flex h-[50vh] min-w-0 items-center justify-center bg-background/70 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[calc(100dvh-7rem)] md:bg-transparent md:backdrop-blur-none"
           >
             <div ref={stageRef} aria-hidden className="canvas-bleed h-full w-full">
               <AssemblyScene step={active} paused={!stageInView} />
@@ -171,7 +171,7 @@ export function HowItWorks() {
           {/* Story — a timeline, not a stack of cards. One spine threads the
               steps; each step is plain type plus its single real artifact, so
               nothing is a box inside a box. */}
-          <ol className="relative">
+          <ol className="relative min-w-0">
             {/* the spine the nodes sit on */}
             <span
               aria-hidden

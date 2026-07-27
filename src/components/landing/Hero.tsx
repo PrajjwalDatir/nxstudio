@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { motion, useReducedMotion } from "framer-motion";
 import { CanvasPreview } from "./CanvasPreview";
 import { ArrowRightIcon, GithubIcon } from "@/components/icons";
 import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
@@ -13,8 +12,6 @@ import { useInView } from "./use-in-view";
 
 // WebGL — client only, so the page still prerenders statically.
 const MachineScene = dynamic(() => import("./MachineScene"), { ssr: false });
-
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Section id → the line the machine says when you reach it. */
 const SECTION_TRIGGERS: [string, DialogueTrigger][] = [
@@ -30,7 +27,6 @@ const SECTION_TRIGGERS: [string, DialogueTrigger][] = [
  * and it talks back to whatever you're doing on the page.
  */
 export function Hero() {
-  const reduce = useReducedMotion();
   const { ref: stageRef, inView: stageInView } = useInView<HTMLDivElement>();
   const { enabled: soundOn, playing, toggle: toggleSound, blip, thunk } = useMachineAudio();
   // Deterministic first line: pickLine() is random, and calling it during
@@ -84,15 +80,6 @@ export function Hero() {
     return () => io.disconnect();
   }, [say]);
 
-  const rise = (delay: number) =>
-    reduce
-      ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.4, delay } }
-      : {
-          initial: { opacity: 0, y: 18 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.7, ease: EASE, delay },
-        };
-
   return (
     <section className="relative overflow-hidden">
       <div className="grid-bg absolute inset-0" aria-hidden />
@@ -114,25 +101,25 @@ export function Hero() {
         <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] md:gap-8">
           {/* Copy — left rail */}
           <div className="relative z-10 text-center md:text-left">
-            <motion.h1
-              {...rise(0.05)}
-              className="text-[2.6rem] font-bold leading-[1.03] tracking-tight sm:text-6xl"
+            <h1
+              style={{ animationDelay: "0.05s" }}
+              className="reveal-rise text-[2.6rem] font-bold leading-[1.03] tracking-tight sm:text-6xl"
             >
               Turn a brief into a{" "}
               <span className="text-gradient">shippable build prompt</span>.
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              {...rise(0.14)}
-              className="mx-auto mt-6 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg md:mx-0"
+            <p
+              style={{ animationDelay: "0.14s" }}
+              className="reveal-rise mx-auto mt-6 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg md:mx-0"
             >
               You know what you&apos;re building. Say it once — we&apos;ll hand
               your agent the rest.
-            </motion.p>
+            </p>
 
-            <motion.div
-              {...rise(0.22)}
-              className="mt-9 flex flex-col items-center gap-3 sm:flex-row md:justify-start"
+            <div
+              style={{ animationDelay: "0.22s" }}
+              className="reveal-rise mt-9 flex flex-col items-center gap-3 sm:flex-row md:justify-start"
             >
               <AuthButton
                 onMouseEnter={() => say("cta-hover")}
@@ -147,15 +134,15 @@ export function Hero() {
               >
                 See how it works
               </a>
-            </motion.div>
+            </div>
 
-            <motion.p
-              {...rise(0.3)}
-              className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground md:justify-start"
+            <p
+              style={{ animationDelay: "0.3s" }}
+              className="reveal-rise mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground md:justify-start"
             >
               <GithubIcon className="h-3.5 w-3.5" />
               Free to start · Sign in with GitHub · Works with Claude Code, Cursor &amp; more
-            </motion.p>
+            </p>
 
           </div>
 
@@ -176,23 +163,21 @@ export function Hero() {
             it reads as the machine talking without covering its face) and dropped
             in-flow under the copy on mobile, where the unit sits centred behind
             everything. */}
-        <motion.div
-          {...rise(0.4)}
-          className="relative z-20 mt-6 flex justify-center md:absolute md:right-[31%] md:top-[28%] md:mt-0 md:block md:w-auto md:max-w-[14rem]"
+        <div
+          style={{ animationDelay: "0.4s" }}
+          className="reveal-rise relative z-20 mt-6 flex justify-center md:absolute md:right-[31%] md:top-[28%] md:mt-0 md:block md:w-auto md:max-w-[14rem]"
         >
           <MachineReadout line={line} tail />
-        </motion.div>
+        </div>
       </div>
 
       {/* The evidence */}
-      <motion.div
-        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 28 }}
-        animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.85, ease: EASE, delay: 0.42 }}
-        className="relative z-10 mx-auto max-w-5xl px-5 sm:px-6"
+      <div
+        style={{ animationDelay: "0.42s" }}
+        className="reveal-rise relative z-10 mx-auto max-w-5xl px-5 sm:px-6"
       >
         <CanvasPreview />
-      </motion.div>
+      </div>
     </section>
   );
 }
