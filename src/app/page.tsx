@@ -32,7 +32,7 @@ const PLANS = [
     features: [
       "Visual project canvas",
       "Brief + derived tech stack",
-      "Full build plan, ready to compile",
+      "Idea pressure-test prompt",
       "Sign in with GitHub",
     ],
     highlighted: false,
