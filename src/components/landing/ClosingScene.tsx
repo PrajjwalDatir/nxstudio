@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useInView } from "./use-in-view";
 
 // WebGL — client only, so the page still prerenders statically.
 const AssemblyScene = dynamic(() => import("./AssemblyScene"), { ssr: false });
@@ -12,9 +13,10 @@ const AssemblyScene = dynamic(() => import("./AssemblyScene"), { ssr: false });
  * this corner read as an afterthought.
  */
 export function ClosingScene() {
+  const { ref, inView } = useInView<HTMLDivElement>();
   return (
-    <div aria-hidden className="canvas-bleed h-[320px] w-full sm:h-[400px]">
-      <AssemblyScene step={2} />
+    <div ref={ref} aria-hidden className="canvas-bleed h-[320px] w-full sm:h-[400px]">
+      <AssemblyScene step={2} paused={!inView} />
     </div>
   );
 }

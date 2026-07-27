@@ -264,6 +264,8 @@ const UNIT_TYPES = { egg: EggUnit, box: BoxUnit, stilt: StiltUnit } as const;
 const WALK_MIN = -17;
 const WALK_MAX = 17;
 const WALK_SPAN = WALK_MAX - WALK_MIN;
+// Faced ~3/4 toward travel (+x) so the walk reads but the eyes still catch.
+const BASE_YAW = Math.PI / 2 - 0.5;
 
 function WalkingUnits({ reduce }: { reduce: boolean }) {
   const refs = useRef<(THREE.Group | null)[]>([]);
@@ -279,11 +281,11 @@ function WalkingUnits({ reduce }: { reduce: boolean }) {
     }[]
   >(
     () => [
-      { z: -3.6, s: 0.6, type: "egg", speed: 0.85, start: 0, bob: 0.08, awake: true },
-      { z: -5.2, s: 0.54, type: "box", speed: 0.62, start: 7, bob: 0.07 },
-      { z: -6.8, s: 0.48, type: "stilt", speed: 1.05, start: 13, bob: 0.05 },
-      { z: -8.2, s: 0.42, type: "egg", speed: 0.5, start: 20, bob: 0.05 },
-      { z: -9.6, s: 0.36, type: "box", speed: 0.72, start: 28, bob: 0.04 },
+      { z: -3.0, s: 0.95, type: "egg", speed: 0.8, start: 0, bob: 0.14, awake: true },
+      { z: -4.4, s: 0.82, type: "box", speed: 0.6, start: 7, bob: 0.12 },
+      { z: -5.9, s: 0.7, type: "stilt", speed: 1.0, start: 13, bob: 0.1 },
+      { z: -7.4, s: 0.6, type: "egg", speed: 0.5, start: 20, bob: 0.09, awake: true },
+      { z: -9.0, s: 0.52, type: "box", speed: 0.72, start: 28, bob: 0.08 },
     ],
     []
   );
@@ -296,10 +298,12 @@ function WalkingUnits({ reduce }: { reduce: boolean }) {
       const x = WALK_MIN + (((u.start + t * u.speed) % WALK_SPAN) + WALK_SPAN) % WALK_SPAN;
       g.position.x = x;
       if (!reduce) {
-        // Bob at 2× the leg-swing so it peaks on each footfall; a whisper of roll.
+        // Bob at 2× the leg-swing so it peaks on each footfall; a waddling roll.
         const stride = t * u.speed * 3.4 + u.start;
         g.position.y = -0.55 + Math.abs(Math.sin(stride)) * u.bob;
-        g.rotation.z = Math.sin(stride) * 0.025;
+        g.rotation.z = Math.sin(stride) * 0.05;
+        // Idle look-around on top of the walk, so they read as alive, not on rails.
+        g.rotation.y = BASE_YAW + Math.sin(t * 0.5 + u.start) * 0.16;
       }
     });
   });
@@ -316,8 +320,7 @@ function WalkingUnits({ reduce }: { reduce: boolean }) {
             }}
             position={[WALK_MIN, -0.55, u.z]}
             scale={u.s}
-            // Faced ~3/4 toward travel (+x) so the walk reads but the eyes still catch.
-            rotation={[0, Math.PI / 2 - 0.5, 0]}
+            rotation={[0, BASE_YAW, 0]}
           >
             <Unit
               awake={u.awake}
