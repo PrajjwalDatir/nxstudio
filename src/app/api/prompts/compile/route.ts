@@ -11,13 +11,15 @@ export const runtime = "nodejs";
 const SUPPORT_EMAIL = "in.prajj@gmail.com";
 
 /**
- * The paywall. Compiles a project's prompts server-side and returns them ONLY to
- * premium users; free users get 402 with an upsell payload and the prompt text
- * never leaves the server for them.
+ * Compiles a project's prompts server-side. The idea prompt and the depth
+ * prompts are FREE — they compile and return for any signed-in user. The master
+ * build prompt is the paid unlock: for non-premium users its prose is stripped
+ * before serialization (never leaves the server) and `locked: true` drives the
+ * upsell UI. The derived stack is non-secret and already available client-side.
  *
  * The founder's workspace data is sent in the body — it's their own input, and
- * the value we protect is the TEMPLATE prose (which stays server-side and is
- * never returned raw), not the data. This avoids any save/refetch race.
+ * the value we protect is the master TEMPLATE prose, not the data. This avoids
+ * any save/refetch race.
  */
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -26,14 +28,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
-  // Gate first — do not compile (or reveal) anything for non-premium users.
   const access = await getAccessForUser(user.id);
-  if (!access.isPremium) {
-    return NextResponse.json(
-      { error: "premium_required", state: access.state, support: SUPPORT_EMAIL },
-      { status: 402 }
-    );
-  }
 
   const body = (await request.json().catch(() => ({}))) as { data?: Partial<WorkspaceData> };
   if (!body.data) return NextResponse.json({ error: "Missing workspace data." }, { status: 400 });
@@ -43,7 +38,12 @@ export async function POST(request: Request) {
 
   try {
     const prompts = await compilePromptsForProject(workspace);
-    return NextResponse.json(prompts);
+    // Strip the master build prompt prose for non-premium users — it stays
+    // server-side. Idea + depth prose ship to everyone.
+    if (!access.isPremium) {
+      prompts.master = { ...prompts.master, prompt: "" };
+    }
+    return NextResponse.json({ ...prompts, locked: !access.isPremium, support: SUPPORT_EMAIL });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to compile prompts.";
     return NextResponse.json({ error: message }, { status: 500 });

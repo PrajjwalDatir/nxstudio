@@ -31,33 +31,31 @@ export interface SurfaceOption {
   id: Surface;
   label: string;
   description: string;
-  icon: string; // emoji
 }
 
 export const SURFACE_OPTIONS: SurfaceOption[] = [
-  { id: "web", label: "Web", description: "Runs in the browser, installable as a PWA.", icon: "🌐" },
-  { id: "ios", label: "iOS", description: "iPhone & iPad, the Apple App Store.", icon: "🍎" },
-  { id: "android", label: "Android", description: "Phones & tablets on Google Play.", icon: "🤖" },
-  { id: "desktop", label: "Desktop", description: "Windows, macOS & Linux apps.", icon: "🖥️" },
+  { id: "web", label: "Web", description: "Runs in the browser, installable as a PWA." },
+  { id: "ios", label: "iOS", description: "iPhone & iPad, the Apple App Store." },
+  { id: "android", label: "Android", description: "Phones & tablets on Google Play." },
+  { id: "desktop", label: "Desktop", description: "Windows, macOS & Linux apps." },
 ];
 
 export interface CapabilityOption {
   id: Capability;
   label: string;
   description: string;
-  icon: string;
 }
 
 export const CAPABILITY_OPTIONS: CapabilityOption[] = [
-  { id: "auth", label: "Accounts & auth", description: "Sign-up, login, and sessions.", icon: "🔑" },
-  { id: "database", label: "Database", description: "Persist users, content, and records.", icon: "🗄️" },
-  { id: "realtime", label: "Realtime updates", description: "Live data & presence as it happens.", icon: "⚡" },
-  { id: "multiplayer", label: "Multiplayer / shared state", description: "Many users on one live state — games, collaboration.", icon: "👥" },
-  { id: "payments", label: "Payments & subscriptions", description: "Charge users and manage plans.", icon: "💳" },
-  { id: "storage", label: "File storage", description: "Uploads, images, and documents.", icon: "📎" },
-  { id: "push", label: "Push notifications", description: "Re-engage users on their device.", icon: "🔔" },
-  { id: "ai", label: "AI / LLM features", description: "Generative or intelligent features.", icon: "✨" },
-  { id: "graphics", label: "3D / rich graphics", description: "Immersive or animated surfaces.", icon: "🎨" },
+  { id: "auth", label: "Accounts & auth", description: "Sign-up, login, and sessions." },
+  { id: "database", label: "Database", description: "Persist users, content, and records." },
+  { id: "realtime", label: "Realtime updates", description: "Live data & presence as it happens." },
+  { id: "multiplayer", label: "Multiplayer / shared state", description: "Many users on one live state — games, collaboration." },
+  { id: "payments", label: "Payments & subscriptions", description: "Charge users and manage plans." },
+  { id: "storage", label: "File storage", description: "Uploads, images, and documents." },
+  { id: "push", label: "Push notifications", description: "Re-engage users on their device." },
+  { id: "ai", label: "AI / LLM features", description: "Generative or intelligent features." },
+  { id: "graphics", label: "3D / rich graphics", description: "Immersive or animated surfaces." },
 ];
 
 /* ------------------------------------------------------------------ */

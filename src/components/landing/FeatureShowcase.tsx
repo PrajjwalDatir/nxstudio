@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import {
   CopyIcon,
   CheckIcon,
@@ -10,19 +10,18 @@ import {
   PlusIcon,
   CommandIcon,
   GlobeIcon,
-  AppleIcon,
-  SmartphoneIcon,
   MonitorIcon,
   BoxIcon,
 } from "@/components/icons";
+import { AppleMark, AndroidMark } from "@/components/landing/brand-icons";
 import { compileStack, SURFACE_OPTIONS } from "@/lib/platform-engine";
 import type { Capability, CompiledStack, Surface } from "@/lib/types";
 
-/** Real (Lucide) icons for each surface — no emoji in the marketing UI. */
-const SURFACE_ICON: Record<Surface, typeof GlobeIcon> = {
+/** Official platform marks per surface (Apple/Android logos) — no emoji in the UI. */
+const SURFACE_ICON: Record<Surface, ComponentType<{ className?: string }>> = {
   web: GlobeIcon,
-  ios: AppleIcon,
-  android: SmartphoneIcon,
+  ios: AppleMark,
+  android: AndroidMark,
   desktop: MonitorIcon,
 };
 
