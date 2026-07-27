@@ -1,6 +1,13 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { Project, ProjectRow, rowToProject } from "./projects";
+import {
+  Collection,
+  CollectionRow,
+  Project,
+  ProjectRow,
+  rowToCollection,
+  rowToProject,
+} from "./projects";
 
 /**
  * Load the signed-in user's projects on the server so the app shell renders
@@ -17,4 +24,20 @@ export async function fetchProjects(): Promise<Project[]> {
 
   if (error || !data) return [];
   return (data as ProjectRow[]).map(rowToProject);
+}
+
+/**
+ * Load the user's collections (product groups). Returns [] if the collections
+ * table isn't there yet (migration 0004 not run) so the app still boots.
+ */
+export async function fetchCollections(): Promise<Collection[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("collections")
+    .select("*")
+    .order("sort", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+  return (data as CollectionRow[]).map(rowToCollection);
 }

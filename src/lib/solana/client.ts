@@ -46,7 +46,9 @@ export function createPaymentRequest(existingReference?: string): PaymentRequest
     splToken: new PublicKey(solana.usdcMint()),
     reference,
     label: solana.label(),
-    message: `${solana.label()} premium — ${solana.cycleDays()} day cycle`,
+    // ASCII only — some wallets fail to parse non-ASCII (e.g. an em dash) in the
+    // Solana Pay message and reject the QR as "invalid".
+    message: `${solana.label()} premium - ${solana.cycleDays()} day cycle`,
   }).toString();
 
   return { reference: reference.toBase58(), url, amount: amount.toString() };

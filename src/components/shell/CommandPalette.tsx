@@ -68,7 +68,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       setIsOpen(false);
     };
     const pages: Item[] = [
-      { id: "p-canvas", group: "Pages", label: "Canvas", icon: <LayersIcon className="h-4 w-4" />, run: go("/") },
+      { id: "p-canvas", group: "Pages", label: "Canvas", icon: <LayersIcon className="h-4 w-4" />, run: go("/canvas") },
       { id: "p-projects", group: "Pages", label: "Projects", icon: <FolderIcon className="h-4 w-4" />, run: go("/projects") },
       { id: "p-team", group: "Pages", label: "Team", icon: <FolderIcon className="h-4 w-4" />, run: go("/team") },
       { id: "p-calendar", group: "Pages", label: "Calendar", icon: <FolderIcon className="h-4 w-4" />, run: go("/calendar") },
@@ -81,7 +81,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       label: ph.label,
       hint: ph.description,
       icon: <PhaseIcon name={ph.icon} className="h-4 w-4" />,
-      run: go(`/phase/${ph.id}`),
+      run: go(`/canvas/${ph.id}`),
     }));
     const projectItems: Item[] = projects.map((pr) => ({
       id: `pr-${pr.id}`,
@@ -91,7 +91,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       icon: <FolderIcon className="h-4 w-4" />,
       run: () => {
         switchProject(pr.id);
-        router.push("/");
+        router.push("/canvas");
         setIsOpen(false);
       },
     }));

@@ -28,7 +28,7 @@ export default function TasksPage() {
             <div key={phase.id}>
               <div className="mb-2 flex items-center justify-between">
                 <Link
-                  href={`/phase/${phase.id}`}
+                  href={`/canvas/${phase.id}`}
                   className="text-sm font-semibold hover:text-primary"
                 >
                   {phase.label}
@@ -65,7 +65,7 @@ export default function TasksPage() {
                 </div>
               ) : (
                 <Link
-                  href={`/phase/${phase.id}`}
+                  href={`/canvas/${phase.id}`}
                   className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 hover:border-primary/40"
                 >
                   <span

@@ -167,7 +167,7 @@ export function TechStackPhase() {
       {stack && (
         <div className="mt-6 flex justify-end">
           <Link
-            href="/phase/build"
+            href="/canvas/build"
             onClick={confirm}
             className="inline-flex items-center gap-1 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >

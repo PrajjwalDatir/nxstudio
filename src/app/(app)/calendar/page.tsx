@@ -131,7 +131,7 @@ export default function CalendarPage() {
           <div className="mt-4 space-y-3">
             {PHASES.map((p) => (
               <div key={p.id} className="flex items-center justify-between gap-2">
-                <Link href={`/phase/${p.id}`} className="text-sm hover:text-primary">
+                <Link href={`/canvas/${p.id}`} className="text-sm hover:text-primary">
                   {p.label}
                 </Link>
                 <DatePicker

@@ -24,6 +24,8 @@ export interface Project {
   github: GitHubConnection;
   /** Per-phase due dates, keyed by phaseId. Value is yyyy-mm-dd ("" clears). */
   dueDates: Record<string, string>;
+  /** Collection (group) this product belongs to, or null when ungrouped. */
+  collectionId: string | null;
 }
 
 /** Shape of a row in public.projects. `data`/`due_dates` are jsonb. */
@@ -35,8 +37,47 @@ export interface ProjectRow {
   github_repo: string | null;
   github_branch: string;
   due_dates: Record<string, string>;
+  collection_id: string | null;
   created_at: string;
   updated_at?: string;
+}
+
+/** A named group that holds products (projects). See 0004_collections.sql. */
+export interface Collection {
+  id: string;
+  name: string;
+  sort: number;
+  createdAt: string;
+}
+
+export interface CollectionRow {
+  id: string;
+  user_id: string;
+  name: string;
+  sort: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export function newCollection(name: string, sort: number): Collection {
+  return {
+    id: `c_${Math.random().toString(36).slice(2, 10)}`,
+    name: name || "Untitled",
+    sort,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export function rowToCollection(row: CollectionRow): Collection {
+  return { id: row.id, name: row.name || "Untitled", sort: row.sort ?? 0, createdAt: row.created_at };
+}
+
+export function collectionToRow(c: Collection, userId: string) {
+  return { id: c.id, user_id: userId, name: c.name, sort: c.sort };
+}
+
+export function serializeCollection(c: Collection): string {
+  return JSON.stringify({ name: c.name, sort: c.sort });
 }
 
 export function newWorkspaceData(name: string): WorkspaceData {
@@ -65,6 +106,7 @@ export function newProject(name: string): Project {
     data: newWorkspaceData(name),
     github: { repo: null, branch: "main" },
     dueDates: {},
+    collectionId: null,
   };
 }
 
@@ -97,6 +139,7 @@ export function rowToProject(row: ProjectRow): Project {
     data: hydrateData(row.data, name),
     github: { repo: row.github_repo ?? null, branch: row.github_branch ?? "main" },
     dueDates: row.due_dates ?? {},
+    collectionId: row.collection_id ?? null,
   };
 }
 
@@ -110,10 +153,16 @@ export function projectToRow(p: Project, userId: string) {
     github_repo: p.github.repo,
     github_branch: p.github.branch,
     due_dates: p.dueDates,
+    collection_id: p.collectionId,
   };
 }
 
 /** Stable serialization of the persisted fields — used to detect dirty projects. */
 export function serializeProject(p: Project): string {
-  return JSON.stringify({ data: p.data, github: p.github, dueDates: p.dueDates });
+  return JSON.stringify({
+    data: p.data,
+    github: p.github,
+    dueDates: p.dueDates,
+    collectionId: p.collectionId,
+  });
 }

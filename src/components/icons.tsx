@@ -2,6 +2,8 @@
 // Nx Studio uses Shadcn UI which is built on Lucide icons
 // This ensures visual consistency across all components
 
+export { NxLogo } from "./NxLogo";
+
 export {
   // Core Actions
   Copy as CopyIcon,
@@ -36,8 +38,7 @@ export {
   
   // Brand
   Zap as ZapIcon,
-  Hexagon as NxLogo,
-  
+
   // Additional common icons
   X as XIcon,
   Menu as MenuIcon,
@@ -51,6 +52,15 @@ export {
   Lightbulb as LightbulbIcon,
   Building2 as BuildingIcon,
   Sprout as SproutIcon,
+
+  // Marketing / landing
+  ArrowRight as ArrowRightIcon,
+  Terminal as TerminalIcon,
+  Command as CommandIcon,
+  Blocks as BlocksIcon,
+  ShieldCheck as ShieldCheckIcon,
+  Coins as CoinsIcon,
+  GitBranch as GitBranchIcon,
 
   // Shell / navigation
   Users as UsersIcon,

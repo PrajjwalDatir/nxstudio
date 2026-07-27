@@ -49,7 +49,7 @@ export function BuildPhase() {
           <LayersIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
           <p className="mt-3 text-sm text-muted-foreground">
             Pick your surfaces in the{" "}
-            <Link href="/phase/tech-stack" className="text-primary hover:underline">
+            <Link href="/canvas/tech-stack" className="text-primary hover:underline">
               Tech Stack
             </Link>{" "}
             phase first — the build prompt is generated from your derived stack.

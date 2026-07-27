@@ -23,7 +23,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/", label: "Canvas", icon: ScaffoldIcon, match: (p: string) => p === "/" || p.startsWith("/phase") },
+  // Phases live under /canvas/<phaseId>, so the board stays highlighted while
+  // you're inside one of its stages.
+  { href: "/canvas", label: "Canvas", icon: ScaffoldIcon, match: (p: string) => p.startsWith("/canvas") },
   { href: "/projects", label: "Projects", icon: FolderIcon },
   { href: "/team", label: "Team", icon: UsersIcon },
   { href: "/calendar", label: "Calendar", icon: CalendarIcon },
@@ -45,7 +47,7 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
     createProject(trimmed);
     setName("");
     setOpen(false);
-    router.push("/");
+    router.push("/canvas");
   };
 
   return (

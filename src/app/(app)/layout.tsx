@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { fetchProjects } from "@/lib/projects-server";
+import { fetchProjects, fetchCollections } from "@/lib/projects-server";
 import { WorkspaceProvider } from "@/lib/workspace-store";
 import { SyncProvider } from "@/lib/sync-store";
 import { CommandProvider } from "@/components/shell/CommandPalette";
@@ -20,11 +20,19 @@ export default async function AppLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Load the user's projects on the server so the shell renders with real data.
-  const initialProjects = await fetchProjects();
+  // Load the user's projects + collections on the server so the shell renders
+  // with real data on first paint.
+  const [initialProjects, initialCollections] = await Promise.all([
+    fetchProjects(),
+    fetchCollections(),
+  ]);
 
   return (
-    <WorkspaceProvider initialProjects={initialProjects} userId={user.id}>
+    <WorkspaceProvider
+      initialProjects={initialProjects}
+      initialCollections={initialCollections}
+      userId={user.id}
+    >
       <SyncProvider>
         <CommandProvider>
           <SidebarProvider>
