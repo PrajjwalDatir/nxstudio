@@ -1,13 +1,6 @@
-import {
-  NxLogo,
-  ScaffoldIcon,
-  FolderIcon,
-  CalendarIcon,
-  SettingsIcon,
-  SearchIcon,
-  LockIcon,
-} from "@/components/icons";
+import { NxLogo, SearchIcon, LockIcon } from "@/components/icons";
 import { PHASES, type PhaseId } from "@/lib/phases";
+import { MAIN_NAV_ITEMS } from "@/lib/navigation";
 import type { PhaseProgress } from "@/lib/types";
 import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCard";
 
@@ -26,8 +19,6 @@ const PREVIEW_PROGRESS: Record<PhaseId, PhaseProgress> = {
   build: { done: 1, total: 1, percent: 100 },
   checklist: { done: 0, total: 3, percent: 0 },
 };
-
-const RAIL = [ScaffoldIcon, FolderIcon, CalendarIcon, SettingsIcon];
 
 export function CanvasPreview() {
   return (
@@ -52,24 +43,35 @@ export function CanvasPreview() {
           </span>
         </div>
 
-        {/* App shell: sidebar rail + canvas */}
+        {/* App shell: labeled sidebar (the real MAIN_NAV_ITEMS) + canvas */}
         <div className="flex">
-          <div className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-white/5 py-4 sm:flex">
-            <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-border">
-              <NxLogo className="h-4 w-4 text-primary" />
-            </span>
-            {RAIL.map((Icon, i) => (
-              <span
-                key={i}
-                className={
-                  i === 0
-                    ? "flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground"
-                    : "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground"
-                }
-              >
-                <Icon className="h-4 w-4" />
+          <div className="hidden w-44 shrink-0 flex-col border-r border-white/5 py-3 sm:flex">
+            <div className="mb-2 flex items-center gap-2.5 px-3.5 pb-1">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-border">
+                <NxLogo className="h-3.5 w-3.5 text-primary" />
               </span>
-            ))}
+              <span className="text-sm font-semibold tracking-tight">nxstudio</span>
+            </div>
+            <ul className="space-y-0.5 px-2">
+              {MAIN_NAV_ITEMS.map((item, i) => {
+                const Icon = item.icon;
+                const active = i === 0; // Canvas is the page being previewed
+                return (
+                  <li key={item.id}>
+                    <span
+                      className={
+                        active
+                          ? "flex items-center gap-2.5 rounded-lg bg-accent px-2.5 py-1.5 text-xs font-medium text-accent-foreground"
+                          : "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground"
+                      }
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {item.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <div className="min-w-0 flex-1 p-5 sm:p-6">
