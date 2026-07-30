@@ -30,6 +30,8 @@ export function compileNxFiles(data: WorkspaceData): NxFile[] {
     project: name,
     problem: data.idea.problem || "TBD",
     target_users: data.idea.targetUsers || "TBD",
+    solutions: data.idea.currentSolutions || "TBD",
+    differentiation: data.idea.differentiation || "TBD",
     stack: stack
       ? {
           surfaces: stack.platform,
@@ -46,15 +48,20 @@ export function compileNxFiles(data: WorkspaceData): NxFile[] {
       vibe: data.brand.vibe,
       primary_color: data.brand.primaryColor,
       radius: data.brand.radius,
+      font: data.brand.font,
     },
+    design_notes: data.designNotes || null,
+    custom_stages: data.customStages?.length
+      ? data.customStages.map((s) => ({ id: s.id, label: s.label, steps: s.steps.map((st) => st.label) }))
+      : [],
     phases: {
-      idea: "done",
+      idea: data.idea.problem ? "done" : "pending",
       tech_stack: stack ? "done" : "pending",
       build: "pending",
     },
   };
 
-  return [
+  const files: NxFile[] = [
     { path: `${NX_ROOT}/memory.json`, content: JSON.stringify(memory, null, 2) },
     {
       path: `${NX_ROOT}/idea.md`,
@@ -88,8 +95,13 @@ ${data.idea.differentiation || "_Not yet defined._"}
 - **Border Radius:** ${data.brand.radius}
 - **Font:** ${data.brand.font}
 
+${
+  data.designNotes
+    ? `## Studio Design Notes & Canvas Annotations\n${data.designNotes}\n`
+    : ""
+}
 These values are NON-NEGOTIABLE for visual consistency. Every component
-must use the primary color for primary actions and the defined radius.
+must use the primary color for primary actions and the defined radius and font.
 `,
     },
     {
@@ -121,6 +133,87 @@ Configure CI/CD to deploy on push to \`main\`. Add preview deployments for PRs.
 `,
     },
   ];
+
+  if (data.customStages && data.customStages.length > 0) {
+    files.push({
+      path: `${NX_ROOT}/custom-workflow.md`,
+      content: `# Custom Product Workflow Stages
+
+${data.customStages
+  .map(
+    (stage) =>
+      `## ${stage.label}\n${stage.description}\n\n### Checklist Steps\n${stage.steps
+        .map((step) => `- [ ] ${step.label}`)
+        .join("\n")}`
+  )
+  .join("\n\n")}
+`,
+    });
+  }
+
+  // Pre-configured IDE agent rule files — unzipping configures Claude Code, Cursor, & Windsurf automatically
+  files.push(
+    {
+      path: ".claude/CLAUDE.md",
+      content: `# Claude Code Instructions — ${name}
+
+When the user says "Start" or initiates a build:
+1. Read \`.nx/memory.json\` and \`.nx/ui/brand-guide.md\` to load the stack, brand tokens, and architecture specs.
+2. Scaffold the project and build the foundation in one continuous agent run.
+`,
+    },
+    {
+      path: ".cursor/rules/nx.mdc",
+      content: `---
+description: Read .nx/ architecture memory on build start
+globs: *
+---
+# Cursor Agent Rule — ${name}
+
+When the user says "Start" or initiates a build:
+- Read \`.nx/memory.json\` and \`.nx/\` files for tech stack, brand tokens, and architecture specs.
+- Scaffold the project and build the foundation end-to-end.
+`,
+    },
+    {
+      path: ".windsurfrules",
+      content: `# Windsurf Cascade Rule — ${name}
+
+When the user says "Start" or initiates a build:
+- Read \`.nx/\` directory files to load architecture memory, brand tokens, and build order.
+- Scaffold the project and build the foundation end-to-end.
+`,
+    },
+    {
+      path: ".antigravity/instructions.md",
+      content: `# Google Antigravity Instructions — ${name}
+
+When the user says "Start" or initiates a build:
+1. Read \`.nx/memory.json\` and \`.nx/ui/brand-guide.md\` to load the stack, brand tokens, and architecture specs.
+2. Scaffold the project and build the foundation in one continuous run.
+`,
+    },
+    {
+      path: ".zed/prompts/build.md",
+      content: `# Zed AI Instructions — ${name}
+
+When the user says "Start" or initiates a build:
+- Read \`.nx/memory.json\` and \`.nx/\` files for tech stack, brand tokens, and architecture specs.
+- Scaffold the project and build the foundation end-to-end.
+`,
+    },
+    {
+      path: "CONVENTIONS.md",
+      content: `# Aider & Universal Conventions — ${name}
+
+When starting a build:
+- Read \`.nx/\` directory files for tech stack, brand tokens, and architecture specs.
+- Scaffold the project and build the foundation end-to-end.
+`,
+    }
+  );
+
+  return files;
 }
 
 function techStackDoc(stack: CompiledStack): string {
@@ -159,6 +252,10 @@ export interface ParsedNx {
   presentPaths: string[];
   /** Parsed memory.json, if present and valid. */
   memory: NxMemory | null;
+  /** Raw contents of the .nx/ files we fetched from the repo (path → content). */
+  docs: Record<string, string>;
+  /** Standard paths nxstudio expects but the repo doesn't have yet. */
+  missingPaths: string[];
   /** True if the .nx/ context directory exists at all. */
   exists: boolean;
 }
@@ -176,7 +273,8 @@ export const NX_STANDARD_PATHS = [
 
 /**
  * Reconstruct project context from the files fetched from the repo.
- * `files` maps repo path → file content (only paths that exist).
+ * `files` maps repo path → file content. Presence-only entries (marked with an
+ * empty string by the sync layer) count toward `presentPaths` but not `docs`.
  */
 export function parseNx(files: Record<string, string>): ParsedNx {
   const presentPaths = Object.keys(files).filter((p) => p.startsWith(NX_ROOT));
@@ -191,9 +289,63 @@ export function parseNx(files: Record<string, string>): ParsedNx {
     }
   }
 
+  // Keep only the files we actually fetched content for (non-empty).
+  const docs: Record<string, string> = {};
+  for (const [p, content] of Object.entries(files)) {
+    if (p.startsWith(NX_ROOT) && content) docs[p] = content;
+  }
+
+  const missingPaths = NX_STANDARD_PATHS.filter((p) => !presentPaths.includes(p));
+
   return {
     presentPaths,
     memory,
+    docs,
+    missingPaths,
     exists: presentPaths.length > 0,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* DRIFT — how the loop "grows": compare committed .nx/ to fresh emit  */
+/* ------------------------------------------------------------------ */
+
+export type NxDriftStatus =
+  | "unchanged" // repo file matches what we'd emit now
+  | "drifted" // exists in both, but the agent changed it in the repo
+  | "missing" // we'd emit it, repo doesn't have it yet
+  | "extra"; // repo has an .nx/ file we don't emit (agent added context)
+
+export interface NxDrift {
+  path: string;
+  status: NxDriftStatus;
+}
+
+function normalizeContent(s: string): string {
+  return s.replace(/\r\n/g, "\n").trimEnd();
+}
+
+/**
+ * Diff the .nx/ docs committed in the repo against what nxstudio would emit from
+ * the current workspace. This is the read side of the loop: after a build, the
+ * AI edits the .nx/ files, and this surfaces where the repo has moved past — or
+ * away from — the studio's last-known intent, so the next compile can reconcile.
+ */
+export function diffNx(repoDocs: Record<string, string>, data: WorkspaceData): NxDrift[] {
+  const emitted = compileNxFiles(data);
+  const seen = new Set<string>();
+  const out: NxDrift[] = [];
+
+  for (const f of emitted) {
+    seen.add(f.path);
+    const repo = repoDocs[f.path];
+    if (repo == null) out.push({ path: f.path, status: "missing" });
+    else if (normalizeContent(repo) !== normalizeContent(f.content))
+      out.push({ path: f.path, status: "drifted" });
+    else out.push({ path: f.path, status: "unchanged" });
+  }
+  for (const path of Object.keys(repoDocs)) {
+    if (!seen.has(path)) out.push({ path, status: "extra" });
+  }
+  return out;
 }

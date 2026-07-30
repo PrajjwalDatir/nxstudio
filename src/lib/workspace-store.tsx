@@ -25,9 +25,18 @@ import {
   serializeCollection,
   serializeProject,
 } from "./projects";
+import {
+  GitHubStatus,
+  SyncResult,
+  connectGitHub,
+  disconnectGitHub,
+  getGitHubStatus,
+  syncRepo,
+} from "./github";
 
 // Re-export the model types so existing importers keep working.
 export type { Collection, GitHubConnection, Project } from "./projects";
+export type { SyncResult } from "./github";
 
 interface Store {
   projects: Project[];
@@ -74,6 +83,7 @@ interface WorkspaceContextType {
   setProductName: (name: string) => void;
   updateIdea: <K extends keyof IdeaData>(field: K, value: IdeaData[K]) => void;
   updateBrand: (field: keyof WorkspaceData["brand"], value: string) => void;
+  updateDesignNotes: (text: string) => void;
   updateTech: <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) => void;
   toggleChecklist: (phaseId: string, stepId: string) => void;
   isStepDone: (phaseId: string, stepId: string) => boolean;
@@ -89,6 +99,8 @@ interface WorkspaceContextType {
   // GitHub connection (per project)
   github: GitHubConnection;
   setRepo: (repo: string | null, branch?: string) => void;
+  /** Shared GitHub sync engine (status, result, connect/disconnect/sync). */
+  sync: SyncApi;
 
   // Due dates — value is a yyyy-mm-dd string (date-only), "" clears it.
   setDueDate: (phaseId: string, date: string) => void;
@@ -104,8 +116,23 @@ export function useWorkspace() {
   return c;
 }
 
-// Alias for clarity at call sites that manage projects.
+// Aliases for backwards compatibility & clean call sites.
 export const useProjects = useWorkspace;
+export type SyncStatus = "checking" | "disconnected" | "no-repo" | "syncing" | "ok" | "error";
+
+export interface SyncApi {
+  github: GitHubStatus;
+  status: SyncStatus;
+  result: SyncResult | null;
+  lastSyncedAt: string | null;
+  error: string | null;
+  connect: (token: string) => Promise<void>;
+  disconnect: () => Promise<void>;
+  sync: () => Promise<void>;
+}
+
+/** Shared GitHub sync state, owned by WorkspaceProvider. */
+export const useSync = (): SyncApi => useWorkspace().sync;
 
 export function WorkspaceProvider({
   children,
@@ -189,20 +216,25 @@ export function WorkspaceProvider({
     }
   }, [userId]);
 
+  const initialProjectsRef = useRef(initialProjects);
+  const initialCollectionsRef = useRef(initialCollections);
+  initialProjectsRef.current = initialProjects;
+  initialCollectionsRef.current = initialCollections;
+
   // Hydrate device-local bits (active project, legacy migration) once on mount.
   useEffect(() => {
     // Seed savedRef with what the server already persisted.
     const saved = new Map<string, string>();
-    for (const p of initialProjects) saved.set(p.id, serializeProject(p));
+    for (const p of initialProjectsRef.current) saved.set(p.id, serializeProject(p));
     savedRef.current = saved;
 
     const savedCollections = new Map<string, string>();
-    for (const c of initialCollections) savedCollections.set(c.id, serializeCollection(c));
+    for (const c of initialCollectionsRef.current) savedCollections.set(c.id, serializeCollection(c));
     savedCollectionsRef.current = savedCollections;
 
     // One-time migration: if the account has no projects yet but this browser
     // has a legacy localStorage workspace, import it (the reconciler uploads it).
-    if (initialProjects.length === 0) {
+    if (initialProjectsRef.current.length === 0) {
       const legacy = getStoredValue<{ projects?: Project[] } | null>("projects", null);
       if (legacy?.projects?.length) {
         const migrated = legacy.projects.map((p) => ({
@@ -225,7 +257,6 @@ export function WorkspaceProvider({
     }
 
     setIsHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debounced autosave: collapse bursts of edits into a single write per project.
@@ -363,6 +394,11 @@ export function WorkspaceProvider({
     [patchData]
   );
 
+  const updateDesignNotes = useCallback(
+    (text: string) => patchData((d) => ({ ...d, designNotes: text })),
+    [patchData]
+  );
+
   const updateTech = useCallback(
     <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) =>
       patchData((d) => ({ ...d, tech: { ...d.tech, [field]: value } })),
@@ -464,6 +500,98 @@ export function WorkspaceProvider({
     [patchActive]
   );
 
+  /* GitHub sync — single shared engine for every consumer of useSync ---- */
+  const repo = activeProject.github.repo;
+  const branch = activeProject.github.branch;
+  const [ghStatus, setGhStatus] = useState<GitHubStatus>({ connected: false });
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("checking");
+  const [resultByRepo, setResultByRepo] = useState<Record<string, SyncResult>>({});
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const syncInFlight = useRef(false);
+
+  const syncResult = repo ? resultByRepo[repo] ?? null : null;
+
+  // Verify the GitHub connection once on mount.
+  useEffect(() => {
+    let alive = true;
+    getGitHubStatus().then((s) => {
+      if (!alive) return;
+      setGhStatus(s);
+      setSyncStatus(s.connected ? (repo ? "ok" : "no-repo") : "disconnected");
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const runSync = useCallback(async () => {
+    if (!ghStatus.connected) {
+      setSyncStatus("disconnected");
+      return;
+    }
+    if (!repo) {
+      setSyncStatus("no-repo");
+      return;
+    }
+    if (syncInFlight.current) return;
+    syncInFlight.current = true;
+    setSyncStatus("syncing");
+    setSyncError(null);
+    try {
+      const r = await syncRepo(repo, branch);
+      setResultByRepo((prev) => ({ ...prev, [repo]: r }));
+      setSyncStatus("ok");
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : "Sync failed.");
+      setSyncStatus("error");
+    } finally {
+      syncInFlight.current = false;
+    }
+  }, [ghStatus.connected, repo, branch]);
+
+  // Sync on repo/connection change, then poll every 60s.
+  useEffect(() => {
+    if (!ghStatus.connected) {
+      setSyncStatus("disconnected");
+      return;
+    }
+    if (!repo) {
+      setSyncStatus("no-repo");
+      return;
+    }
+    runSync();
+    const id = setInterval(runSync, 60_000);
+    return () => clearInterval(id);
+  }, [ghStatus.connected, repo, branch, runSync]);
+
+  const connectSync = useCallback(
+    async (token: string) => {
+      const s = await connectGitHub(token);
+      setGhStatus(s);
+      setSyncStatus(s.connected ? (repo ? "syncing" : "no-repo") : "disconnected");
+    },
+    [repo]
+  );
+
+  const disconnectSync = useCallback(async () => {
+    await disconnectGitHub();
+    setGhStatus({ connected: false });
+    setSyncStatus("disconnected");
+    setResultByRepo({});
+  }, []);
+
+  const sync: SyncApi = {
+    github: ghStatus,
+    status: syncStatus,
+    result: syncResult,
+    lastSyncedAt: syncResult?.syncedAt ?? null,
+    error: syncError,
+    connect: connectSync,
+    disconnect: disconnectSync,
+    sync: runSync,
+  };
+
   return (
     <Ctx.Provider
       value={{
@@ -484,6 +612,7 @@ export function WorkspaceProvider({
         setProductName,
         updateIdea,
         updateBrand,
+        updateDesignNotes,
         updateTech,
         toggleChecklist,
         isStepDone,
@@ -495,6 +624,7 @@ export function WorkspaceProvider({
         removeCustomStep,
         github: activeProject.github,
         setRepo,
+        sync,
         setDueDate,
         resetActive,
       }}
