@@ -107,12 +107,7 @@ This is your single source of truth — re-read it before each step and follow i
 ## Step 1 — Build the foundation, end to end
 Do NOT stop between steps. Work through them in order, verifying as you go:
 
-1. Scaffold {{fe}} per `{{nxRoot}}/decisions/tech-stack.md`.
-2. Apply the brand tokens from `{{nxRoot}}/ui/brand-guide.md` (color, radius, font) as the theme.
-3. Build the atomic UI components (Button, Card, Input, etc.) on those tokens.
-4. Lay out the folder structure and shared utilities; propose it, then proceed.
-{{backendLine}}
-7. Implement the core product flow that solves: {{problem}}.{{libsLine}}
+{{buildSteps}}
 
 After each feature, run the project's checks before moving on. When the foundation
 is complete, commit it and summarise what was built and what remains.$body$,

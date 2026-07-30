@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyPayment } from "@/lib/solana/client";
 import { solana } from "@/lib/solana/config";
-import { deriveAccessState } from "@/lib/subscription-status";
+import { deriveAccessState } from "@/lib/billing";
+import { markReferralConverted } from "@/lib/referrals-server";
 
 // @solana/web3.js needs the Node runtime. Do not switch to edge.
 export const runtime = "nodejs";
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
     const { data: row } = await admin
       .from("subscriptions")
-      .select("pending_reference, current_period_end")
+      .select("pending_reference, pending_amount, plan_id, current_period_end")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -49,7 +50,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await verifyPayment(stored);
+    const expectedAmt = row?.pending_amount ? String(row.pending_amount) : undefined;
+    const result = await verifyPayment(stored, expectedAmt);
     if (!result.ok) {
       // not_found → poll again shortly; invalid → needs support.
       return NextResponse.json({
@@ -93,12 +95,16 @@ export async function POST(request: Request) {
     const currentEndMs = row?.current_period_end ? new Date(row.current_period_end).getTime() : 0;
     const base = Math.max(now, currentEndMs);
     const newEnd = new Date(base + solana.cycleDays() * 86_400_000).toISOString();
+    const finalPlanId = row?.plan_id || (result.amount === "50" ? "master_50" : "pro_10");
 
     const { error: updateErr } = await admin
       .from("subscriptions")
       .update({
         provider: "crypto",
         status: "active",
+        plan_id: finalPlanId,
+        plan_tier: finalPlanId,
+        plan_amount: Number(result.amount),
         current_period_end: newEnd,
         pending_reference: null,
         pending_amount: null,
@@ -107,6 +113,14 @@ export async function POST(request: Request) {
       .eq("user_id", user.id);
     if (updateErr) {
       return NextResponse.json({ error: `DB error: ${updateErr.message}` }, { status: 500 });
+    }
+
+    // Convert any pending referral now that this user is premium. Best-effort:
+    // a referral hiccup must never fail a verified payment.
+    try {
+      await markReferralConverted(user.id);
+    } catch {
+      // swallow — payment already succeeded; conversion can be reconciled later.
     }
 
     const state = deriveAccessState(

@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { AccessState, deriveAccessState, isPremium as premiumOf } from "@/lib/subscription-status";
+import {
+  AccessState,
+  PlanTier,
+  deriveAccessState,
+  derivePlanTier,
+  getTierInfo,
+  isPremium as premiumOf,
+} from "@/lib/billing";
 
 export interface Subscription {
   provider: string | null;
@@ -35,9 +42,7 @@ async function loadSubscription(): Promise<Loaded> {
 }
 
 /**
- * Reads the signed-in user's subscription (RLS restricts it to their own row) and
- * derives access with the same pure logic the server uses. `isActive` (active OR
- * grace) is the single flag to gate premium features on.
+ * Reads the signed-in user's subscription and derives tier capabilities.
  */
 export function useSubscription() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -46,11 +51,31 @@ export function useSubscription() {
 
   useEffect(() => {
     let alive = true;
-    loadSubscription().then((r) => {
+    loadSubscription().then(async (r) => {
       if (!alive) return;
       setSubscription(r.subscription);
       setEmail(r.email);
       setLoading(false);
+
+      // Auto-verify background check if pending
+      if (r.subscription && (r.subscription as unknown as { pending_reference?: string }).pending_reference) {
+        try {
+          const res = await fetch("/api/billing/crypto/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
+          const body = await res.json();
+          if (body.verified && alive) {
+            const updated = await loadSubscription();
+            if (alive) {
+              setSubscription(updated.subscription);
+            }
+          }
+        } catch {
+          // quiet background auto-verify
+        }
+      }
     });
     return () => {
       alive = false;
@@ -66,6 +91,16 @@ export function useSubscription() {
 
   const state: AccessState = deriveAccessState(subscription);
   const isActive = premiumOf(state);
+  const tier: PlanTier = derivePlanTier(subscription, state);
+  const tierInfo = getTierInfo(tier);
 
-  return { subscription, email, state, isActive, loading, refresh };
+  return {
+    subscription,
+    email,
+    state,
+    isActive,
+    ...tierInfo,
+    loading,
+    refresh,
+  };
 }

@@ -36,8 +36,12 @@ export const solana = {
   walletAddress: () => required("SOLANA_WALLET_ADDRESS"),
   usdcMint: () => process.env.SOLANA_USDC_MINT || MAINNET_USDC,
   usdtMint: () => process.env.SOLANA_USDT_MINT || MAINNET_USDT,
-  /** Price per cycle, denominated in the stablecoin (e.g. "5" = 5 USDC). */
-  planAmount: () => required("CRYPTO_PLAN_AMOUNT"),
+  /** Price per cycle, denominated in the stablecoin (10 USDT Atelier or 50 USDT Black Label). */
+  planAmount: (tier?: string) => {
+    if (tier === "master_50" || tier === "50") return "50";
+    if (tier === "pro_10" || tier === "10") return "10";
+    return process.env.CRYPTO_PLAN_AMOUNT || "10";
+  },
   cycleDays: () => Number(process.env.CRYPTO_CYCLE_DAYS ?? 28),
   graceHours: () => Number(process.env.CRYPTO_GRACE_HOURS ?? 48),
   label: () => process.env.CRYPTO_PAY_LABEL || "nxstudio",

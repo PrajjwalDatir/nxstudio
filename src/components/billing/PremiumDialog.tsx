@@ -1,25 +1,27 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CryptoCheckout } from "./CryptoCheckout";
-import { WandIcon, XIcon } from "@/components/icons";
+import { PricingGrid } from "./PricingGrid";
+import { WandIcon, XIcon, ZapIcon } from "@/components/icons";
 
 const SUPPORT_EMAIL = "in.prajj@gmail.com";
 
-/**
- * Upsell modal shown when a free user tries to copy a gated prompt. Wraps the
- * shared CryptoCheckout. Lightweight overlay — the design system has no dialog
- * primitive, and a full Radix dialog isn't warranted here.
- */
 export function PremiumDialog({
   open,
+  title = "Scale Your Studio",
+  description = "Free includes 1 full project. Step across the velvet rope for multi-project scaling & autonomous workflows.",
   onClose,
   onActivated,
 }: {
   open: boolean;
+  title?: string;
+  description?: string;
   onClose: () => void;
   onActivated?: () => void;
 }) {
+  const [selectedTier, setSelectedTier] = useState<"pro_10" | "master_50" | null>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -31,23 +33,23 @@ export function PremiumDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
+        className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-800 bg-[#09090A] p-6 sm:p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <WandIcon className="h-5 w-5" />
+        <div className="flex items-start justify-between border-b border-zinc-800 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary border border-primary/30">
+              <ZapIcon className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Unlock your build prompts</h2>
-              <p className="text-sm text-muted-foreground">Premium compiles and copies every prompt.</p>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">{title}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
             </div>
           </div>
           <button
@@ -59,13 +61,33 @@ export function PremiumDialog({
           </button>
         </div>
 
-        <div className="mt-5">
-          <CryptoCheckout onActivated={onActivated} />
-        </div>
+        {selectedTier ? (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                Checkout — {selectedTier === "master_50" ? "Black Label VIP (50 USDT)" : "Atelier (10 USDT)"}
+              </h3>
+              <button
+                onClick={() => setSelectedTier(null)}
+                className="text-xs font-mono text-primary hover:underline"
+              >
+                ← Back to Plans
+              </button>
+            </div>
+            <CryptoCheckout initialTier={selectedTier} onActivated={onActivated} />
+          </div>
+        ) : (
+          <div className="mt-6 space-y-6">
+            <PricingGrid onSelectTier={(tier) => setSelectedTier(tier)} />
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+              <CryptoCheckout onActivated={onActivated} />
+            </div>
+          </div>
+        )}
 
-        <p className="mt-5 text-xs text-muted-foreground">
-          Questions or a payment that didn&apos;t go through?{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Need support or customized enterprise agent setup?{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline text-foreground">
             {SUPPORT_EMAIL}
           </a>
         </p>
