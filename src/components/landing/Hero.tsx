@@ -84,6 +84,9 @@ export function Hero() {
     <section className="relative overflow-hidden">
       <div className="grid-bg absolute inset-0" aria-hidden />
       <div className="hero-glow" aria-hidden />
+      {/* Filmic grain — a faint tactile texture over the whole stage, blended so
+          it grips the dark background without lifting it to grey. */}
+      <div className="grain-overlay pointer-events-none absolute inset-0 z-30" aria-hidden />
 
       {/* Full-bleed stage. The canvas spans the viewport so the unit is framed
           by the screen edge, not by a container it can get guillotined at.
