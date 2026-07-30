@@ -1,0 +1,25 @@
+/**
+ * Toolcraft editor styles.
+ *
+ * Ported verbatim from pixel-point/toolcraft (MIT). The runtime theme is fully
+ * self-scoped under `[data-toolcraft-theme]` (see runtime/styles.css), so these
+ * design tokens never leak onto nx-studio's own `:root` theme — they only apply
+ * inside the mounted editor. ui/styles.css supplies the `@custom-variant`s the
+ * Base-UI components depend on (data-open, data-checked, …).
+ *
+ * Pulled in from src/app/globals.css. Tailwind scans this directory via @source.
+ */
+@import "./ui/styles.css";
+@import "./runtime/styles.css";
+
+@source ".";
+
+/* Tailwind utility tokens the toolcraft components reference that nx-studio's
+   own theme doesn't define (text-2xs, text-xs-plus, spacing-field-control). */
+@theme {
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs-plus: 0.8125rem;
+  --text-xs-plus--line-height: 1.125rem;
+  --spacing-field-control: 0.3125rem;
+}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
-import { CompiledPrompts } from "@/lib/prompts";
+import { CompiledPrompts } from "@/lib/prompts-server";
 
 interface State {
   prompts: CompiledPrompts | null;
@@ -40,6 +40,7 @@ export function useCompiledPrompts() {
     idea: data.idea,
     brand: data.brand,
     tech: data.tech,
+    designNotes: data.designNotes,
   });
 
   const dataRef = useRef(data);
