@@ -101,6 +101,7 @@ function StructuredData() {
         featureList: [
           "Turn a product brief into a derived tech stack",
           "Generate one production-ready build prompt for AI coding agents",
+          "Design brand, 3D and motion in a live visual Studio",
           "Track product phases from idea to ship",
         ],
         offers: {
