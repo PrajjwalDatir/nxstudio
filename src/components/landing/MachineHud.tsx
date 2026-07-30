@@ -18,37 +18,21 @@ import gsap from "gsap";
 
 export function MachineReadout({ line, tail = false }: { line: string; tail?: boolean }) {
   const textRef = useRef<HTMLSpanElement>(null);
-  const caretRef = useRef<HTMLSpanElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
     const el = textRef.current;
     if (!el) return;
 
-    // Kill any in-flight reveal so a fast trigger doesn't interleave two lines.
     tl.current?.kill();
 
-    const chars = line.length;
-    const state = { i: 0 };
-    el.textContent = "";
-
     tl.current = gsap.timeline();
-    tl.current.to(state, {
-      i: chars,
-      duration: Math.min(0.9, chars * 0.016),
-      ease: "none",
-      onUpdate: () => {
-        el.textContent = line.slice(0, Math.round(state.i));
-      },
-    });
-
-    if (caretRef.current) {
-      gsap.fromTo(
-        caretRef.current,
-        { opacity: 1 },
-        { opacity: 0.15, duration: 0.5, repeat: -1, yoyo: true, ease: "steps(1)" }
-      );
-    }
+    tl.current
+      .to(el, { opacity: 0, duration: 0.18, ease: "power1.out" })
+      .add(() => {
+        el.textContent = line;
+      })
+      .to(el, { opacity: 1, duration: 0.3, ease: "power1.in" });
 
     return () => {
       tl.current?.kill();
@@ -56,16 +40,15 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
   }, [line]);
 
   return (
-    <div className="relative inline-flex max-w-sm items-start gap-2.5 rounded-xl border border-white/8 bg-background/70 py-2.5 pl-3 pr-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_10px_30px_-20px_rgba(0,0,0,0.7)] backdrop-blur-md">
+    <div className="relative inline-flex max-w-sm items-start gap-2.5 rounded-xl border border-white/12 bg-background/90 py-2.5 pl-3 pr-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_10px_30px_-10px_rgba(0,0,0,0.85)] backdrop-blur-md">
       {/* Speech tail on the right edge, pointing across to the unit beside it. */}
       {tail && (
         <span
           aria-hidden
-          className="absolute right-[-6px] top-8 hidden h-3 w-3 rotate-45 rounded-[2px] border-r border-t border-white/8 bg-background/70 md:block"
+          className="absolute right-[-6px] top-6 hidden h-3 w-3 rotate-45 rounded-[1px] border-r border-t border-white/12 bg-background/90 md:block"
         />
       )}
-      {/* Live status lamp — same pulse the "works-with" rail uses, so the unit's
-          telemetry and the page's status language read as one system. */}
+      {/* Live status lamp — matching status pulse. */}
       <span className="relative mt-[5px] flex h-1.5 w-1.5 shrink-0">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-50" />
         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
@@ -79,10 +62,6 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
           className="min-h-[1.5em] font-mono text-[11px] leading-relaxed text-foreground/75 sm:text-xs"
         >
           <span ref={textRef} />
-          <span
-            ref={caretRef}
-            className="ml-0.5 inline-block h-3 w-1.5 translate-y-[2px] bg-primary/80"
-          />
         </p>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { CanvasPreview } from "./CanvasPreview";
 import { ArrowRightIcon, GithubIcon } from "@/components/icons";
 import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
 import { useMachineAudio } from "./useMachineAudio";
-import { AudioControl, MachineReadout } from "./MachineHud";
+import { AudioControl } from "./MachineHud";
 import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
 
@@ -93,7 +93,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 z-0 h-[620px] w-full sm:h-[680px]"
       >
         <div ref={stageRef} className="pointer-events-auto h-full w-full cursor-pointer">
-          <MachineScene onPoke={() => say("poke", "thunk")} paused={!stageInView} />
+          <MachineScene line={line} onPoke={() => say("poke", "thunk")} paused={!stageInView} />
         </div>
       </div>
 
@@ -105,16 +105,15 @@ export function Hero() {
               style={{ animationDelay: "0.05s" }}
               className="reveal-rise text-[2.6rem] font-bold leading-[1.03] tracking-tight sm:text-6xl"
             >
-              Turn a brief into a{" "}
-              <span className="text-gradient">shippable build prompt</span>.
+              Describe your app.{" "}
+              <span className="text-gradient">Bring it to life.</span>
             </h1>
 
             <p
               style={{ animationDelay: "0.14s" }}
-              className="reveal-rise mx-auto mt-6 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg md:mx-0"
+              className="reveal-rise mx-auto mt-6 max-w-sm text-base leading-relaxed text-muted-foreground sm:text-lg md:mx-0"
             >
-              You know what you&apos;re building. Say it once — we&apos;ll hand
-              your agent the rest.
+              Describe your vision once — your brand, your design, and your app&apos;s whole foundation.
             </p>
 
             <div
@@ -123,14 +122,14 @@ export function Hero() {
             >
               <AuthButton
                 onMouseEnter={() => say("cta-hover")}
-                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_16px_40px_-16px_rgba(139,92,246,0.8)] transition-transform hover:-translate-y-0.5 sm:w-auto"
+                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground border border-primary-foreground/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-4px_rgba(139,92,246,0.4)] transition-all hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_1px_3px_rgba(0,0,0,0.5),0_12px_28px_-4px_rgba(139,92,246,0.5)] sm:w-auto"
               >
                 Start building — free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
               <a
                 href="#how"
-                className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-border bg-secondary/40 px-6 text-sm font-medium text-foreground transition-colors hover:border-primary/40 sm:w-auto"
+                className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-6 text-sm font-medium text-foreground backdrop-blur-md transition-colors hover:border-white/20 hover:bg-white/[0.08] sm:w-auto"
               >
                 See how it works
               </a>
@@ -157,17 +156,6 @@ export function Hero() {
             viewport. */}
         <div className="absolute right-5 top-3 z-30 sm:right-6">
           <AudioControl enabled={soundOn} playing={playing} onToggle={toggleSound} />
-        </div>
-
-        {/* The unit's readout, anchored as speech beside its head on desktop (so
-            it reads as the machine talking without covering its face) and dropped
-            in-flow under the copy on mobile, where the unit sits centred behind
-            everything. */}
-        <div
-          style={{ animationDelay: "0.4s" }}
-          className="reveal-rise relative z-20 mt-6 flex justify-center md:absolute md:right-[31%] md:top-[28%] md:mt-0 md:block md:w-auto md:max-w-[14rem]"
-        >
-          <MachineReadout line={line} tail />
         </div>
       </div>
 

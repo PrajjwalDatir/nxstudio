@@ -19,6 +19,8 @@
 
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
+import gsap from "gsap";
 import * as THREE from "three";
 
 /**
@@ -139,10 +141,11 @@ export function usePrefersReducedMotion() {
 
 // Mid-greys, not near-blacks. On a #08080A page a dark shell just silhouettes
 // into the background and loses all the plate detail.
-const SHELL = "#74747F";
-const SHELL_DARK = "#4E4E58";
+// Bright silver alloy for high contrast against dark background
+const SHELL = "#A1A1B2";
+const SHELL_DARK = "#52525E";
 
-/** Outer plate metal — rough weathered cast, grime worked in via the grunge map. */
+/** Outer plate metal — rough weathered cast with metallic shine. */
 function Shell({ color = SHELL }: { color?: string }) {
   const g = grungeTexture();
   return (
@@ -150,14 +153,14 @@ function Shell({ color = SHELL }: { color?: string }) {
       color={color}
       map={g}
       roughnessMap={g}
-      metalness={0.5}
-      roughness={0.82}
+      metalness={0.65}
+      roughness={0.45}
       flatShading
     />
   );
 }
 
-/** Joints and bolted collars: duller and grittier than the plates they join. */
+/** Joints and bolted collars: dark gunmetal contrast. */
 function Joint() {
   const g = grungeTexture();
   return (
@@ -165,16 +168,101 @@ function Joint() {
       color={SHELL_DARK}
       map={g}
       roughnessMap={g}
-      metalness={0.28}
-      roughness={0.95}
+      metalness={0.5}
+      roughness={0.7}
       flatShading
     />
   );
 }
 
-/** Sockets and vents — near-black, fully matte, so they read as holes not parts. */
+/** Sockets and vents — near-black, fully matte. */
 function Recess() {
-  return <meshStandardMaterial color="#16161A" metalness={0.1} roughness={1} flatShading />;
+  return <meshStandardMaterial color="#0E0D14" metalness={0.2} roughness={0.9} flatShading />;
+}
+
+/**
+ * NX Tattoo / Stencil Emblem mounted on the main machine's front chest.
+ * Positioned proudly on chest with glowing neon stencil lettering.
+ */
+function NxChestTattoo() {
+  return (
+    <group position={[0, 0.44, 0.59]} rotation={[0.08, 0, 0]}>
+      {/* Outer neon purple border rim */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.54, 0.36, 0.02]} />
+        <meshStandardMaterial color="#8B5CF6" emissive="#7C3AED" emissiveIntensity={1.8} toneMapped={false} />
+      </mesh>
+
+      {/* Base chest badge plate backing */}
+      <mesh position={[0, 0, 0.01]}>
+        <boxGeometry args={[0.5, 0.32, 0.025]} />
+        <meshStandardMaterial color="#12101D" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Corner mounting rivets */}
+      {[
+        [-0.21, 0.12],
+        [0.21, 0.12],
+        [-0.21, -0.12],
+        [0.21, -0.12],
+      ].map(([rx, ry], idx) => (
+        <mesh key={idx} position={[rx, ry, 0.024]}>
+          <cylinderGeometry args={[0.018, 0.018, 0.02, 8]} />
+          <meshStandardMaterial color="#DDD6FE" emissive="#A78BFA" emissiveIntensity={1.2} />
+        </mesh>
+      ))}
+
+      {/* Backlit electric violet core panel */}
+      <mesh position={[0, 0, 0.02]}>
+        <planeGeometry args={[0.42, 0.24]} />
+        <meshStandardMaterial
+          color="#6D28D9"
+          emissive="#A78BFA"
+          emissiveIntensity={2.5}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {/* Glowing Neon 3D Stencil Letter "N" */}
+      <group position={[-0.09, 0, 0.035]}>
+        {/* Left vertical bar */}
+        <mesh position={[-0.055, 0, 0]}>
+          <boxGeometry args={[0.026, 0.16, 0.02]} />
+          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
+        </mesh>
+        {/* Diagonal stroke */}
+        <mesh position={[0, 0, 0]} rotation={[0, 0, -0.68]}>
+          <boxGeometry args={[0.024, 0.175, 0.02]} />
+          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
+        </mesh>
+        {/* Right vertical bar */}
+        <mesh position={[0.055, 0, 0]}>
+          <boxGeometry args={[0.026, 0.16, 0.02]} />
+          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
+        </mesh>
+      </group>
+
+      {/* Glowing Neon 3D Stencil Letter "X" */}
+      <group position={[0.09, 0, 0.035]}>
+        {/* Diagonal 1 */}
+        <mesh position={[0, 0, 0]} rotation={[0, 0, 0.65]}>
+          <boxGeometry args={[0.026, 0.175, 0.02]} />
+          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
+        </mesh>
+        {/* Diagonal 2 */}
+        <mesh position={[0, 0, 0]} rotation={[0, 0, -0.65]}>
+          <boxGeometry args={[0.026, 0.175, 0.02]} />
+          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
+        </mesh>
+      </group>
+
+      {/* Micro serial stamp */}
+      <mesh position={[0, -0.11, 0.018]}>
+        <boxGeometry args={[0.26, 0.015, 0.01]} />
+        <meshStandardMaterial color="#8B5CF6" emissive="#7C3AED" emissiveIntensity={0.8} />
+      </mesh>
+    </group>
+  );
 }
 
 /**
@@ -227,6 +315,56 @@ function Hand({ side, curl = 1 }: { side: number; curl?: number }) {
   );
 }
 
+/**
+ * Organic speech dialogue overlay anchored right at the machine's jaw/mouth.
+ * Floating directly in 3D space with a speech tail pointing right to his mouth.
+ */
+function MouthDialogue({ line }: { line: string }) {
+  const textRef = useRef<HTMLSpanElement>(null);
+  const tl = useRef<gsap.core.Timeline | null>(null);
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    tl.current?.kill();
+
+    tl.current = gsap.timeline();
+    tl.current
+      .to(el, { opacity: 0, duration: 0.18, ease: "power1.out" })
+      .add(() => {
+        el.textContent = line;
+      })
+      .to(el, { opacity: 1, duration: 0.3, ease: "power1.in" });
+
+    return () => {
+      tl.current?.kill();
+    };
+  }, [line]);
+
+  return (
+    <Html
+      position={[-0.75, -0.15, 0.45]}
+      center
+      distanceFactor={7.0}
+      zIndexRange={[100, 0]}
+      style={{ pointerEvents: "none", userSelect: "none" }}
+    >
+      <div className="flex items-center gap-2 max-w-[340px] sm:max-w-[380px] pointer-events-none select-none">
+        <div className="relative rounded-2xl border border-white/15 bg-background/95 px-4.5 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_32px_-8px_rgba(0,0,0,0.9)] backdrop-blur-xl text-left">
+          {/* Small speech tail pointing directly right to his jaw */}
+          <span
+            aria-hidden
+            className="absolute -right-1.5 top-4 h-3 w-3 rotate-45 border-r border-t border-white/15 bg-background/95"
+          />
+          <p className="font-mono text-xs leading-relaxed text-foreground/95 sm:text-sm">
+            <span ref={textRef} />
+          </p>
+        </div>
+      </div>
+    </Html>
+  );
+}
+
 /** One machine. Modular by design, so the same parts read as mass-produced. */
 export function Machine({
   reduce,
@@ -234,6 +372,7 @@ export function Machine({
   pose = "ready",
   build = 1,
   dynamicsRef,
+  line,
 }: {
   reduce: boolean;
   onPoke?: () => void;
@@ -246,6 +385,8 @@ export function Machine({
    * add the closing dance. Absent on the hero, so it stays a still, built unit.
    */
   dynamicsRef?: MutableRefObject<MachineDynamics>;
+  /** Optional machine speech line anchored to his mouth in 3D */
+  line?: string;
 }) {
   const group = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
@@ -360,6 +501,9 @@ export function Machine({
           <Shell />
         </mesh>
 
+        {/* Dialogue speech line anchored directly near his mouth in 3D */}
+        {line && <MouthDialogue line={line} />}
+
         {/* Antenna — a bent stalk, the one asymmetric detail on the whole unit */}
         <mesh position={[0.2, 0.58, -0.08]} rotation={[0.12, 0, -0.28]}>
           <cylinderGeometry args={[0.022, 0.03, 0.5, 6]} />
@@ -434,6 +578,11 @@ export function Machine({
         <cylinderGeometry args={[0.14, 0.14, 0.3, 10]} />
         <Shell color={SHELL_DARK} />
       </mesh>
+      {/* Neck power ring */}
+      <mesh position={[0, 0.9, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.16, 0.025, 8, 16]} />
+        <meshStandardMaterial color="#8B5CF6" emissive="#7C3AED" emissiveIntensity={0.6} />
+      </mesh>
 
       {/* Barrel torso */}
       <mesh position={[0, 0.35, 0]} castShadow>
@@ -450,10 +599,38 @@ export function Machine({
         <Shell color={SHELL_DARK} />
       </mesh>
 
+      {/* NX Chest Tattoo — bold, stencil-milled industrial logo with backlit violet core */}
+      <NxChestTattoo />
+
+      {/* Chest status indicator LEDs flanking the tattoo */}
+      {[-0.22, 0.22].map((x) => (
+        <mesh key={x} position={[x, 0.65, 0.48]}>
+          <sphereGeometry args={[0.025, 8, 8]} />
+          <meshStandardMaterial
+            color="#8B5CF6"
+            emissive="#A78BFA"
+            emissiveIntensity={1.2}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+
+      {/* Power conduits connecting chest to shoulder joints */}
+      {[-0.32, 0.32].map((x, i) => (
+        <mesh
+          key={i}
+          position={[x, 0.76, 0.26]}
+          rotation={[0.3, 0, i === 0 ? -0.4 : 0.4]}
+        >
+          <cylinderGeometry args={[0.022, 0.022, 0.35, 8]} />
+          <Joint />
+        </mesh>
+      ))}
+
       {/* Chest vent slats */}
-      {[0.58, 0.47, 0.36].map((y) => (
-        <mesh key={y} position={[0, y, 0.47]} rotation={[0.08, 0, 0]}>
-          <boxGeometry args={[0.34, 0.035, 0.05]} />
+      {[0.24, 0.16].map((y) => (
+        <mesh key={y} position={[0, y, 0.54]} rotation={[0.08, 0, 0]}>
+          <boxGeometry args={[0.26, 0.025, 0.04]} />
           <Shell color={SHELL_DARK} />
         </mesh>
       ))}

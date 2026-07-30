@@ -9,7 +9,7 @@ import {
 } from "@/components/icons";
 import { PHASES, type PhaseId } from "@/lib/phases";
 import type { PhaseProgress } from "@/lib/types";
-import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCardBody";
+import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCard";
 
 /**
  * A frame of the actual nxstudio product (the Project Canvas) as the hero
@@ -23,7 +23,8 @@ import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCardBody
 const PREVIEW_PROGRESS: Record<PhaseId, PhaseProgress> = {
   idea: { done: 4, total: 4, percent: 100 },
   "tech-stack": { done: 2, total: 5, percent: 40 },
-  build: { done: 0, total: 3, percent: 0 },
+  build: { done: 1, total: 1, percent: 100 },
+  checklist: { done: 0, total: 3, percent: 0 },
 };
 
 const RAIL = [ScaffoldIcon, FolderIcon, CalendarIcon, SettingsIcon];

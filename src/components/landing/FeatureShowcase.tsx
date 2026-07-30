@@ -143,41 +143,64 @@ export function FeatureShowcase() {
   );
 }
 
-/* ── One build prompt — recompiled live from the Stack picks ────────────────── */
+/* ── One build prompt — ZIP + 1-line 'Start' trigger ───────────────────────── */
 function PromptCard({ className, stack }: { className?: string; stack: CompiledStack }) {
   const promptText = useMemo(() => buildPrompt(stack), [stack]);
+  const triggerCommand = "Start";
   const [copied, setCopied] = useState(false);
+
   const copy = useCallback(() => {
-    navigator.clipboard?.writeText(promptText).catch(() => {});
+    navigator.clipboard?.writeText(triggerCommand).catch(() => {});
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
-  }, [promptText]);
+  }, [triggerCommand]);
+
+  const downloadZip = useCallback(async () => {
+    const { exportNxZip } = await import("@/lib/nx-exporter");
+    await exportNxZip({
+      productName: "nxstudio-demo",
+      idea: { problem: "One brief to full build order", targetUsers: "Founders", currentSolutions: "Manual prompts", differentiation: "Studio .nx/ engine" },
+      brand: { vibe: "Modern Industrial", primaryColor: "#8B5CF6", radius: "12px", font: "Instrument Sans" },
+      tech: { surfaces: ["web"], capabilities: ["auth", "database"] },
+      checklist: {},
+      customStages: [],
+    });
+  }, []);
 
   return (
     <CardShell
-      title="One prompt, not forty messages"
-      line="Everything your agent needs, compiled into a single paste."
+      title="Zip only. Say 'Start'."
+      line="Download your .nx/ context bundle — your agent reads disk and builds in one run."
       className={className}
     >
       <div className="overflow-hidden rounded-xl border border-white/5 bg-background/50">
         <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
           <span className="font-mono text-[11px] text-muted-foreground">build-prompt.md</span>
-          <button
-            onClick={copy}
-            aria-live="polite"
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors ${
-              copied
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-            }`}
-          >
-            {copied ? <CheckIcon className="h-3 w-3" /> : <CopyIcon className="h-3 w-3" />}
-            {copied ? "Copied" : "Copy"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadZip}
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary transition-transform hover:-translate-y-0.5 hover:bg-primary/20"
+            >
+              <BoxIcon className="h-3 w-3" />
+              Download .nx/ ZIP
+            </button>
+            <button
+              onClick={copy}
+              aria-live="polite"
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors ${
+                copied
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                  : "border-border bg-secondary/40 text-foreground hover:border-primary/40"
+              }`}
+            >
+              {copied ? <CheckIcon className="h-3 w-3" /> : <CopyIcon className="h-3 w-3" />}
+              {copied ? "Copied 'Start'" : "Copy 'Start'"}
+            </button>
+          </div>
         </div>
         <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[11.5px] leading-relaxed text-foreground/80">
           {promptText.split("\n").map((ln, i) => (
-            <span key={i} className={ln.startsWith("#") ? "text-primary" : undefined}>
+            <span key={i} className={ln.startsWith("#") ? "text-primary" : "text-emerald-400 font-semibold"}>
               {ln}
               {"\n"}
             </span>

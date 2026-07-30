@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 import { PHASES } from "@/lib/phases";
-import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCardBody";
+import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCard";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
