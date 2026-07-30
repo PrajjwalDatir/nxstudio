@@ -1,9 +1,9 @@
 -- ============================================================================
 -- run_all.sql — full nx-studio schema, in dependency order.
 -- Paste this whole file into the Supabase SQL editor and run once.
--- It is the concatenation of 0001 -> 0002 -> 0003 (all idempotent, so
--- re-running is safe). Order matters: 0001 defines public.subscriptions and
--- touch_updated_at(), which 0002 and 0003 depend on.
+-- It is the concatenation of 0001 -> 0002 -> 0003 -> 0004 -> 0005 (all
+-- idempotent, so re-running is safe). Order matters: 0001 defines
+-- public.subscriptions and touch_updated_at(), which the rest depend on.
 -- ============================================================================
 
 -- >>> 0001_subscriptions.sql <<<
@@ -231,12 +231,7 @@ This is your single source of truth — re-read it before each step and follow i
 ## Step 1 — Build the foundation, end to end
 Do NOT stop between steps. Work through them in order, verifying as you go:
 
-1. Scaffold {{fe}} per `{{nxRoot}}/decisions/tech-stack.md`.
-2. Apply the brand tokens from `{{nxRoot}}/ui/brand-guide.md` (color, radius, font) as the theme.
-3. Build the atomic UI components (Button, Card, Input, etc.) on those tokens.
-4. Lay out the folder structure and shared utilities; propose it, then proceed.
-{{backendLine}}
-7. Implement the core product flow that solves: {{problem}}.{{libsLine}}
+{{buildSteps}}
 
 After each feature, run the project's checks before moving on. When the foundation
 is complete, commit it and summarise what was built and what remains.$body$,
@@ -355,3 +350,126 @@ alter table public.projects
   references public.collections (id) on delete set null;
 
 create index if not exists projects_collection_id_idx on public.projects (collection_id);
+
+
+/* ------------------------------------------------------------------ */
+/* 0005_referrals — affiliate attribution (codes + referred users)    */
+/* ------------------------------------------------------------------ */
+
+create table if not exists public.referral_codes (
+  code       text primary key,
+  user_id    uuid not null unique references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table public.referral_codes enable row level security;
+
+drop policy if exists "read own referral code" on public.referral_codes;
+create policy "read own referral code"
+  on public.referral_codes for select to authenticated
+  using (auth.uid() = user_id);
+
+create table if not exists public.referrals (
+  id                uuid primary key default gen_random_uuid(),
+  referrer_user_id  uuid not null references auth.users (id) on delete cascade,
+  referred_user_id  uuid not null unique references auth.users (id) on delete cascade,
+  code              text not null references public.referral_codes (code),
+  status            text not null default 'pending',
+  converted_at      timestamptz,
+  created_at        timestamptz not null default now(),
+  constraint no_self_referral check (referrer_user_id <> referred_user_id)
+);
+
+create index if not exists referrals_referrer_idx
+  on public.referrals (referrer_user_id, status);
+
+alter table public.referrals enable row level security;
+
+drop policy if exists "read own referrals" on public.referrals;
+create policy "read own referrals"
+  on public.referrals for select to authenticated
+  using (auth.uid() = referrer_user_id or auth.uid() = referred_user_id);
+
+/* ------------------------------------------------------------------ */
+/* 0006_three_tier_rls_gating — 3-tier RLS triggers & limits          */
+/* ------------------------------------------------------------------ */
+
+alter table public.subscriptions
+  add column if not exists plan_tier   text not null default 'free',
+  add column if not exists plan_amount numeric not null default 0;
+
+create or replace function public.get_user_project_limit(u_id uuid)
+returns integer
+language plpgsql
+security definer
+as $$
+declare
+  sub_plan text;
+  sub_status text;
+  period_end timestamptz;
+begin
+  select plan_id, status, current_period_end
+    into sub_plan, sub_status, period_end
+    from public.subscriptions
+   where user_id = u_id;
+
+  if sub_status = 'active' or (period_end is not null and period_end + interval '48 hours' > now()) then
+    if sub_plan = 'master_50' or sub_plan = '50' then
+      return null;
+    elsif sub_plan = 'pro_10' or sub_plan = '10' then
+      return 5;
+    end if;
+  end if;
+
+  return 1;
+end;
+$$;
+
+create or replace function public.enforce_project_limit_trigger()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  lim integer;
+  cnt integer;
+begin
+  lim := public.get_user_project_limit(NEW.user_id);
+  if lim is not null then
+    select count(*) into cnt from public.projects where user_id = NEW.user_id;
+    if cnt >= lim then
+      raise exception 'Project limit of % reached for your subscription tier. Upgrade your plan to build more workspaces.', lim
+        using errcode = 'P0001';
+    end if;
+  end if;
+  return NEW;
+end;
+$$;
+
+drop trigger if exists check_project_limit_before_insert on public.projects;
+create trigger check_project_limit_before_insert
+  before insert on public.projects
+  for each row execute function public.enforce_project_limit_trigger();
+
+create or replace function public.enforce_collections_access_trigger()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  lim integer;
+begin
+  lim := public.get_user_project_limit(NEW.user_id);
+  if lim = 1 then
+    raise exception 'Project Collections are available on Atelier (10 USDT) and Black Label (50 USDT) tiers.'
+      using errcode = 'P0001';
+  end if;
+  return NEW;
+end;
+$$;
+
+drop trigger if exists check_collections_access_before_insert on public.collections;
+create trigger check_collections_access_before_insert
+  before insert on public.collections
+  for each row execute function public.enforce_collections_access_trigger();
+
