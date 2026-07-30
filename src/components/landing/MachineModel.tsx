@@ -349,7 +349,7 @@ function MouthDialogue({ line }: { line: string }) {
       zIndexRange={[100, 0]}
       style={{ pointerEvents: "none", userSelect: "none" }}
     >
-      <div className="flex items-center gap-2 max-w-[340px] sm:max-w-[380px] pointer-events-none select-none">
+      <div className="flex items-center gap-2 max-w-[460px] sm:max-w-[560px] pointer-events-none select-none">
         <div className="relative rounded-2xl border border-white/15 bg-background/95 px-4.5 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_32px_-8px_rgba(0,0,0,0.9)] backdrop-blur-xl text-left">
           {/* Small speech tail pointing directly right to his jaw */}
           <span
@@ -474,16 +474,16 @@ export function Machine({
     // Head lifts and the limbs drift out into a loose exploded-diagram cluster
     // — clearly "in pieces", but sized to stay inside the centred frame rather
     // than flinging a part off-screen or up into the section header.
-    if (head.current) head.current.position.y = 1.42 + apart * (0.72 + wob);
+    if (head.current) head.current.position.y = 1.42 + apart * (0.42 + wob);
     arms.current.forEach((g, i) => {
       if (!g) return;
-      g.position.x = apart * (i === 0 ? -0.82 : 0.82);
-      g.position.y = apart * (0.42 + wob);
+      g.position.x = apart * (i === 0 ? -0.5 : 0.5);
+      g.position.y = apart * (0.24 + wob);
       // Dance: the arms lift and wave in opposition, in time with the bounce.
       g.rotation.z = Math.sin(beat + (i === 0 ? 0 : Math.PI)) * 0.5 * dance;
     });
     legs.current.forEach((g) => {
-      if (g) g.position.y = apart * (-0.6 - wob);
+      if (g) g.position.y = apart * (-0.36 - wob);
     });
   });
 
