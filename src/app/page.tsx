@@ -6,10 +6,12 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { ClaudeMark, CursorMark, V0Mark, WindsurfMark } from "@/components/landing/brand-icons";
 import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { TeamSection } from "@/components/landing/TeamSection";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { SectionKicker } from "@/components/landing/SectionKicker";
 import { ClosingScene } from "@/components/landing/ClosingScene";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
+import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
 
 const AGENTS = [
@@ -25,32 +27,56 @@ export const metadata: Metadata = {
 
 const PLANS = [
   {
-    name: "Free",
-    price: "$0",
+    name: "Curated Entry",
+    price: "0 USDT",
     cadence: "forever",
-    blurb: "Plan your whole build before you write a line.",
+    blurb: "Build 1 product workspace with full access.",
     features: [
+      "1 Product workspace (ALL ACCESS)",
       "Visual project canvas",
-      "Brief + derived tech stack",
-      "Idea pressure-test prompt",
+      "Brief → derived tech stack",
+      "Full Master Build Prompt",
+      "Full Depth Prompts compilation",
       "Sign in with GitHub",
     ],
     highlighted: false,
+    vip: false,
     cta: "Start free",
   },
   {
-    name: "Pro",
-    price: "$50",
+    name: "Atelier",
+    price: "10 USDT",
     cadence: "per 28 days",
-    blurb: "For founders shipping continuously.",
+    blurb: "For serial builders scaling multiple products.",
     features: [
-      "Everything in Free",
-      "Your compiled build prompt",
-      "5 depth prompts — QA, security, perf, a11y, deploy",
-      "Pay with USDC / USDT on Solana",
+      "5 Product workspaces (ALL ACCESS)",
+      "Project Collections (Group & organize)",
+      "Prompt Gallery of Use Cases & Personas",
+      "Agent Targets (.cursor/rules, .claude, etc.)",
+      "Pay in USDC / USDT on Solana",
     ],
     highlighted: true,
-    cta: "Go Pro",
+    vip: false,
+    badge: "Most popular",
+    cta: "Go Atelier",
+  },
+  {
+    name: "Black Label VIP",
+    price: "50 USDT",
+    cadence: "per 28 days",
+    blurb: "Autonomous machine workflows & repo pipeline automation.",
+    features: [
+      "Unlimited Products & Collections",
+      "Autonomous Machine Engine (.jules/ configs)",
+      "GitHub Action Automation (.github/workflows/)",
+      "Issue -> Auto Test Case & Business Logic",
+      "Test-Gated CI/CD Deployment Pipeline",
+      "Priority Web3 verification support",
+    ],
+    highlighted: false,
+    vip: true,
+    badge: "VIP Studio",
+    cta: "Unlock Black Label VIP",
   },
 ];
 
@@ -84,6 +110,7 @@ const FAQ = [
 export default function LandingPage() {
   return (
     <AuthProvider>
+    <ReferralCapture />
     <div className="min-h-screen bg-background text-foreground">
       <LandingNav />
 
@@ -128,7 +155,7 @@ export default function LandingPage() {
             <div className="max-w-2xl">
               <SectionKicker index="02">Features</SectionKicker>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                Everything between idea and first commit.
+                Everything between an idea and a working app.
               </h2>
             </div>
             <FeatureShowcase />
@@ -141,52 +168,62 @@ export default function LandingPage() {
             <div className="mx-auto max-w-2xl text-center">
               <SectionKicker index="03" align="center">Pricing</SectionKicker>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                Start free. Go Pro when you&apos;re shipping.
+                Start free. Go Pro as you create.
               </h2>
               <p className="mt-4 text-muted-foreground">
                 No card required — Pro is billed in crypto, verified on-chain.
               </p>
             </div>
-            <div className="mx-auto mt-12 grid max-w-3xl gap-5 md:grid-cols-2">
+            <div className="mx-auto mt-12 grid max-w-6xl gap-5 md:grid-cols-2 lg:grid-cols-3">
               {PLANS.map((plan) => (
                 <div
                   key={plan.name}
                   className={
-                    plan.highlighted
-                      ? "relative flex flex-col overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-[0_0_0_1px_rgba(139,92,246,0.12),0_24px_60px_-40px_rgba(139,92,246,0.5)] md:-mt-4"
-                      : "relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card/20"
+                    plan.vip
+                      ? "relative flex flex-col overflow-hidden rounded-2xl border border-amber-500/40 bg-gradient-to-b from-amber-950/20 via-card to-background shadow-[0_0_40px_-15px_rgba(245,158,11,0.25)]"
+                      : plan.highlighted
+                        ? "relative flex flex-col overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-[0_0_40px_-15px_rgba(139,92,246,0.4)] md:-mt-2"
+                        : "relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card/20"
                   }
                 >
-                  {/* Header band — a spec-sheet masthead, not a floating pill */}
+                  {/* Header band */}
                   <div
-                    className={`flex items-center justify-between px-7 py-4 ${
-                      plan.highlighted
-                        ? "border-b border-primary/20 bg-primary/[0.07]"
-                        : "border-b border-border"
+                    className={`flex items-center justify-between px-6 py-4 ${
+                      plan.vip
+                        ? "border-b border-amber-500/30 bg-amber-500/10"
+                        : plan.highlighted
+                          ? "border-b border-primary/20 bg-primary/[0.07]"
+                          : "border-b border-border"
                     }`}
                   >
                     <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       {plan.name}
                     </span>
-                    {plan.highlighted && (
-                      <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-medium text-primary-foreground">
-                        Most popular
+                    {plan.badge && (
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${
+                          plan.vip
+                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            : "bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        {plan.badge}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex flex-1 flex-col p-7">
+                  <div className="flex flex-1 flex-col p-6">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                      <span className="text-3xl font-bold tracking-tight">{plan.price}</span>
                       <span className="font-mono text-xs text-muted-foreground">{plan.cadence}</span>
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{plan.blurb}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{plan.blurb}</p>
 
-                    {/* Spec rows — divided lines, so it reads as a datasheet */}
-                    <ul className="mt-6 divide-y divide-border/60 border-y border-border/60">
+                    {/* Spec rows */}
+                    <ul className="mt-5 divide-y divide-border/60 border-y border-border/60">
                       {plan.features.map((feat) => (
-                        <li key={feat} className="flex items-start gap-2.5 py-2.5 text-sm">
-                          <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <li key={feat} className="flex items-start gap-2.5 py-2 text-xs">
+                          <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                           <span className="text-foreground/85">{feat}</span>
                         </li>
                       ))}
@@ -194,9 +231,11 @@ export default function LandingPage() {
 
                     <AuthButton
                       className={
-                        plan.highlighted
-                          ? "mt-7 flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
-                          : "mt-7 flex h-11 w-full items-center justify-center rounded-xl border border-border bg-secondary/40 text-sm font-medium text-foreground transition-colors hover:border-primary/40"
+                        plan.vip
+                          ? "mt-6 flex h-10 w-full items-center justify-center rounded-xl bg-amber-500 font-mono text-xs font-semibold uppercase tracking-wider text-black transition-transform hover:-translate-y-0.5"
+                          : plan.highlighted
+                            ? "mt-6 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-xs font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
+                            : "mt-6 flex h-10 w-full items-center justify-center rounded-xl border border-border bg-secondary/40 text-xs font-medium text-foreground transition-colors hover:border-primary/40"
                       }
                     >
                       {plan.cta}
@@ -227,6 +266,9 @@ export default function LandingPage() {
             <FaqAccordion items={FAQ} />
           </div>
         </section>
+
+        {/* ── Team ──────────────────────────────────────────────────────── */}
+        <TeamSection />
 
         {/* ── Final CTA + the unit, signing off ─────────────────────────── */}
         <section className="relative overflow-hidden border-t border-border">
