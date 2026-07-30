@@ -31,7 +31,7 @@ export const siteConfig = {
   shortName: "nxstudio",
   tagline: "From brief to build prompt.",
   description:
-    "nxstudio is a founder-mode build tool. Turn a product brief into a derived tech stack and one production-ready build prompt — then ship. Built for founders shipping products with AI coding agents.",
+    "nxstudio is a founder-mode build tool. Turn a product brief into a derived tech stack and one production-ready build prompt, then shape its brand, 3D and motion in a live visual Studio. Built for founders shipping products with AI coding agents.",
   url: resolveSiteUrl(),
   ogImage: "/opengraph-image",
   themeColor: "#08080A",
@@ -71,6 +71,8 @@ export const siteConfig = {
     "turn idea into product",
     "founder tools",
     "product studio",
+    "brand design tool",
+    "generative design canvas",
     "MVP builder",
     "AI coding prompt",
     "vibe coding",
