@@ -9,6 +9,7 @@ import { useAuthOverlay } from "./AuthOverlay";
 const LINKS = [
   { href: "#how", label: "How it works" },
   { href: "#features", label: "Features" },
+  { href: "#studio", label: "Studio" },
   { href: "#pricing", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
   { href: "#team", label: "Team" },
