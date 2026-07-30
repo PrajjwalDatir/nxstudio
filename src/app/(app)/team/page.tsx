@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSync } from "@/lib/sync-store";
+import { useSync } from "@/lib/workspace-store";
 import { GithubIcon } from "@/components/icons";
 
 export default function TeamPage() {

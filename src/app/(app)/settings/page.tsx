@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useWorkspace } from "@/lib/workspace-store";
-import { useSync } from "@/lib/sync-store";
+import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { Button } from "@/components/ui/button";
 import { BillingSection } from "@/components/billing/BillingSection";
+import { ReferralPanel } from "@/components/referral/ReferralPanel";
 import { GithubIcon, CheckCircleIcon, LoaderIcon, ExternalLinkIcon } from "@/components/icons";
 
 function Field({
@@ -145,7 +145,7 @@ export default function SettingsPage() {
               </Button>
               <span className="text-sm text-muted-foreground">
                 {sync.status === "ok" && sync.result
-                  ? `${sync.result.context.exists ? ".nx found" : ".nx not found"} · ${sync.result.commits.length} commits`
+                  ? `${sync.result.context?.exists ? ".nx found" : ".nx not found"} · ${sync.result.commits?.length ?? 0} commits`
                   : sync.status === "no-repo"
                     ? "No repo linked"
                     : sync.status === "error"
@@ -159,6 +159,9 @@ export default function SettingsPage() {
 
       {/* Subscription */}
       <BillingSection />
+
+      {/* Referrals */}
+      <ReferralPanel />
 
       {/* Danger */}
       <section className="mt-6 rounded-xl border border-red-500/30 bg-red-500/5 p-6">

@@ -4,41 +4,13 @@
  */
 
 // Server-only module: imported exclusively by /api/github/* route handlers.
-import { NX_ROOT, parseNx, ParsedNx } from "./nx-compiler";
+import { NX_ROOT, NX_STANDARD_PATHS, parseNx } from "./nx-compiler";
+// Wire types live in one place (client-safe); the server just produces them.
+import type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync } from "./github-types";
+
+export type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync };
 
 const API = "https://api.github.com";
-
-export interface GhUser {
-  login: string;
-  avatar_url: string;
-  name: string | null;
-}
-
-export interface GhCommit {
-  sha: string;
-  message: string;
-  author: string;
-  avatar: string | null;
-  date: string;
-}
-
-export interface GhIssue {
-  number: number;
-  title: string;
-  state: string;
-  url: string;
-  labels: string[];
-}
-
-export interface RepoSync {
-  repo: string;
-  branch: string;
-  context: ParsedNx;
-  commits: GhCommit[];
-  issues: GhIssue[];
-  contributors: { login: string; avatar: string; commits: number }[];
-  syncedAt: string;
-}
 
 async function gh(token: string, path: string) {
   const res = await fetch(`${API}${path}`, {
@@ -78,19 +50,28 @@ export async function syncRepo(
     .filter((n) => n.type === "blob" && n.path.startsWith(NX_ROOT))
     .map((n) => n.path);
 
-  // 2. Fetch memory.json content (the only file we parse) if present.
+  // 2. Fetch the content of the .nx/ files so the studio re-ingests what the
+  //    agent changed OR added (not just memory.json). Standard files first, then
+  //    any agent-added .nx/ files, bounded so a pathological repo can't make us
+  //    pull thousands of blobs. Files >1MB come back without `content` and are
+  //    skipped automatically.
   const files: Record<string, string> = {};
   for (const p of nxPaths) files[p] = ""; // mark presence
-  const memPath = `${NX_ROOT}/memory.json`;
-  if (nxPaths.includes(memPath)) {
-    const c = await gh(token, `/repos/${owner}/${name}/contents/${memPath}?ref=${branch}`);
-    if (c.ok) {
+  const MAX_NX_FILES = 50;
+  const toFetch = [
+    ...NX_STANDARD_PATHS.filter((p) => nxPaths.includes(p)),
+    ...nxPaths.filter((p) => !NX_STANDARD_PATHS.includes(p)),
+  ].slice(0, MAX_NX_FILES);
+  await Promise.all(
+    toFetch.map(async (p) => {
+      const c = await gh(token, `/repos/${owner}/${name}/contents/${p}?ref=${branch}`);
+      if (!c.ok) return;
       const blob = (await c.json()) as { content?: string; encoding?: string };
       if (blob.content) {
-        files[memPath] = Buffer.from(blob.content, "base64").toString("utf-8");
+        files[p] = Buffer.from(blob.content, "base64").toString("utf-8");
       }
-    }
-  }
+    })
+  );
   const context = parseNx(files);
 
   // 3. Recent commits.

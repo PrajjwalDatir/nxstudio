@@ -10,9 +10,12 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useProjects } from "@/lib/workspace-store";
-import { PHASES } from "@/lib/phases";
-import { SearchIcon, FolderIcon, LayersIcon } from "@/components/icons";
-import { PhaseIcon } from "@/components/phase-icon";
+import {
+  MAIN_NAV_ITEMS,
+  STUDIO_MODE_NAV_ITEMS,
+  getPhaseNavItems,
+} from "@/lib/navigation";
+import { SearchIcon, FolderIcon } from "@/components/icons";
 
 interface CommandContextType {
   open: () => void;
@@ -67,26 +70,47 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       router.push(href);
       setIsOpen(false);
     };
-    const pages: Item[] = [
-      { id: "p-canvas", group: "Pages", label: "Canvas", icon: <LayersIcon className="h-4 w-4" />, run: go("/canvas") },
-      { id: "p-projects", group: "Pages", label: "Projects", icon: <FolderIcon className="h-4 w-4" />, run: go("/projects") },
-      { id: "p-team", group: "Pages", label: "Team", icon: <FolderIcon className="h-4 w-4" />, run: go("/team") },
-      { id: "p-calendar", group: "Pages", label: "Calendar", icon: <FolderIcon className="h-4 w-4" />, run: go("/calendar") },
-      { id: "p-tasks", group: "Pages", label: "Tasks", icon: <FolderIcon className="h-4 w-4" />, run: go("/tasks") },
-      { id: "p-settings", group: "Pages", label: "Settings", icon: <FolderIcon className="h-4 w-4" />, run: go("/settings") },
-    ];
-    const phases: Item[] = PHASES.map((ph) => ({
-      id: `ph-${ph.id}`,
-      group: "Phases",
-      label: ph.label,
-      hint: ph.description,
-      icon: <PhaseIcon name={ph.icon} className="h-4 w-4" />,
-      run: go(`/canvas/${ph.id}`),
-    }));
+
+    const pages: Item[] = MAIN_NAV_ITEMS.map((item) => {
+      const Icon = item.icon;
+      return {
+        id: item.id,
+        group: "Pages",
+        label: item.label,
+        hint: item.description,
+        icon: <Icon className="h-4 w-4" />,
+        run: go(item.href),
+      };
+    });
+
+    const studioModes: Item[] = STUDIO_MODE_NAV_ITEMS.map((item) => {
+      const Icon = item.icon;
+      return {
+        id: item.id,
+        group: "Studio Modes",
+        label: item.label,
+        hint: item.description,
+        icon: <Icon className="h-4 w-4" />,
+        run: go(item.href),
+      };
+    });
+
+    const phases: Item[] = getPhaseNavItems().map((item) => {
+      const Icon = item.icon;
+      return {
+        id: item.id,
+        group: "Phases",
+        label: item.label,
+        hint: item.description,
+        icon: <Icon className="h-4 w-4" />,
+        run: go(item.href),
+      };
+    });
+
     const projectItems: Item[] = projects.map((pr) => ({
       id: `pr-${pr.id}`,
       group: "Projects",
-      label: pr.data.productName,
+      label: pr.data.productName || "Untitled Project",
       hint: "Switch project",
       icon: <FolderIcon className="h-4 w-4" />,
       run: () => {
@@ -95,7 +119,8 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
         setIsOpen(false);
       },
     }));
-    return [...pages, ...phases, ...projectItems];
+
+    return [...pages, ...studioModes, ...phases, ...projectItems];
   }, [projects, router, switchProject]);
 
   const filtered = useMemo(() => {
@@ -108,7 +133,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
 
   // Group in stable order
   const groups = useMemo(() => {
-    const order = ["Phases", "Pages", "Projects"];
+    const order = ["Pages", "Studio Modes", "Phases", "Projects"];
     const map = new Map<string, Item[]>();
     for (const it of filtered) {
       map.set(it.group, [...(map.get(it.group) ?? []), it]);
@@ -140,6 +165,9 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
           onClick={close}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Command palette"
             className="w-full max-w-lg overflow-hidden rounded-xl border border-border bg-popover shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={onKeyDown}
@@ -153,6 +181,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
                   setQuery(e.target.value);
                   setActive(0);
                 }}
+                aria-label="Search commands"
                 placeholder="Search phases, pages, projects…"
                 className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
@@ -165,35 +194,38 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
               {flat.length === 0 ? (
                 <div className="px-3 py-8 text-center text-sm text-muted-foreground">No results.</div>
               ) : (
-                groups.map((g) => (
-                  <div key={g.group} className="mb-2">
-                    <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {g.group}
+                (() => {
+                  let itemIndex = 0;
+                  return groups.map((g) => (
+                    <div key={g.group} className="mb-2">
+                      <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {g.group}
+                      </div>
+                      {g.items.map((it) => {
+                        const idx = itemIndex++;
+                        return (
+                          <button
+                            key={it.id}
+                            onMouseEnter={() => setActive(idx)}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              it.run();
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm ${
+                              idx === active ? "bg-accent text-accent-foreground" : "hover:bg-secondary"
+                            }`}
+                          >
+                            <span className="text-muted-foreground">{it.icon}</span>
+                            <span className="flex-1 truncate">{it.label}</span>
+                            {it.hint && (
+                              <span className="truncate text-xs text-muted-foreground">{it.hint}</span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                    {g.items.map((it) => {
-                      const idx = flat.indexOf(it);
-                      return (
-                        <button
-                          key={it.id}
-                          onMouseEnter={() => setActive(idx)}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            it.run();
-                          }}
-                          className={`flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm ${
-                            idx === active ? "bg-accent text-accent-foreground" : "hover:bg-secondary"
-                          }`}
-                        >
-                          <span className="text-muted-foreground">{it.icon}</span>
-                          <span className="flex-1 truncate">{it.label}</span>
-                          {it.hint && (
-                            <span className="truncate text-xs text-muted-foreground">{it.hint}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))
+                  ));
+                })()
               )}
             </div>
           </div>

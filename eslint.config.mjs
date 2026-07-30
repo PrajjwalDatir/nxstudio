@@ -21,6 +21,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored toolcraft editor (pixel-point/toolcraft, MIT). Ported verbatim and
+    // kept in sync with upstream, so it's excluded from our app lint rules. It is
+    // still type-checked by tsc.
+    "src/toolcraft/**",
   ]),
 ]);
 

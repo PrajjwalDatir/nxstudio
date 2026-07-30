@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeftIcon, MoreIcon, BadgeCheckIcon } from "@/components/icons";
-import { useSync } from "@/lib/sync-store";
-import { useWorkspace } from "@/lib/workspace-store";
+import { useSync, useWorkspace } from "@/lib/workspace-store";
 import { DueDatePicker } from "@/components/ui/due-date";
 import { cn } from "@/lib/utils";
 
@@ -113,7 +112,7 @@ export function PhaseHeader({
               )}
             </div>
           )}
-          <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground">
+          <button aria-label="More options" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground">
             <MoreIcon className="h-4 w-4" />
           </button>
         </div>

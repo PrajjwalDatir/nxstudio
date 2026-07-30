@@ -4,14 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useProjects } from "@/lib/workspace-store";
+import { useProductLimit } from "@/lib/use-product-limit";
+import { PremiumDialog } from "@/components/billing/PremiumDialog";
 import { useSidebar } from "@/components/shell/sidebar-context";
+import { motion } from "framer-motion";
+import { MAIN_NAV_ITEMS } from "@/lib/navigation";
 import {
-  ScaffoldIcon,
-  FolderIcon,
-  UsersIcon,
-  CalendarIcon,
-  ListChecksIcon,
-  SettingsIcon,
   PlusIcon,
   PanelLeftIcon,
   LogOutIcon,
@@ -22,23 +20,14 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  // Phases live under /canvas/<phaseId>, so the board stays highlighted while
-  // you're inside one of its stages.
-  { href: "/canvas", label: "Canvas", icon: ScaffoldIcon, match: (p: string) => p.startsWith("/canvas") },
-  { href: "/projects", label: "Projects", icon: FolderIcon },
-  { href: "/team", label: "Team", icon: UsersIcon },
-  { href: "/calendar", label: "Calendar", icon: CalendarIcon },
-  { href: "/tasks", label: "Tasks", icon: ListChecksIcon },
-  { href: "/settings", label: "Settings", icon: SettingsIcon },
-];
-
 export function Sidebar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const { createProject } = useProjects();
+  const { atLimit } = useProductLimit();
   const { collapsed, toggle } = useSidebar();
   const [open, setOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   const [name, setName] = useState("");
 
   const handleNew = () => {
@@ -53,7 +42,7 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
   return (
     <aside
       className={cn(
-        "hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out",
+        "relative z-30 pointer-events-auto hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out",
         collapsed ? "w-16" : "w-[212px]"
       )}
     >
@@ -94,25 +83,32 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
           </p>
         )}
         <ul className="space-y-1">
-          {NAV.map((item) => {
+          {MAIN_NAV_ITEMS.map((item) => {
             const active = item.match ? item.match(pathname) : pathname === item.href;
             const Icon = item.icon;
             return (
-              <li key={item.href}>
+              <li key={item.href} className="relative">
                 <Link
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    "flex items-center rounded-lg text-sm transition-colors",
+                    "relative flex items-center rounded-lg text-sm transition-colors z-10 pointer-events-auto",
                     collapsed ? "h-9 w-9 justify-center" : "gap-3 px-3 py-2",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      ? "text-sidebar-accent-foreground font-medium"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   {!collapsed && item.label}
                 </Link>
+                {active && (
+                  <motion.div
+                    layoutId="sidebar-active-pill"
+                    className="absolute inset-0 rounded-lg bg-sidebar-accent z-0 pointer-events-none"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
               </li>
             );
           })}
@@ -121,6 +117,28 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
 
       {/* New Project */}
       <div className={cn("border-t border-sidebar-border", collapsed ? "p-2" : "p-3")}>
+        {atLimit ? (
+          collapsed ? (
+            <Button
+              variant="outline"
+              size="icon"
+              title="New Project — upgrade to build more"
+              className="w-full border-sidebar-border"
+              onClick={() => setPayOpen(true)}
+            >
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full gap-2 border-sidebar-border"
+              onClick={() => setPayOpen(true)}
+            >
+              <PlusIcon className="h-4 w-4" />
+              New Project
+            </Button>
+          )
+        ) : (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             {collapsed ? (
@@ -173,6 +191,8 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
             </form>
           </PopoverContent>
         </Popover>
+        )}
+        <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => setPayOpen(false)} />
       </div>
 
       {/* Account + sign out */}

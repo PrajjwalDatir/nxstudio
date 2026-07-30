@@ -39,6 +39,7 @@ export function CopyButton({
   return (
     <button
       onClick={copy}
+      aria-label={label || (locked ? "Locked" : copied ? "Copied" : "Copy")}
       className={cn(
         "inline-flex items-center gap-2 rounded-lg text-sm font-medium transition-colors",
         variant === "solid"

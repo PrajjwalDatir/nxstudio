@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useWorkspace } from "@/lib/workspace-store";
-import { useSync } from "@/lib/sync-store";
+import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { PHASES, getPhaseProgress } from "@/lib/phases";
 import { CheckIcon, GithubIcon, ExternalLinkIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -46,6 +45,7 @@ export default function TasksPage() {
                       <button
                         key={step.id}
                         onClick={() => toggleChecklist(phase.id, step.id)}
+                        aria-label={`${done ? "Uncheck" : "Check"}: ${step.label}`}
                         className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left hover:border-primary/40"
                       >
                         <span

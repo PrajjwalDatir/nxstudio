@@ -3,10 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProjects, type Project } from "@/lib/workspace-store";
+import { useProductLimit } from "@/lib/use-product-limit";
+import { useSubscription } from "@/lib/use-subscription";
 import { PHASES, getPhaseProgress } from "@/lib/phases";
 import { WorkspaceData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PremiumDialog } from "@/components/billing/PremiumDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,14 +55,44 @@ export default function ProjectsPage() {
     assignToCollection,
   } = useProjects();
 
+  const { atLimit, limit } = useProductLimit();
+  const { canUseCollections } = useSubscription();
+
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
+  const [payOpen, setPayOpen] = useState(false);
+  const [payTitle, setPayTitle] = useState("Scale Your Studio");
+  const [payDesc, setPayDesc] = useState("Upgrade your tier to build more projects or organize workspaces.");
   const [creatingCollection, setCreatingCollection] = useState(false);
   const [collectionName, setCollectionName] = useState("");
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
+  const startCreate = () => {
+    if (atLimit) {
+      setPayTitle("Workspace Limit Reached");
+      setPayDesc(`Your current plan is limited to ${limit} active workspace. Upgrade to Atelier (10 USDT) or Black Label VIP (50 USDT) to scale.`);
+      setPayOpen(true);
+      return;
+    }
+    setCreating(true);
+  };
+
+  const startCreateCollection = () => {
+    if (!canUseCollections) {
+      setPayTitle("Unlock Project Collections");
+      setPayDesc("Project Collections allow you to organize, categorize, and group side projects, client work, and experiments. Upgrade to Atelier (10 USDT).");
+      setPayOpen(true);
+      return;
+    }
+    setCreatingCollection(true);
+  };
+
   const create = () => {
+    if (atLimit) {
+      setPayOpen(true);
+      return;
+    }
     const n = name.trim();
     if (!n) return;
     createProject(n);
@@ -185,16 +218,41 @@ export default function ProjectsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setCreatingCollection(true)} className="gap-2">
+          <Button variant="outline" onClick={startCreateCollection} className="gap-2">
             <FolderIcon className="h-4 w-4" />
             New Collection
           </Button>
-          <Button onClick={() => setCreating(true)} className="gap-2">
+          <Button onClick={startCreate} className="gap-2">
             <PlusIcon className="h-4 w-4" />
             New Project
           </Button>
         </div>
       </div>
+
+      {atLimit && (
+        <button
+          onClick={() => {
+            setPayTitle("Workspace Limit Reached");
+            setPayDesc("Free accounts are limited to 1 active workspace. Upgrade to Atelier (10 USDT) or Black Label VIP (50 USDT) to scale.");
+            setPayOpen(true);
+          }}
+          className="mt-4 flex w-full items-center justify-between rounded-xl border border-primary/30 bg-accent/20 px-4 py-3 text-left text-sm"
+        >
+          <span className="text-muted-foreground">
+            Free accounts are limited to {limit} product.{" "}
+            <span className="font-medium text-foreground">Upgrade to build multi-product workspaces.</span>
+          </span>
+          <span className="shrink-0 font-semibold text-primary">Upgrade →</span>
+        </button>
+      )}
+
+      <PremiumDialog
+        open={payOpen}
+        title={payTitle}
+        description={payDesc}
+        onClose={() => setPayOpen(false)}
+        onActivated={() => setPayOpen(false)}
+      />
 
       {creating && (
         <div className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-card p-4">

@@ -3,6 +3,7 @@
 import { useWorkspace } from "@/lib/workspace-store";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
+import { ReferralClaim } from "@/components/referral/ReferralClaim";
 import { NxLogo } from "@/components/icons";
 
 /**
@@ -32,10 +33,19 @@ export function AppShell({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      {/* Claims a captured ?ref= code once the user is authenticated. */}
+      <ReferralClaim />
+      {/* Skip to content link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-lg"
+      >
+        Skip to content
+      </a>
       <Sidebar userEmail={userEmail} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main id="main-content" className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

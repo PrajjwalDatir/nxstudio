@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getUser } from "@/lib/github-server";
+import { getGhUser } from "@/lib/github";
 
 const COOKIE = "gh_token";
 
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing token." }, { status: 400 });
   }
 
-  const user = await getUser(token);
+  const user = await getGhUser(token);
   if (!user) {
     return NextResponse.json({ error: "Invalid token." }, { status: 401 });
   }
