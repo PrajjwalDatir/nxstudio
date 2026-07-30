@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
-import { PhaseIcon } from "@/components/phase-icon";
+import { PhaseIcon, CheckIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import { PhaseHeader } from "@/components/phases/PhaseHeader";
-import { CheckIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

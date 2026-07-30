@@ -1,6 +1,4 @@
-// Re-export Lucide icons for consistent brand identity
-// Nx Studio uses Shadcn UI which is built on Lucide icons
-// This ensures visual consistency across all components
+// Re-export Lucide icons for consistent brand identity & high-craft design UI
 
 export { NxLogo } from "./NxLogo";
 
@@ -31,6 +29,7 @@ export {
   Layers as LayersIcon,
   Palette as PaletteIcon,
   Box as BoxIcon,
+  FolderKanban as ProjectIcon,
 
   // Surfaces / platforms
   Globe as GlobeIcon,
@@ -38,9 +37,22 @@ export {
   Smartphone as SmartphoneIcon,
   Monitor as MonitorIcon,
 
-  // Builder & Scaffold
+  // Builder & Precision Vector Icons
   Hammer as HammerIcon,
   LayoutGrid as ScaffoldIcon,
+  Waves as WavesIcon,
+  Atom as AtomIcon,
+  Activity as ActivityIcon,
+  Binary as BinaryIcon,
+  Spline as SplineIcon,
+  Disc as DiscIcon,
+  Gem as GemIcon,
+  Hexagon as HexagonIcon,
+  Film as FilmIcon,
+  PencilLine as PencilLineIcon,
+  Compass as CompassIcon,
+  Aperture as ApertureIcon,
+  RotateCcw as RotateCcwIcon,
   
   // Brand
   Zap as ZapIcon,
@@ -89,12 +101,37 @@ export {
   Mic as MicIcon,
   FileText as FileTextIcon,
   FileType as FileDocIcon,
-  Compass as CompassIcon,
   BadgeCheck as BadgeCheckIcon,
   Maximize2 as ExpandIcon,
   Wand2 as WandIcon,
+  Pencil as PencilIcon,
   Wrench as WrenchIcon,
   Loader2 as LoaderIcon,
   Database as DatabaseIcon,
   CreditCard as CreditCardIcon,
 } from "lucide-react";
+
+import {
+  Lightbulb as LightbulbIcon,
+  CheckCircle2 as CheckCircleIcon,
+  Box as BoxIcon,
+  Layers as LayersIcon,
+  Play as PlayIcon,
+  Rocket as RocketIcon,
+  Sparkles as SparklesIcon,
+} from "lucide-react";
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  lightbulb: LightbulbIcon,
+  check: CheckCircleIcon,
+  box: BoxIcon,
+  layers: LayersIcon,
+  play: PlayIcon,
+  rocket: RocketIcon,
+  sparkles: SparklesIcon,
+};
+
+export function PhaseIcon({ name, className }: { name: string; className?: string }) {
+  const Icon = ICON_MAP[name] ?? BoxIcon;
+  return <Icon className={className} />;
+}

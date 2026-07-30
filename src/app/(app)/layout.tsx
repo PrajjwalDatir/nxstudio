@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProjects, fetchCollections } from "@/lib/projects-server";
 import { WorkspaceProvider } from "@/lib/workspace-store";
-import { SyncProvider } from "@/lib/sync-store";
 import { CommandProvider } from "@/components/shell/CommandPalette";
 import { SidebarProvider } from "@/components/shell/sidebar-context";
 import { AppShell } from "@/components/shell/AppShell";
@@ -33,13 +32,11 @@ export default async function AppLayout({
       initialCollections={initialCollections}
       userId={user.id}
     >
-      <SyncProvider>
-        <CommandProvider>
-          <SidebarProvider>
-            <AppShell userEmail={user.email ?? ""}>{children}</AppShell>
-          </SidebarProvider>
-        </CommandProvider>
-      </SyncProvider>
+      <CommandProvider>
+        <SidebarProvider>
+          <AppShell userEmail={user.email ?? ""}>{children}</AppShell>
+        </SidebarProvider>
+      </CommandProvider>
     </WorkspaceProvider>
   );
 }

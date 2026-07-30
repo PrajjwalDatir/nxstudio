@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
-import { CompiledPrompt } from "@/lib/prompts";
+import { CompiledPrompt } from "@/lib/prompts-server";
 import { compileStack } from "@/lib/platform-engine";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
@@ -31,7 +31,7 @@ const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
 };
 
 export function BuildPhase() {
-  const { data } = useWorkspace();
+  const { data, isStepDone, toggleChecklist } = useWorkspace();
   const stack = compileStack(data.tech);
   const { prompts, locked, loading, refresh } = useCompiledPrompts();
 
@@ -62,11 +62,57 @@ export function BuildPhase() {
   const masterPrompt = prompts?.master.prompt ?? "";
   const depthPrompts: CompiledPrompt[] = prompts?.depth ?? [];
 
+  const buildSteps = [
+    { id: "foundation", label: "Project Foundation & Setup", description: "Environment, workspace, shared utilities." },
+    { id: "core", label: "Core Features Implementation", description: "Data models, auth, main modules." },
+    { id: "polish", label: "Polish & Deployment", description: "Optimization and production pipeline." },
+  ];
+
+  const doneCount = buildSteps.filter((s) => isStepDone("build", s.id)).length;
+  const status = doneCount >= buildSteps.length ? "complete" : "in-progress";
+
   return (
     <>
-      <PhaseHeader title="Build" status="ready" phaseId="build" />
+      <PhaseHeader title="Build" status={status} phaseId="build" />
 
       <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => { setPayOpen(false); refresh(); }} />
+
+      {/* Interactive Task Checklist */}
+      <div className="mb-8 rounded-2xl border border-border bg-card p-6">
+        <h2 className="text-lg font-semibold">Deliverables Checklist</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Track implementation progress as your AI agent executes each step.
+        </p>
+
+        <div className="mt-4 space-y-2.5">
+          {buildSteps.map((step) => {
+            const checked = isStepDone("build", step.id);
+            return (
+              <div
+                key={step.id}
+                onClick={() => toggleChecklist("build", step.id)}
+                className="flex cursor-pointer items-center gap-3.5 rounded-xl border border-border bg-secondary/20 px-4 py-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
+              >
+                <div
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                    checked
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:border-primary/60"
+                  }`}
+                >
+                  {checked && <BadgeCheckIcon className="h-3.5 w-3.5" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-medium ${checked ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                    {step.label}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">{step.description}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* The one build prompt — the hero */}
       <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6">
@@ -76,18 +122,33 @@ export function BuildPhase() {
               <WandIcon className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold">Your build prompt</h2>
+              <h2 className="text-xl font-semibold">Zip only. Say &quot;Start&quot;.</h2>
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                One prompt. Paste it into your AI IDE — it creates your{" "}
-                <span className="font-mono text-primary">.nx/</span> context and builds the{" "}
-                {stack.frontend} foundation in a single run.
+                Download your <span className="font-mono text-primary">.nx/</span> context bundle into your repo root.
+                Your AI agent reads disk directly — you only need to say &quot;Start&quot;.
               </p>
             </div>
           </div>
           {locked ? (
             <CopyButton value="" label="Unlock" variant="solid" className="shrink-0" locked onLockedClick={openPaywall} />
           ) : (
-            <CopyButton value={masterPrompt} label="Copy prompt" variant="solid" className="shrink-0" />
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={async () => {
+                  const { exportNxZip } = await import("@/lib/nx-exporter");
+                  await exportNxZip(data);
+                }}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
+              >
+                <LayersIcon className="h-4 w-4" />
+                Download .nx/ ZIP
+              </button>
+              <CopyButton
+                value="Start"
+                label="Copy 'Start'"
+                variant="ghost"
+              />
+            </div>
           )}
         </div>
 

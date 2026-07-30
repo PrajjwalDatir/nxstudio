@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSync } from "@/lib/sync-store";
+import { useSync } from "@/lib/workspace-store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BellIcon, GithubIcon, CircleIcon, ExternalLinkIcon } from "@/components/icons";
 

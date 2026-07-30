@@ -159,10 +159,5 @@ export function projectToRow(p: Project, userId: string) {
 
 /** Stable serialization of the persisted fields — used to detect dirty projects. */
 export function serializeProject(p: Project): string {
-  return JSON.stringify({
-    data: p.data,
-    github: p.github,
-    dueDates: p.dueDates,
-    collectionId: p.collectionId,
-  });
+  return JSON.stringify([p.id, p.data, p.github, p.dueDates, p.collectionId]);
 }

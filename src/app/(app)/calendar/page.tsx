@@ -82,10 +82,10 @@ export default function CalendarPage() {
               {MONTHS[cursor.m]} {cursor.y}
             </h2>
             <div className="flex gap-1">
-              <button onClick={() => shift(-1)} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary">
+              <button onClick={() => shift(-1)} aria-label="Previous month" className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary">
                 <ChevronLeftIcon className="h-4 w-4" />
               </button>
-              <button onClick={() => shift(1)} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary">
+              <button onClick={() => shift(1)} aria-label="Next month" className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary">
                 <ChevronRightIcon className="h-4 w-4" />
               </button>
             </div>

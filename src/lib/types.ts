@@ -30,6 +30,17 @@ export interface BrandDNA {
 /* Tech Stack — founder input (the wizard collects this)              */
 /* ------------------------------------------------------------------ */
 
+/** Target AI coding agent for prompt compilation optimization. */
+export type AgentTarget =
+  | "generic"
+  | "claude"
+  | "cursor"
+  | "windsurf"
+  | "antigravity"
+  | "zed"
+  | "aider"
+  | "v0";
+
 /** The surfaces a product can ship to. The engine derives a stack from the set. */
 export type Surface = "web" | "ios" | "android" | "desktop";
 
@@ -110,6 +121,11 @@ export interface WorkspaceData {
   checklist: Record<string, string[]>;
   /** Founder-defined stages that render on the Canvas after the built-ins. */
   customStages: CustomStage[];
+  /**
+   * Free-form notes the founder sketched in Studio (annotation text) to steer
+   * the AI — "special notes" attached to the build context.
+   */
+  designNotes?: string;
 }
 
 export interface PhaseProgress {

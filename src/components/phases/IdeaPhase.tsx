@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSpeechInput } from "@/lib/use-speech-input";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
-import { BrandDNA, IdeaData } from "@/lib/types";
+import { IdeaData } from "@/lib/types";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { PaperclipIcon, MicIcon, WandIcon } from "@/components/icons";
@@ -153,16 +153,18 @@ function QuestionCard({
   );
 }
 
-const BRAND_FIELDS: {
-  field: keyof BrandDNA;
-  label: string;
-  placeholder: string;
-}[] = [
-  { field: "vibe", label: "Vibe", placeholder: "e.g. minimal, playful, editorial" },
-  { field: "primaryColor", label: "Primary color", placeholder: "e.g. #6366F1 or indigo" },
-  { field: "radius", label: "Border radius", placeholder: "e.g. 0.75rem" },
-  { field: "font", label: "Font", placeholder: "e.g. Inter" },
-];
+// Brand vocabulary shared 1:1 with Studio's Design panel (see studio/schema.ts)
+// so the two edit the same brand with the same options.
+const VIBES = ["minimal", "playful", "bold", "elegant"] as const;
+const FONTS = ["Inter", "Geist", "System UI", "Serif", "Monospace"] as const;
+const HEX6 = /^#[0-9a-fA-F]{6}$/;
+
+/** Parse the stored radius ("10px" or legacy "0.75rem") to a px number. */
+function radiusToNum(raw: string): number {
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n)) return 10;
+  return raw.includes("rem") ? Math.round(n * 16) : Math.round(n);
+}
 
 export function IdeaPhase() {
   const { data, updateIdea, updateBrand } = useWorkspace();
@@ -208,20 +210,87 @@ export function IdeaPhase() {
       <div className="mt-4 rounded-xl glass p-5">
         <label className="font-medium">Brand DNA</label>
         <p className="mt-1 text-sm text-muted-foreground">
-          Locked into the build prompt so generated code stays visually consistent.
+          Locked into the build prompt so generated code stays visually consistent — shared live with Studio.
         </p>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {BRAND_FIELDS.map((b) => (
-            <label key={b.field} className="block">
-              <span className="text-sm text-muted-foreground">{b.label}</span>
+
+        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {/* Primary color — swatch picker + hex/name field */}
+          <div>
+            <span className="text-sm text-muted-foreground">Primary color</span>
+            <div className="mt-1.5 flex items-center gap-2">
               <input
-                value={data.brand[b.field]}
-                onChange={(e) => updateBrand(b.field, e.target.value)}
-                placeholder={b.placeholder}
-                className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+                type="color"
+                aria-label="Pick primary color"
+                value={HEX6.test(data.brand.primaryColor) ? data.brand.primaryColor : "#6366f1"}
+                onChange={(e) => updateBrand("primaryColor", e.target.value)}
+                className="h-9 w-10 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-1"
               />
-            </label>
-          ))}
+              <input
+                value={data.brand.primaryColor}
+                onChange={(e) => updateBrand("primaryColor", e.target.value)}
+                placeholder="#6366F1 or indigo"
+                className="w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+              />
+            </div>
+          </div>
+
+          {/* Typography */}
+          <div>
+            <span className="text-sm text-muted-foreground">Typography</span>
+            <select
+              value={FONTS.includes(data.brand.font as (typeof FONTS)[number]) ? data.brand.font : ""}
+              onChange={(e) => updateBrand("font", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none focus:border-ring"
+            >
+              <option value="" disabled>
+                Choose a font…
+              </option>
+              {FONTS.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Vibe — segmented, matches Studio */}
+          <div>
+            <span className="text-sm text-muted-foreground">Vibe</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {VIBES.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => updateBrand("vibe", v)}
+                  className={cn(
+                    "rounded-lg border px-3 py-1.5 text-sm capitalize transition-colors",
+                    data.brand.vibe === v
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Corner radius — slider, matches Studio */}
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Corner radius</span>
+              <span className="text-sm font-medium">{radiusToNum(data.brand.radius)}px</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={24}
+              step={1}
+              value={radiusToNum(data.brand.radius)}
+              onChange={(e) => updateBrand("radius", `${e.target.value}px`)}
+              className="mt-2.5 w-full accent-primary"
+            />
+          </div>
         </div>
       </div>
 
