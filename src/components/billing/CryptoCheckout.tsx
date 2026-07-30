@@ -12,19 +12,21 @@ interface PayRequest {
   reference: string;
   url: string;
   amount: string;
+  tier: string;
   wallet: string;
   cycleDays: number;
 }
 
 type Phase = "idle" | "requesting" | "awaiting" | "verifying";
 
-/**
- * Solana Pay checkout. Requests a reference-bound payment, renders a QR + deep
- * link, and verifies on demand ("I've paid"). No hash pasting; the persisted
- * reference makes "I've already paid" safe to re-check later. Calls `onActivated`
- * when the server confirms the payment and extends the cycle.
- */
-export function CryptoCheckout({ onActivated }: { onActivated?: () => void }) {
+export function CryptoCheckout({
+  initialTier = "pro_10",
+  onActivated,
+}: {
+  initialTier?: "pro_10" | "master_50";
+  onActivated?: () => void;
+}) {
+  const [selectedTier, setSelectedTier] = useState<"pro_10" | "master_50">(initialTier);
   const [phase, setPhase] = useState<Phase>("idle");
   const [req, setReq] = useState<PayRequest | null>(null);
   const [qr, setQr] = useState<string | null>(null);
@@ -38,12 +40,16 @@ export function CryptoCheckout({ onActivated }: { onActivated?: () => void }) {
       .catch(() => setQr(null));
   }, [req?.url]);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (tierToPay = selectedTier) => {
     setPhase("requesting");
     setNote(null);
     setNeedsSupport(false);
     try {
-      const res = await fetch("/api/billing/crypto/request", { method: "POST" });
+      const res = await fetch("/api/billing/crypto/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: tierToPay }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Couldn't start the payment.");
       setReq(data as PayRequest);
@@ -52,7 +58,7 @@ export function CryptoCheckout({ onActivated }: { onActivated?: () => void }) {
       setNote(e instanceof Error ? e.message : "Something went wrong.");
       setPhase("idle");
     }
-  }, []);
+  }, [selectedTier]);
 
   const verify = useCallback(async () => {
     setPhase("verifying");
@@ -68,9 +74,9 @@ export function CryptoCheckout({ onActivated }: { onActivated?: () => void }) {
       if (!res.ok) throw new Error(data.error ?? "Verification failed.");
 
       if (data.verified) {
-        setNote("Payment confirmed — premium unlocked.");
+        setNote("Payment confirmed — access activated.");
         onActivated?.();
-        return; // keep phase in "verifying"; parent typically refreshes/closes
+        return;
       }
       if (data.reason === "not_found") {
         setNote("We haven't seen the payment finalize yet. Give it a few seconds and try again.");
@@ -87,14 +93,42 @@ export function CryptoCheckout({ onActivated }: { onActivated?: () => void }) {
 
   if (phase === "idle" || phase === "requesting") {
     return (
-      <div className="space-y-3">
-        <Button onClick={start} disabled={phase === "requesting"} className="gap-2">
+      <div className="space-y-4">
+        {/* Tier Selector Tabs */}
+        <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-secondary/30 p-1">
+          <button
+            type="button"
+            onClick={() => setSelectedTier("pro_10")}
+            className={`rounded-lg py-2 text-center text-xs font-semibold transition-all ${
+              selectedTier === "pro_10"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Atelier (10 USDT)
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedTier("master_50")}
+            className={`rounded-lg py-2 text-center text-xs font-semibold transition-all ${
+              selectedTier === "master_50"
+                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Black Label (50 USDT)
+          </button>
+        </div>
+
+        <Button onClick={() => start(selectedTier)} disabled={phase === "requesting"} className="w-full gap-2 font-mono text-xs uppercase">
           {phase === "requesting" ? (
             <LoaderIcon className="h-4 w-4 animate-spin" />
           ) : (
             <ZapIcon className="h-4 w-4" />
           )}
-          {phase === "requesting" ? "Preparing…" : "Pay with crypto (USDC / USDT)"}
+          {phase === "requesting"
+            ? "Preparing..."
+            : `Pay ${selectedTier === "master_50" ? "50" : "10"} USDT with Solana Pay`}
         </Button>
         {note && <p className="text-sm text-red-400">{note}</p>}
       </div>
@@ -137,6 +171,9 @@ export function CryptoCheckout({ onActivated }: { onActivated?: () => void }) {
         </Button>
         <Button variant="ghost" onClick={verify} disabled={phase === "verifying"}>
           {"I've already paid"}
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setPhase("idle")} className="ml-auto text-xs">
+          Switch Plan
         </Button>
       </div>
 
