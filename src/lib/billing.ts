@@ -51,7 +51,7 @@ export function getTierInfo(tier: PlanTier) {
     case "master_50":
       return {
         tier,
-        tierName: "Black Label VIP",
+        tierName: "Master",
         projectLimit: Infinity,
         canUseCollections: true,
         canUsePromptGallery: true,
@@ -60,7 +60,7 @@ export function getTierInfo(tier: PlanTier) {
     case "pro_10":
       return {
         tier,
-        tierName: "Atelier",
+        tierName: "Pro",
         projectLimit: 5,
         canUseCollections: true,
         canUsePromptGallery: true,
@@ -70,7 +70,7 @@ export function getTierInfo(tier: PlanTier) {
     default:
       return {
         tier: "free" as const,
-        tierName: "Curated Entry",
+        tierName: "Free",
         projectLimit: 1,
         canUseCollections: false,
         canUsePromptGallery: false,

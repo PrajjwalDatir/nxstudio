@@ -26,7 +26,7 @@ export function MachineWorkflowsView({ data }: { data: WorkspaceData }) {
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold tracking-tight text-foreground">Autonomous Machine Workflows</h2>
               <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-amber-400 uppercase">
-                Black Label VIP
+                Master
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -91,7 +91,7 @@ export function MachineWorkflowsView({ data }: { data: WorkspaceData }) {
           <pre className="max-h-96 overflow-x-auto overflow-y-auto rounded-lg bg-black/60 p-4 font-mono text-xs text-zinc-300 leading-relaxed">
             {canUseMachineWorkflows
               ? activeFile.content
-              : activeFile.content.slice(0, 180) + "\n\n/* ... Locked — Upgrade to Black Label VIP (50 USDT) to copy full machine workflow ... */"}
+              : activeFile.content.slice(0, 180) + "\n\n/* ... Locked — Upgrade to Master (50 USDT) to copy full machine workflow ... */"}
           </pre>
         </div>
       </div>

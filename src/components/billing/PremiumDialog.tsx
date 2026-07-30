@@ -65,7 +65,7 @@ export function PremiumDialog({
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                Checkout — {selectedTier === "master_50" ? "Black Label VIP (50 USDT)" : "Atelier (10 USDT)"}
+                Checkout — {selectedTier === "master_50" ? "Master (50 USDT)" : "Pro (10 USDT)"}
               </h3>
               <button
                 onClick={() => setSelectedTier(null)}

@@ -105,18 +105,18 @@ export function CryptoCheckout({
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Atelier (10 USDT)
+            Pro (10 USDT)
           </button>
           <button
             type="button"
             onClick={() => setSelectedTier("master_50")}
             className={`rounded-lg py-2 text-center text-xs font-semibold transition-all ${
               selectedTier === "master_50"
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Black Label (50 USDT)
+            Master (50 USDT)
           </button>
         </div>
 
