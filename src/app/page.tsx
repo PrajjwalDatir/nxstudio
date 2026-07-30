@@ -5,6 +5,7 @@ import { Hero } from "@/components/landing/Hero";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { ClaudeMark, CursorMark, V0Mark, WindsurfMark } from "@/components/landing/brand-icons";
 import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
+import { StudioShowcase } from "@/components/landing/StudioShowcase";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { TeamSection } from "@/components/landing/TeamSection";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 
 const PLANS = [
   {
-    name: "Curated Entry",
+    name: "Free",
     price: "0 USDT",
     cadence: "forever",
     blurb: "Build 1 product workspace with full access.",
@@ -44,7 +45,7 @@ const PLANS = [
     cta: "Start free",
   },
   {
-    name: "Atelier",
+    name: "Pro",
     price: "10 USDT",
     cadence: "per 28 days",
     blurb: "For serial builders scaling multiple products.",
@@ -58,10 +59,10 @@ const PLANS = [
     highlighted: true,
     vip: false,
     badge: "Most popular",
-    cta: "Go Atelier",
+    cta: "Go Pro",
   },
   {
-    name: "Black Label VIP",
+    name: "Master",
     price: "50 USDT",
     cadence: "per 28 days",
     blurb: "Autonomous machine workflows & repo pipeline automation.",
@@ -75,8 +76,8 @@ const PLANS = [
     ],
     highlighted: false,
     vip: true,
-    badge: "VIP Studio",
-    cta: "Unlock Black Label VIP",
+    badge: "Unlimited",
+    cta: "Unlock Master",
   },
 ];
 
@@ -162,11 +163,14 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── Studio ────────────────────────────────────────────────────── */}
+        <StudioShowcase />
+
         {/* ── Pricing ───────────────────────────────────────────────────── */}
         <section id="pricing" className="scroll-mt-20 border-t border-border">
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 md:py-28">
             <div className="mx-auto max-w-2xl text-center">
-              <SectionKicker index="03" align="center">Pricing</SectionKicker>
+              <SectionKicker index="04" align="center">Pricing</SectionKicker>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                 Start free. Go Pro as you create.
               </h2>
@@ -174,73 +178,65 @@ export default function LandingPage() {
                 No card required — Pro is billed in crypto, verified on-chain.
               </p>
             </div>
-            <div className="mx-auto mt-12 grid max-w-6xl gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto mt-14 grid max-w-6xl gap-4 md:grid-cols-2 lg:grid-cols-3">
               {PLANS.map((plan) => (
                 <div
                   key={plan.name}
-                  className={
-                    plan.vip
-                      ? "relative flex flex-col overflow-hidden rounded-2xl border border-amber-500/40 bg-gradient-to-b from-amber-950/20 via-card to-background shadow-[0_0_40px_-15px_rgba(245,158,11,0.25)]"
-                      : plan.highlighted
-                        ? "relative flex flex-col overflow-hidden rounded-2xl border border-primary/40 bg-card shadow-[0_0_40px_-15px_rgba(139,92,246,0.4)] md:-mt-2"
-                        : "relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card/20"
-                  }
+                  className={`relative flex flex-col justify-between rounded-xl border p-6 transition-colors duration-200 ${
+                    plan.highlighted
+                      ? "border-primary/60 bg-primary/[0.04]"
+                      : plan.vip
+                        ? "border-border bg-card ring-1 ring-inset ring-white/[0.06]"
+                        : "border-border bg-card/40"
+                  }`}
                 >
-                  {/* Header band */}
-                  <div
-                    className={`flex items-center justify-between px-6 py-4 ${
-                      plan.vip
-                        ? "border-b border-amber-500/30 bg-amber-500/10"
-                        : plan.highlighted
-                          ? "border-b border-primary/20 bg-primary/[0.07]"
-                          : "border-b border-border"
-                    }`}
-                  >
+                  {/* Floating badge for featured tiers */}
+                  {plan.badge && (
+                    <span
+                      className={`absolute -top-2.5 left-6 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                        plan.highlighted
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-primary/30 bg-accent text-accent-foreground"
+                      }`}
+                    >
+                      {plan.badge}
+                    </span>
+                  )}
+
+                  <div>
                     <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       {plan.name}
                     </span>
-                    {plan.badge && (
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${
-                          plan.vip
-                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                            : "bg-primary text-primary-foreground"
-                        }`}
-                      >
-                        {plan.badge}
-                      </span>
-                    )}
-                  </div>
 
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-3xl font-bold tracking-tight">{plan.price}</span>
+                    <div className="mt-3 flex items-baseline gap-1.5">
+                      <span className="text-3xl font-semibold tracking-tight">{plan.price}</span>
                       <span className="font-mono text-xs text-muted-foreground">{plan.cadence}</span>
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">{plan.blurb}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{plan.blurb}</p>
 
-                    {/* Spec rows */}
-                    <ul className="mt-5 divide-y divide-border/60 border-y border-border/60">
+                    <div className="my-5 h-px w-full bg-border" />
+
+                    <ul className="space-y-2.5">
                       {plan.features.map((feat) => (
-                        <li key={feat} className="flex items-start gap-2.5 py-2 text-xs">
+                        <li key={feat} className="flex items-start gap-2.5 text-xs">
                           <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                          <span className="text-foreground/85">{feat}</span>
+                          <span className="text-foreground/80">{feat}</span>
                         </li>
                       ))}
                     </ul>
-
-                    <AuthButton
-                      className={
-                        plan.vip
-                          ? "mt-6 flex h-10 w-full items-center justify-center rounded-xl bg-amber-500 font-mono text-xs font-semibold uppercase tracking-wider text-black transition-transform hover:-translate-y-0.5"
-                          : plan.highlighted
-                            ? "mt-6 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-xs font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
-                            : "mt-6 flex h-10 w-full items-center justify-center rounded-xl border border-border bg-secondary/40 text-xs font-medium text-foreground transition-colors hover:border-primary/40"
-                      }
-                    >
-                      {plan.cta}
-                    </AuthButton>
                   </div>
+
+                  <AuthButton
+                    className={`mt-6 flex h-10 w-full items-center justify-center rounded-lg font-mono text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      plan.highlighted
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : plan.vip
+                          ? "bg-foreground text-background hover:bg-foreground/90"
+                          : "border border-primary/40 text-foreground hover:bg-primary/10"
+                    }`}
+                  >
+                    {plan.cta}
+                  </AuthButton>
                 </div>
               ))}
             </div>
@@ -258,7 +254,7 @@ export default function LandingPage() {
         <section id="faq" className="scroll-mt-20 border-t border-border bg-card/20">
           <div className="mx-auto max-w-3xl px-5 py-20 sm:px-6 md:py-28">
             <div className="flex flex-col items-center text-center">
-              <SectionKicker index="04" align="center">FAQ</SectionKicker>
+              <SectionKicker index="05" align="center">FAQ</SectionKicker>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                 Questions, answered.
               </h2>
