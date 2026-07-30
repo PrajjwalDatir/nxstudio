@@ -75,13 +75,13 @@ export function PromptGallery() {
             <h2 className="text-xl font-bold tracking-tight">Prompt Gallery & Agent Personas</h2>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Curated production prompt templates & specialized agent personas for Atelier & Black Label builders.
+            Curated production prompt templates & specialized agent personas for Pro & Master builders.
           </p>
         </div>
         {!canUsePromptGallery && (
           <Button onClick={() => setPayOpen(true)} size="sm" className="gap-2 font-mono text-xs uppercase">
             <LockIcon className="h-3.5 w-3.5" />
-            Unlock Gallery (Atelier 10 USDT)
+            Unlock Gallery (Pro 10 USDT)
           </Button>
         )}
       </div>

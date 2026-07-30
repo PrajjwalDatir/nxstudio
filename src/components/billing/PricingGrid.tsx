@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, ZapIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 export interface PricingPlan {
@@ -19,7 +19,7 @@ export interface PricingPlan {
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "free",
-    name: "Curated Entry",
+    name: "Free",
     price: "0 USDT",
     cadence: "forever",
     description: "Build 1 full product workspace with complete access.",
@@ -35,7 +35,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: "pro_10",
-    name: "Atelier",
+    name: "Pro",
     badge: "MOST POPULAR",
     price: "10 USDT",
     cadence: "per 28 days",
@@ -49,12 +49,12 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Pay in USDC / USDT on Solana",
     ],
     highlighted: true,
-    cta: "Upgrade to Atelier",
+    cta: "Upgrade to Pro",
   },
   {
     id: "master_50",
-    name: "Black Label VIP",
-    badge: "VIP STUDIO",
+    name: "Master",
+    badge: "UNLIMITED",
     price: "50 USDT",
     cadence: "per 28 days",
     description: "Complete autonomous software machine & pipeline workflows.",
@@ -67,7 +67,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Test-Gated CI/CD Deployment Pipeline",
     ],
     vip: true,
-    cta: "Unlock Black Label VIP",
+    cta: "Unlock Master",
   },
 ];
 
@@ -79,53 +79,55 @@ export function PricingGrid({
   onSelectTier?: (tier: "pro_10" | "master_50") => void;
 }) {
   return (
-    <div className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <div className="w-full">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {PRICING_PLANS.map((plan) => {
           const isCurrent = currentTier === plan.id;
           return (
             <div
               key={plan.id}
-              className={`relative flex flex-col justify-between rounded-2xl border p-6 transition-all duration-200 ${
-                plan.vip
-                  ? "border-amber-500/40 bg-gradient-to-b from-amber-950/20 via-card to-background shadow-[0_0_40px_-15px_rgba(245,158,11,0.25)]"
-                  : plan.highlighted
-                    ? "border-primary/50 bg-card/90 shadow-[0_0_40px_-15px_rgba(139,92,246,0.3)]"
+              className={`relative flex flex-col justify-between rounded-xl border p-6 transition-colors duration-200 ${
+                plan.highlighted
+                  ? "border-primary/60 bg-primary/[0.04]"
+                  : plan.vip
+                    ? "border-border bg-card ring-1 ring-inset ring-white/[0.06]"
                     : "border-border bg-card/40"
               }`}
             >
+              {/* Floating badge for featured tiers */}
+              {plan.badge && (
+                <span
+                  className={`absolute -top-2.5 left-6 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                    plan.highlighted
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-primary/30 bg-accent text-accent-foreground"
+                  }`}
+                >
+                  {plan.badge}
+                </span>
+              )}
+
               <div>
-                {/* Header tag */}
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    {plan.name}
-                  </span>
-                  {plan.badge && (
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider ${
-                        plan.vip
-                          ? "border border-amber-500/30 bg-amber-500/10 text-amber-400"
-                          : "bg-primary/20 text-primary"
-                      }`}
-                    >
-                      {plan.badge}
-                    </span>
-                  )}
-                </div>
+                {/* Plan name */}
+                <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {plan.name}
+                </span>
 
                 {/* Price */}
-                <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="text-3xl font-bold tracking-tight text-foreground">{plan.price}</span>
+                <div className="mt-3 flex items-baseline gap-1.5">
+                  <span className="text-3xl font-semibold tracking-tight text-foreground">{plan.price}</span>
                   <span className="font-mono text-xs text-muted-foreground">{plan.cadence}</span>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">{plan.description}</p>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{plan.description}</p>
 
-                {/* Features datasheet */}
-                <ul className="mt-5 divide-y divide-border/50 border-y border-border/50">
+                <div className="my-5 h-px w-full bg-border" />
+
+                {/* Features */}
+                <ul className="space-y-2.5">
                   {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-start gap-2 py-2 text-xs">
+                    <li key={feat} className="flex items-start gap-2.5 text-xs">
                       <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                      <span className="text-foreground/90">{feat}</span>
+                      <span className="text-foreground/80">{feat}</span>
                     </li>
                   ))}
                 </ul>
@@ -145,11 +147,10 @@ export function PricingGrid({
                     onClick={() => onSelectTier?.(plan.id as "pro_10" | "master_50")}
                     className={`w-full font-mono text-xs uppercase tracking-wider ${
                       plan.vip
-                        ? "bg-amber-500 text-black hover:bg-amber-400 font-semibold"
+                        ? "bg-foreground text-background hover:bg-foreground/90"
                         : "bg-primary text-primary-foreground hover:bg-primary/90"
                     }`}
                   >
-                    <ZapIcon className="mr-1.5 h-3.5 w-3.5" />
                     {plan.cta}
                   </Button>
                 )}

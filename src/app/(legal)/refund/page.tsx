@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/site";
 
-const UPDATED = "July 26, 2026";
+const UPDATED = "July 31, 2026";
 
 export const metadata: Metadata = {
   title: "Refunds & Billing",
@@ -24,13 +24,18 @@ export default function RefundPage() {
 
       <h2>1. Plans</h2>
       <ul>
-        <li><strong>Free</strong> — $0. Core canvas, brief, tech stack, and one build prompt.</li>
-        <li><strong>Pro</strong> — $50 per 28-day cycle. Full prompt compilation, unlimited projects and custom stages.</li>
+        <li><strong>Free</strong> — $0. One full product workspace with complete access: the brief, tech-stack engine, Studio, and the full build &amp; depth prompts.</li>
+        <li><strong>Pro</strong> — $10 per 28-day cycle. Up to 5 workspaces, project collections, the prompt gallery, and agent targets (.cursor/rules, .claude, and more).</li>
+        <li><strong>Master</strong> — $50 per 28-day cycle. Unlimited projects and collections, the autonomous machine engine, and test-gated CI/CD pipeline automation.</li>
       </ul>
+      <p>
+        “Paid plan” below refers to Pro or Master. Amounts are quoted
+        in US dollars and settled in equivalent USDC/USDT.
+      </p>
 
       <h2>2. How you pay</h2>
       <p>
-        Pro is paid in cryptocurrency — <strong>USDC or USDT on the Solana
+        Paid plans are settled in cryptocurrency — <strong>USDC or USDT on the Solana
         network</strong> — to our receiving wallet. Each payment moves real funds
         and is verified on-chain before access is granted. We do not charge cards
         and do not store any card or bank details.
@@ -38,18 +43,18 @@ export default function RefundPage() {
 
       <h2>3. How access works</h2>
       <p>
-        Once your payment is confirmed on-chain, your account is granted Pro access
-        for a 28-day cycle. Access is derived from your confirmed payment — there is
-        no hidden recurring charge.
+        Once your payment is confirmed on-chain, your account is granted access to
+        the plan you paid for, for a 28-day cycle. Access is derived from your
+        confirmed payment — there is no hidden recurring charge.
       </p>
 
       <h2>4. Renewals &amp; cancellation</h2>
       <p>
         Because crypto payments are non-custodial, we cannot and do not auto-charge
         you. To continue after a cycle ends, you make another payment. To “cancel”,
-        simply don’t renew — your Pro access continues until the end of the cycle
-        you already paid for, then reverts to Free. A short grace period may apply
-        around renewal.
+        simply don’t renew — your paid access continues until the end of the cycle
+        you already paid for, then reverts to Free. A short grace
+        period may apply around renewal.
       </p>
 
       <h2>5. Refunds</h2>

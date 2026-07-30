@@ -41,7 +41,7 @@ export function createPaymentRequest(existingReference?: string, tier: string = 
     : Keypair.generate().publicKey;
   const amtStr = solana.planAmount(tier);
   const amount = new BigNumber(amtStr);
-  const tierName = amtStr === "50" ? "Black Label VIP" : "Atelier";
+  const tierName = amtStr === "50" ? "Master" : "Pro";
   const url = encodeURL({
     recipient: new PublicKey(solana.walletAddress()),
     amount,

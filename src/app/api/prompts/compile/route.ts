@@ -20,7 +20,7 @@ export const POST = withAuthApiHandler<{ data?: Partial<WorkspaceData>; agentTar
       const agentTarget = body.agentTarget ?? "generic";
       const prompts = await compilePromptsForProject(workspace, agentTarget);
 
-      // ALL USERS (Free, Atelier, Black Label) get ALL ACCESS for prompt compilation on their active workspace!
+      // ALL USERS (Free, Pro, Master) get ALL ACCESS for prompt compilation on their active workspace!
       return NextResponse.json({
         ...prompts,
         tier: access.tier,

@@ -36,7 +36,7 @@ export const solana = {
   walletAddress: () => required("SOLANA_WALLET_ADDRESS"),
   usdcMint: () => process.env.SOLANA_USDC_MINT || MAINNET_USDC,
   usdtMint: () => process.env.SOLANA_USDT_MINT || MAINNET_USDT,
-  /** Price per cycle, denominated in the stablecoin (10 USDT Atelier or 50 USDT Black Label). */
+  /** Price per cycle, denominated in the stablecoin (10 USDT Pro or 50 USDT Master). */
   planAmount: (tier?: string) => {
     if (tier === "master_50" || tier === "50") return "50";
     if (tier === "pro_10" || tier === "10") return "10";

@@ -18,7 +18,7 @@ export const POST = withAuthApiHandler<{ data?: Partial<WorkspaceData> }>(
       if (!access.canUseMachineWorkflows) {
         return NextResponse.json(
           {
-            error: "Autonomous Machine Workflows require the Black Label VIP tier (50 USDT).",
+            error: "Autonomous Machine Workflows require the Master tier (50 USDT).",
             locked: true,
             tier: access.tier,
           },
