@@ -6,7 +6,16 @@ import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { diffNx, NX_ROOT } from "@/lib/nx-compiler";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { PhaseCard } from "@/components/canvas/PhaseCard";
-import { NxLogo, ArrowUpIcon, FilterIcon, CheckIcon } from "@/components/icons";
+import {
+  NxLogo,
+  ArrowUpIcon,
+  FilterIcon,
+  CheckIcon,
+  GitBranchIcon,
+  FileTextIcon,
+  PlusIcon,
+  PencilLineIcon,
+} from "@/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,31 +133,57 @@ export default function CanvasPage() {
         </span>
       </button>
 
-      {/* Drift strip — the loop's read side made visible */}
+      {/* Drift dashboard — the loop's read side, one box per changed context file */}
       {healthy && changed.length > 0 && (
-        <div className="mt-4 rounded-xl border border-primary/30 bg-accent/20 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="flex h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-            <span className="font-medium text-foreground">
-              Your agent changed {changed.length} context file{changed.length === 1 ? "" : "s"} since the last brief
+        <section className="mt-6">
+          <div className="mb-3 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
+              <GitBranchIcon className="h-4 w-4" />
             </span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {changed.map((d) => (
-              <span
-                key={d.path}
-                className="rounded-md border border-border bg-secondary/50 px-2 py-0.5 font-mono text-[11px] text-muted-foreground"
-                title={d.status === "extra" ? "Added by your agent" : "Edited in the repo"}
-              >
-                {shortPath(d.path)}
-                {d.status === "extra" && <span className="ml-1 text-primary">+new</span>}
+            <h2 className="text-sm font-semibold tracking-tight">
+              Context drift
+              <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
+                {changed.length} file{changed.length === 1 ? "" : "s"} changed since the last brief
               </span>
-            ))}
+            </h2>
           </div>
-          <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {changed.map((d) => {
+              const isNew = d.status === "extra";
+              return (
+                <div
+                  key={d.path}
+                  className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/40 text-muted-foreground">
+                    <FileTextIcon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-sm text-foreground" title={shortPath(d.path)}>
+                      {shortPath(d.path)}
+                    </p>
+                    <span
+                      className={cn(
+                        "mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                        isNew
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-secondary/50 text-muted-foreground"
+                      )}
+                    >
+                      {isNew ? <PlusIcon className="h-2.5 w-2.5" /> : <PencilLineIcon className="h-2.5 w-2.5" />}
+                      {isNew ? "New file" : "Edited in repo"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-3 text-xs leading-snug text-muted-foreground">
             The repo has moved past the studio&apos;s last compile. Update your Brief to reconcile, or re-copy the build prompt to fold these back in.
           </p>
-        </div>
+        </section>
       )}
 
       {/* Phase grid (glass cards over an ambient glow) */}
