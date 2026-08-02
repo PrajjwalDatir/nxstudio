@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { CopyIcon } from "@/components/icons";
 import { SectionKicker } from "./SectionKicker";
 import { useInView } from "./use-in-view";
+import { useIsMobile } from "./use-is-mobile";
 
 const AssemblyScene = dynamic(() => import("./AssemblyScene"), { ssr: false });
 
@@ -85,7 +86,13 @@ const STEPS = [
 
 export function HowItWorks() {
   const reduce = useReducedMotion();
+  const isMobile = useIsMobile();
   const { ref: stageRef, inView: stageInView } = useInView<HTMLDivElement>();
+  // On mobile, mount the WebGL canvas only while it's near the viewport, so no
+  // more than one scene holds a context at a time (mobile GPUs evict contexts
+  // when all three landing scenes are mounted together). Desktop keeps it live
+  // and just pauses the render loop when out of view.
+  const mountScene = !isMobile || stageInView;
   const [active, setActive] = useState(0);
   const stepRefs = useRef<(HTMLLIElement | null)[]>([]);
 
@@ -154,7 +161,7 @@ export function HowItWorks() {
             className="sticky top-16 z-10 -mx-5 flex h-[50vh] min-w-0 items-center justify-center bg-background/70 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[calc(100dvh-7rem)] md:bg-transparent md:backdrop-blur-none"
           >
             <div ref={stageRef} aria-hidden className="canvas-bleed h-full w-full">
-              <AssemblyScene step={active} paused={!stageInView} />
+              {mountScene && <AssemblyScene step={active} paused={!stageInView} />}
             </div>
             <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center gap-1.5 md:bottom-8">
               {STEPS.map((s, i) => (
