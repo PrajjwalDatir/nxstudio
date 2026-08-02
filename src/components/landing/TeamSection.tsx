@@ -73,7 +73,7 @@ export function TeamSection() {
           <SectionKicker index="06" align="center">
             Team
           </SectionKicker>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl">
             Two people. One tight loop.
           </h2>
           <p className="mt-4 text-muted-foreground">

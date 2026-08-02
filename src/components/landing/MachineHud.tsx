@@ -54,7 +54,7 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
       </span>
       <div className="min-w-0">
-        <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-primary/60">
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary/60">
           Unit
         </span>
         <p
@@ -116,7 +116,7 @@ export function AudioControl({
           <span key={i} className="h-full w-[2px] rounded-full bg-primary" />
         ))}
       </div>
-      <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors group-hover:text-foreground">
+      <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground transition-colors group-hover:text-foreground">
         {enabled ? (playing ? "Audio" : "Armed") : "Muted"}
       </span>
     </button>

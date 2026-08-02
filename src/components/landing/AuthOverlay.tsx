@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
               <div className="flex flex-col items-center text-center">
                 <NxLogo className="h-9 w-9 text-primary" />
-                <h2 id="auth-title" className="mt-4 text-xl font-bold tracking-tight">
+                <h2 id="auth-title" className="mt-4 text-lg font-bold tracking-tight">
                   Let&apos;s get you building
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">

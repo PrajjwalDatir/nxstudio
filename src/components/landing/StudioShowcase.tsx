@@ -127,7 +127,7 @@ export function StudioShowcase() {
           {/* ── Copy ─────────────────────────────────────────────────────── */}
           <div>
             <SectionKicker index="03">Studio</SectionKicker>
-            <h2 className="mt-4 max-w-md text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-4 max-w-md text-2xl font-bold tracking-tight sm:text-4xl">
               Design its face while you spec its guts.
             </h2>
             <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">
@@ -172,7 +172,7 @@ export function StudioShowcase() {
               <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 nxstudio · studio
               </span>
-              <span className="ml-auto hidden items-center gap-1.5 font-mono text-[10px] text-muted-foreground sm:flex">
+              <span className="ml-auto hidden items-center gap-1.5 font-mono text-[11px] text-muted-foreground sm:flex">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 localStorage
               </span>
@@ -222,14 +222,14 @@ export function StudioShowcase() {
                     <path d="M2 18 C 10 4, 20 4, 30 9" fill="none" stroke={accent} strokeOpacity="0.7" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="1 3" />
                     <path d="M25 6 L31 9 L26 13" fill="none" stroke={accent} strokeOpacity="0.7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span className="-rotate-2 rounded-md border border-border bg-background/80 px-1.5 py-0.5 font-mono text-[9px] text-foreground/70 backdrop-blur-sm">
+                  <span className="-rotate-2 rounded-md border border-border bg-background/80 px-1.5 py-0.5 font-mono text-[11px] text-foreground/70 backdrop-blur-sm">
                     make it pop
                   </span>
                 </div>
-                <span className="absolute left-3 top-3 rounded-md border border-border bg-background/70 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground backdrop-blur-sm">
+                <span className="absolute left-3 top-3 rounded-md border border-border bg-background/70 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground backdrop-blur-sm">
                   {MODES.find((m) => m.id === mode)!.label} mode
                 </span>
-                <span className="absolute right-3 top-3 rounded-md border border-border bg-background/70 px-2 py-0.5 font-mono text-[10px] text-muted-foreground backdrop-blur-sm">
+                <span className="absolute right-3 top-3 rounded-md border border-border bg-background/70 px-2 py-0.5 font-mono text-[11px] text-muted-foreground backdrop-blur-sm">
                   seed {seed}
                 </span>
               </div>
@@ -283,7 +283,7 @@ export function StudioShowcase() {
                       key={e}
                       onClick={() => setEngine(e)}
                       aria-pressed={engine === e}
-                      className={`rounded-full border px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                         engine === e
                           ? "border-primary/40 bg-primary/15 text-foreground"
                           : "border-border text-muted-foreground hover:text-foreground"
@@ -313,7 +313,7 @@ export function StudioShowcase() {
             </div>
 
             {/* status bar */}
-            <div className="flex items-center gap-3 border-t border-border px-4 py-2 font-mono text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-3 border-t border-border px-4 py-2 font-mono text-[11px] text-muted-foreground">
               <span className="text-foreground/70">{MODES.find((m) => m.id === mode)!.label}</span>
               <span className="text-muted-foreground/40">/</span>
               <span>{engine}</span>
@@ -395,12 +395,12 @@ function CanvasObject({
           <div className="h-2 w-full rounded-full bg-foreground/10" />
           <div className="flex items-center justify-between pt-1">
             <span
-              className="rounded-full px-2 py-0.5 text-[9px] font-medium"
+              className="rounded-full px-2 py-0.5 text-[11px] font-medium"
               style={{ background: `${accent}22`, color: accent }}
             >
               {vibe}
             </span>
-            <span className="font-mono text-[9px] text-muted-foreground">{radius}px</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{radius}px</span>
           </div>
         </div>
       </div>
