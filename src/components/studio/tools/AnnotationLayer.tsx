@@ -94,6 +94,21 @@ const ExcalidrawSurface = React.memo(function ExcalidrawSurface({
         .excalidraw button.sidebar-trigger {
           display: none !important;
         }
+        /* Excalidraw docks its shape toolbar at top-center, where it hides
+           behind our ModeToolbar. Float it down to sit just above the bottom
+           zoom panel (which lives at bottom-2.5 of the app) instead. The
+           Excalidraw surface is inset by the 21rem controls panel on the right,
+           so its own centre sits 10.5rem left of the viewport centre — offset
+           the toolbar back so it lines up with the (viewport-centred) zoom bar. */
+        .excalidraw .shapes-section {
+          position: absolute;
+          left: 50%;
+          right: auto;
+          bottom: 4.25rem;
+          transform: translateX(calc(-50% + 10.5rem));
+          justify-content: center;
+          z-index: 4;
+        }
       `}</style>
       <Excalidraw
         theme="dark"

@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace-store";
 import { getPhase } from "@/lib/phases";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { ProductNameCrumb } from "@/components/shell/ProductNameCrumb";
 import { Notifications } from "@/components/shell/Notifications";
+import { WorkspacesMenu } from "@/components/shell/WorkspacesMenu";
 import { ChevronRightIcon, SearchIcon } from "@/components/icons";
 
 export function Topbar() {
@@ -43,12 +43,7 @@ export function Topbar() {
       {/* Breadcrumbs. The project name sits between "Workspaces" and the
           optional phase crumb, and renames in place rather than navigating. */}
       <nav className="flex items-center gap-2 text-sm min-w-0">
-        <Link
-          href="/canvas"
-          className="truncate text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Workspaces
-        </Link>
+        <WorkspacesMenu />
 
         <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <ProductNameCrumb isLast={crumbs.length === 1} />
