@@ -136,7 +136,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="pt-20 md:pt-28">
           <SectionKicker index="01">How it works</SectionKicker>
-          <h2 className="mt-4 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 max-w-2xl text-2xl font-bold tracking-tight sm:text-4xl">
             Watch it come online.
           </h2>
           <p className="mt-4 max-w-xl text-muted-foreground">
@@ -189,7 +189,7 @@ export function HowItWorks() {
                 {/* numbered node on the spine — the only 'chrome' the step has */}
                 <span
                   aria-hidden
-                  className={`absolute left-0 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[10px] transition-colors duration-500 ${
+                  className={`absolute left-0 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[11px] transition-colors duration-500 ${
                     i === active
                       ? "border-primary/60 bg-primary/15 text-primary"
                       : "border-border bg-background text-muted-foreground"

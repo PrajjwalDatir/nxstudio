@@ -155,7 +155,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 md:py-28">
             <div className="max-w-2xl">
               <SectionKicker index="02">Features</SectionKicker>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl">
                 Everything between an idea and a working app.
               </h2>
             </div>
@@ -171,7 +171,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 md:py-28">
             <div className="mx-auto max-w-2xl text-center">
               <SectionKicker index="04" align="center">Pricing</SectionKicker>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl">
                 Start free. Go Pro as you create.
               </h2>
               <p className="mt-4 text-muted-foreground">
@@ -193,7 +193,7 @@ export default function LandingPage() {
                   {/* Floating badge for featured tiers */}
                   {plan.badge && (
                     <span
-                      className={`absolute -top-2.5 left-6 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                      className={`absolute -top-2.5 left-6 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-[0.15em] ${
                         plan.highlighted
                           ? "bg-primary text-primary-foreground"
                           : "border border-primary/30 bg-accent text-accent-foreground"
@@ -212,13 +212,13 @@ export default function LandingPage() {
                       <span className="text-3xl font-semibold tracking-tight">{plan.price}</span>
                       <span className="font-mono text-xs text-muted-foreground">{plan.cadence}</span>
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{plan.blurb}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{plan.blurb}</p>
 
                     <div className="my-5 h-px w-full bg-border" />
 
                     <ul className="space-y-2.5">
                       {plan.features.map((feat) => (
-                        <li key={feat} className="flex items-start gap-2.5 text-xs">
+                        <li key={feat} className="flex items-start gap-2.5 text-sm">
                           <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                           <span className="text-foreground/80">{feat}</span>
                         </li>
@@ -255,7 +255,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-3xl px-5 py-20 sm:px-6 md:py-28">
             <div className="flex flex-col items-center text-center">
               <SectionKicker index="05" align="center">FAQ</SectionKicker>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl">
                 Questions, answered.
               </h2>
             </div>
@@ -276,7 +276,7 @@ export default function LandingPage() {
             </div>
 
             <div className="text-center md:text-left">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
+              <h2 className="text-2xl font-bold tracking-tight sm:text-5xl">
                 One brief in.
                 <br className="hidden sm:block" /> One prompt out.
               </h2>

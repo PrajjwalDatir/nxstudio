@@ -38,7 +38,7 @@ export function CanvasPreview() {
             <LockIcon className="h-3 w-3" />
             nxstudio.dev/canvas
           </div>
-          <span className="hidden rounded-md border border-border bg-secondary/50 px-2 py-1 font-mono text-[10px] text-muted-foreground sm:inline">
+          <span className="hidden rounded-md border border-border bg-secondary/50 px-2 py-1 font-mono text-[11px] text-muted-foreground sm:inline">
             ⌘K
           </span>
         </div>
@@ -94,7 +94,7 @@ export function CanvasPreview() {
               <span className="flex-1 text-xs text-muted-foreground">
                 Command nx for actions and search…
               </span>
-              <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+              <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
                 ⌘K
               </span>
             </div>

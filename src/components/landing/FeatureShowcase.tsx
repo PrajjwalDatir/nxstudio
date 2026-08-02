@@ -89,7 +89,7 @@ function CardShell({
     <div
       className={`group relative flex flex-col overflow-hidden rounded-xl glass p-5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-white/12 ${className}`}
     >
-      <h3 className="text-base font-semibold tracking-tight">{title}</h3>
+      <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{line}</p>
       <div className="mt-5 flex-1">{children}</div>
     </div>
@@ -198,7 +198,7 @@ function PromptCard({ className, stack }: { className?: string; stack: CompiledS
             </button>
           </div>
         </div>
-        <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[11.5px] leading-relaxed text-foreground/80">
+        <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[11px] leading-relaxed text-foreground/80">
           {promptText.split("\n").map((ln, i) => (
             <span key={i} className={ln.startsWith("#") ? "text-primary" : "text-emerald-400 font-semibold"}>
               {ln}
@@ -307,7 +307,7 @@ function PaletteCard({ className }: { className?: string }) {
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   <span className="flex-1">{label}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground">{hint}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">{hint}</span>
                 </button>
               </li>
             );
@@ -340,7 +340,7 @@ function PhasesCard({ className }: { className?: string }) {
           <button key={p.label} onClick={() => bump(i)} className="block w-full text-left">
             <div className="flex items-center justify-between text-xs">
               <span className="text-foreground/85">{p.label}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">
+              <span className="font-mono text-[11px] text-muted-foreground">
                 {p.done}/{p.total}
               </span>
             </div>
