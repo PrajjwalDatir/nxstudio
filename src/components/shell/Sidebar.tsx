@@ -164,8 +164,9 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
                 handleNew();
               }}
             >
-              <label className="text-xs font-medium text-muted-foreground">Project name</label>
+              <label htmlFor="new-project-name" className="text-xs font-medium text-muted-foreground">Project name</label>
               <Input
+                id="new-project-name"
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
