@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { Button } from "@/components/ui/button";
 import { BillingSection } from "@/components/billing/BillingSection";
@@ -18,10 +18,12 @@ function Field({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
+  const id = useId();
   return (
-    <label className="block">
+    <label htmlFor={id} className="block">
       <span className="text-sm font-medium">{label}</span>
       <input
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -84,9 +86,10 @@ export default function SettingsPage() {
 
         {!sync.github.connected ? (
           <div className="mt-4 space-y-3">
-            <label className="block">
+            <label htmlFor="github-pat-input" className="block">
               <span className="text-sm font-medium">Personal Access Token</span>
               <input
+                id="github-pat-input"
                 type="password"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
