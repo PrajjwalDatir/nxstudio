@@ -341,22 +341,30 @@ function MouthDialogue({ line }: { line: string }) {
     };
   }, [line]);
 
+  // On mobile, the machine is centered and large, so a side dialogue box gets clipped.
+  // We move it up and center it, changing the tail to point down.
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
   return (
     <Html
-      position={[-0.75, -0.15, 0.45]}
+      position={isMobile ? [0, 0.7, 0.5] : [-0.75, -0.15, 0.45]}
       center
       distanceFactor={7.0}
       zIndexRange={[100, 0]}
       style={{ pointerEvents: "none", userSelect: "none" }}
     >
-      <div className="flex items-center gap-2 max-w-[460px] sm:max-w-[560px] pointer-events-none select-none">
-        <div className="relative rounded-2xl border border-white/15 bg-background/95 px-4.5 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_32px_-8px_rgba(0,0,0,0.9)] backdrop-blur-xl text-left">
+      <div className="flex items-center gap-2 max-w-[280px] sm:max-w-[460px] md:max-w-[560px] pointer-events-none select-none">
+        <div className="relative rounded-2xl border border-white/15 bg-background/95 px-4 py-2.5 sm:px-4.5 sm:py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_32px_-8px_rgba(0,0,0,0.9)] backdrop-blur-xl text-left">
           {/* Small speech tail pointing directly right to his jaw */}
           <span
             aria-hidden
-            className="absolute -right-1.5 top-4 h-3 w-3 rotate-45 border-r border-t border-white/15 bg-background/95"
+            className="hidden sm:block absolute -right-1.5 top-4 h-3 w-3 rotate-45 border-r border-t border-white/15 bg-background/95"
           />
-          <p className="font-mono text-xs leading-relaxed text-foreground/95 sm:text-sm">
+          <span
+            aria-hidden
+            className="sm:hidden absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-b border-r border-white/15 bg-background/95"
+          />
+          <p className="font-mono text-[10px] leading-[1.6] text-foreground/95 sm:text-xs md:text-sm md:leading-relaxed">
             <span ref={textRef} />
           </p>
         </div>
