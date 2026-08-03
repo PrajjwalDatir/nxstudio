@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useId } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSpeechInput } from "@/lib/use-speech-input";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
@@ -62,6 +62,7 @@ function QuestionCard({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const id = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const [note, setNote] = useState<string | null>(null);
   const { supported: voiceSupported, listening, toggle } = useSpeechInput((text) =>
@@ -94,8 +95,9 @@ function QuestionCard({
 
   return (
     <div className="rounded-xl glass p-5">
-      <label className="font-medium">{title}</label>
+      <label htmlFor={id} className="font-medium">{title}</label>
       <textarea
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
