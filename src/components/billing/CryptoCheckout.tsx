@@ -89,7 +89,7 @@ export function CryptoCheckout({
       setNote(e instanceof Error ? e.message : "Verification failed.");
       setPhase("awaiting");
     }
-  }, [req?.reference, onActivated]);
+  }, [req, onActivated]);
 
   if (phase === "idle" || phase === "requesting") {
     return (
