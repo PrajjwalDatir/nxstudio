@@ -4,7 +4,7 @@ import { useSubscription } from "@/lib/use-subscription";
 import { useProductLimit } from "@/lib/use-product-limit";
 import { CryptoCheckout } from "./CryptoCheckout";
 import { PricingGrid } from "./PricingGrid";
-import { CheckCircleIcon, ZapIcon, LockIcon, ShieldCheckIcon } from "@/components/icons";
+import { CheckCircleIcon, ZapIcon, LockIcon } from "@/components/icons";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
