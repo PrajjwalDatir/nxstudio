@@ -26,6 +26,7 @@ import {
   BellIcon,
   SparklesIcon,
   PaletteIcon,
+  LightbulbIcon,
 } from "@/components/icons";
 import { AppleMark, AndroidMark } from "@/components/landing/brand-icons";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,32 @@ export function TechStackPhase() {
   const confirm = () => {
     if (surfaces.length > 0 && !configured) toggleChecklist("tech-stack", "configured");
   };
+
+  const ideaDone = [
+    data.idea.problem,
+    data.idea.targetUsers,
+    data.idea.currentSolutions,
+    data.idea.differentiation,
+  ].every((v) => v.trim().length > 0);
+
+  if (!ideaDone) {
+    return (
+      <>
+        <PhaseHeader title="Tech Stack" status="in-progress" phaseId="tech-stack" />
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <LightbulbIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
+          <p className="mt-3 text-sm text-muted-foreground">
+            Finish the{" "}
+            <Link href="/canvas/idea" className="text-primary hover:underline">
+              Brief
+            </Link>{" "}
+            first — the stack, brand tokens, and build prompt are all derived from your
+            problem, users, and differentiation.
+          </p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
