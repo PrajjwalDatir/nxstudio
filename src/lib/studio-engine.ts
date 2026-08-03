@@ -11,17 +11,25 @@ export interface Particle2D {
 }
 
 export class SpatialHashGrid {
-  private grid = new Map<string, Particle2D[]>();
+  private grid = new Map<number, Particle2D[]>();
   constructor(private cellSize = 130) {}
 
   clear() { this.grid.clear(); }
-  private key(x: number, y: number) { return `${Math.floor(x / this.cellSize)}:${Math.floor(y / this.cellSize)}`; }
+
+  private key(x: number, y: number): number {
+    const cx = Math.floor(x / this.cellSize);
+    const cy = Math.floor(y / this.cellSize);
+    return (cx << 16) | (cy & 0xFFFF);
+  }
 
   insert(p: Particle2D) {
     const k = this.key(p.x, p.y);
-    const cell = this.grid.get(k) ?? [];
-    if (!this.grid.has(k)) this.grid.set(k, cell);
-    cell.push(p);
+    const cell = this.grid.get(k);
+    if (cell) {
+      cell.push(p);
+    } else {
+      this.grid.set(k, [p]);
+    }
   }
 
   build(particles: Particle2D[]) {
@@ -35,7 +43,8 @@ export class SpatialHashGrid {
     const nearby: Particle2D[] = [];
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
-        const cell = this.grid.get(`${cx + dx}:${cy + dy}`);
+        const k = ((cx + dx) << 16) | ((cy + dy) & 0xFFFF);
+        const cell = this.grid.get(k);
         if (cell) for (let i = 0; i < cell.length; i++) nearby.push(cell[i]);
       }
     }
