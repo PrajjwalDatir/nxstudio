@@ -90,7 +90,10 @@ export function BuildPhase() {
             return (
               <div
                 key={step.id}
-                onClick={() => toggleChecklist("build", step.id)}
+                onClick={() => {
+                  toggleChecklist("build", step.id);
+                  toggleChecklist("checklist", step.id);
+                }}
                 className="flex cursor-pointer items-center gap-3.5 rounded-xl border border-border bg-secondary/20 px-4 py-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
               >
                 <div
@@ -162,13 +165,16 @@ export function BuildPhase() {
           </button>
         ) : (
           <>
-            <button
-              onClick={() => setShowMaster((v) => !v)}
-              className="mt-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-            >
-              {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-              {showMaster ? "Hide" : "Preview"} the full prompt
-            </button>
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setShowMaster((v) => !v)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                {showMaster ? "Hide" : "Preview"} the full prompt
+              </button>
+              <CopyButton value={masterPrompt} label="Copy full prompt" variant="ghost" />
+            </div>
             {showMaster && (
               <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
                 {loading && !masterPrompt ? "Compiling…" : masterPrompt}
