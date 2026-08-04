@@ -113,6 +113,7 @@ const particles: SketchFactory = () => {
       spatialGrid.build(ps);
 
       p.strokeWeight(1.2);
+      const lineInk = p.color(params.primary);
       // Query adjacent grid cells: average O(N) instead of O(N^2)
       for (let i = 0; i < ps.length; i++) {
         const a = ps[i];
@@ -126,7 +127,6 @@ const particles: SketchFactory = () => {
 
           if (dSq < maxDistanceSq) {
             const d = Math.sqrt(dSq);
-            const lineInk = p.color(params.primary);
             lineInk.setAlpha(p.map(d, 0, maxDist, 160, 0));
             p.stroke(lineInk);
             p.line(a.x, a.y, b.x, b.y);
