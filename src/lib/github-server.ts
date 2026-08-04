@@ -39,8 +39,12 @@ export async function syncRepo(
   const [owner, name] = repo.split("/");
   if (!owner || !name) return { error: "Invalid repo. Use owner/name.", status: 400 };
 
+  const encOwner = encodeURIComponent(owner);
+  const encName = encodeURIComponent(name);
+  const encBranch = encodeURIComponent(branch);
+
   // 1. Recursive tree to discover which .nx files exist.
-  const treeRes = await gh(token, `/repos/${owner}/${name}/git/trees/${branch}?recursive=1`);
+  const treeRes = await gh(token, `/repos/${encOwner}/${encName}/git/trees/${encBranch}?recursive=1`);
   if (treeRes.status === 404) return { error: "Repo or branch not found.", status: 404 };
   if (treeRes.status === 401) return { error: "Invalid or expired token.", status: 401 };
   if (!treeRes.ok) return { error: `GitHub error (${treeRes.status}).`, status: treeRes.status };
@@ -64,7 +68,15 @@ export async function syncRepo(
   ].slice(0, MAX_NX_FILES);
   await Promise.all(
     toFetch.map(async (p) => {
-      const c = await gh(token, `/repos/${owner}/${name}/contents/${p}?ref=${branch}`);
+      // Split path to encode segments separately (or use as is if encoding p breaks deep paths).
+      // GitHub contents API expects the path itself, not fully url-encoded if it has slashes.
+      // E.g. "foo/bar.txt" should be "foo/bar.txt" in the URL or "foo%2Fbar.txt" depending on API.
+      // The path variable `p` here comes from the GitHub API itself (tree response)
+      // but to be safe we'll use encOwner and encName, and keep p as is because p is typically
+      // safely formed from the API (and we checked it starts with NX_ROOT).
+      // However, `p` can contain spaces or specials, so `encodeURIComponent` on each part:
+      const encPath = p.split("/").map(encodeURIComponent).join("/");
+      const c = await gh(token, `/repos/${encOwner}/${encName}/contents/${encPath}?ref=${encBranch}`);
       if (!c.ok) return;
       const blob = (await c.json()) as { content?: string; encoding?: string };
       if (blob.content) {
@@ -76,7 +88,7 @@ export async function syncRepo(
 
   // 3. Recent commits.
   let commits: GhCommit[] = [];
-  const commitsRes = await gh(token, `/repos/${owner}/${name}/commits?sha=${branch}&per_page=15`);
+  const commitsRes = await gh(token, `/repos/${encOwner}/${encName}/commits?sha=${encBranch}&per_page=15`);
   if (commitsRes.ok) {
     const raw = (await commitsRes.json()) as Array<{
       sha: string;
@@ -94,7 +106,7 @@ export async function syncRepo(
 
   // 4. Open issues (exclude PRs).
   let issues: GhIssue[] = [];
-  const issuesRes = await gh(token, `/repos/${owner}/${name}/issues?state=open&per_page=30`);
+  const issuesRes = await gh(token, `/repos/${encOwner}/${encName}/issues?state=open&per_page=30`);
   if (issuesRes.ok) {
     const raw = (await issuesRes.json()) as Array<{
       number: number;
