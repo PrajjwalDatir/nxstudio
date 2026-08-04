@@ -34,7 +34,7 @@ export default async function AppLayout({
     >
       <CommandProvider>
         <SidebarProvider>
-          <AppShell userEmail={user.email ?? ""}>{children}</AppShell>
+          <AppShell userEmail={user.email ?? ""} isAnonymous={user.is_anonymous ?? false}>{children}</AppShell>
         </SidebarProvider>
       </CommandProvider>
     </WorkspaceProvider>

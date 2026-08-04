@@ -18,9 +18,11 @@ import { NxLogo } from "@/components/icons";
 export function AppShell({
   children,
   userEmail,
+  isAnonymous = false,
 }: {
   children: React.ReactNode;
   userEmail: string;
+  isAnonymous?: boolean;
 }) {
   const { isHydrated } = useWorkspace();
 
@@ -43,7 +45,7 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <Sidebar userEmail={userEmail} />
+      <Sidebar userEmail={userEmail} isAnonymous={isAnonymous} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar />
         <main id="main-content" className="flex-1 overflow-y-auto">{children}</main>

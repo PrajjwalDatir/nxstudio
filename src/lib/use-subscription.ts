@@ -22,6 +22,7 @@ export interface Subscription {
 interface Loaded {
   subscription: Subscription | null;
   email: string;
+  isAnonymous: boolean;
 }
 
 /** Fetch the current user's subscription. Pure read — never touches state. */
@@ -30,7 +31,7 @@ async function loadSubscription(): Promise<Loaded> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { subscription: null, email: "" };
+  if (!user) return { subscription: null, email: "", isAnonymous: false };
 
   const { data } = await supabase
     .from("subscriptions")
@@ -38,7 +39,11 @@ async function loadSubscription(): Promise<Loaded> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  return { subscription: (data as Subscription | null) ?? null, email: user.email ?? "" };
+  return { 
+    subscription: (data as Subscription | null) ?? null, 
+    email: user.email ?? "",
+    isAnonymous: user.is_anonymous ?? false
+  };
 }
 
 /**
@@ -47,6 +52,7 @@ async function loadSubscription(): Promise<Loaded> {
 export function useSubscription() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [email, setEmail] = useState<string>("");
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,6 +61,7 @@ export function useSubscription() {
       if (!alive) return;
       setSubscription(r.subscription);
       setEmail(r.email);
+      setIsAnonymous(r.isAnonymous);
       setLoading(false);
 
       // Auto-verify background check if pending
@@ -86,20 +93,29 @@ export function useSubscription() {
     const r = await loadSubscription();
     setSubscription(r.subscription);
     setEmail(r.email);
+    setIsAnonymous(r.isAnonymous);
     setLoading(false);
   }, []);
 
   const state: AccessState = deriveAccessState(subscription);
   const isActive = premiumOf(state);
-  const tier: PlanTier = derivePlanTier(subscription, state);
+  
+  // Force free tier if anonymous to apply guest restrictions
+  const baseTier: PlanTier = derivePlanTier(subscription, state);
+  const tier: PlanTier = isAnonymous ? "free" : baseTier;
+  
   const tierInfo = getTierInfo(tier);
 
+  // If anonymous, restrict limit to 1 (or 0) regardless of tier 
+  // Free gives 1 project limit, so guest will also get 1.
+  
   return {
     subscription,
     email,
     state,
     isActive,
     ...tierInfo,
+    isAnonymous,
     loading,
     refresh,
   };

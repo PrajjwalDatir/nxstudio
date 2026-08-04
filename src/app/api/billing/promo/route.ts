@@ -13,6 +13,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
+  if (user.is_anonymous) {
+    return NextResponse.json({ error: "Guest users cannot claim promo codes. Please sign in." }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const code = body.code?.trim().toLowerCase();
 
@@ -23,6 +27,20 @@ export async function POST(request: Request) {
   try {
     const admin = createAdminClient();
     
+    // Check if max limit reached
+    const { count, error: countErr } = await admin
+      .from("subscriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("provider", "promo");
+
+    if (countErr) {
+      return NextResponse.json({ error: `DB error: ${countErr.message}` }, { status: 500 });
+    }
+
+    if (count && count >= 100) {
+      return NextResponse.json({ error: "This promo code has reached its maximum number of uses." }, { status: 400 });
+    }
+    
     // 30 days trial
     const trialDays = 30;
     const now = Date.now();
@@ -30,9 +48,13 @@ export async function POST(request: Request) {
     // check if user already has an active subscription
     const { data: row } = await admin
       .from("subscriptions")
-      .select("current_period_end")
+      .select("current_period_end, provider")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    if (row?.provider === "promo") {
+      return NextResponse.json({ error: "Promo code already claimed." }, { status: 400 });
+    }
 
     const currentEndMs = row?.current_period_end ? new Date(row.current_period_end).getTime() : 0;
     
@@ -46,8 +68,8 @@ export async function POST(request: Request) {
         user_id: user.id,
         provider: "promo",
         status: "active",
-        plan_id: "pro_10",
-        plan_tier: "pro_10",
+        plan_id: "master_50",
+        plan_tier: "master_50",
         plan_amount: 0,
         current_period_end: newEnd,
       },

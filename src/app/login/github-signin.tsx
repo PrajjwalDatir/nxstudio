@@ -22,13 +22,30 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
     const callback = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(
       redirectTo
     )}`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: { redirectTo: callback },
-    });
-    if (error) {
-      setErr(error.message);
-      setLoading(false);
+    
+    // Check if user is currently anonymous
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user?.is_anonymous) {
+      // Link GitHub identity to the current anonymous user
+      const { error } = await supabase.auth.linkIdentity({
+        provider: "github",
+        options: { redirectTo: callback },
+      });
+      if (error) {
+        setErr(error.message);
+        setLoading(false);
+      }
+    } else {
+      // Standard sign in
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: { redirectTo: callback },
+      });
+      if (error) {
+        setErr(error.message);
+        setLoading(false);
+      }
     }
   };
 

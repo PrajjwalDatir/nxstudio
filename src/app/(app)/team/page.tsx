@@ -2,11 +2,35 @@
 
 import Link from "next/link";
 import { useSync } from "@/lib/workspace-store";
+import { useSubscription } from "@/lib/use-subscription";
 import { GithubIcon } from "@/components/icons";
 
 export default function TeamPage() {
   const { github, result, status } = useSync();
+  const { isAnonymous } = useSubscription();
   const contributors = result?.contributors ?? [];
+
+  if (isAnonymous) {
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-8">
+        <h1 className="text-3xl font-bold tracking-tight">Team</h1>
+        <div className="mt-8 rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+            <GithubIcon className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg font-semibold">Sign up to collaborate</h2>
+          <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+            Guest accounts can&apos;t invite team members or sync with GitHub. Link your account to unlock team features.
+          </p>
+          <div className="mt-6">
+            <Link href="/login" className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+              Link account
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
