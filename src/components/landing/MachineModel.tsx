@@ -115,8 +115,11 @@ function grungeTexture(): THREE.CanvasTexture | null {
  *   dormant  — powered down, head hung, nothing to act on
  *   briefed  — coming up, straightening, taking the instruction in
  *   ready    — upright and alert, waiting to be sent
+ *   curious  — head tilted to one side, one arm raised, taking something in
+ *   excited  — head back, both arms up, eyes at their brightest
+ *   proud    — settled upright, calm bright eyes, arms relaxed at rest
  */
-export type MachinePose = "dormant" | "briefed" | "ready";
+export type MachinePose = "dormant" | "briefed" | "ready" | "curious" | "excited" | "proud";
 
 const POSE: Record<
   MachinePose,
@@ -125,6 +128,9 @@ const POSE: Record<
   dormant: { headX: 0.5, headZ: 0.16, lean: 0.16, eye: 0.12, armL: 0.05, armR: 0.1 },
   briefed: { headX: 0.12, headZ: 0.1, lean: 0.05, eye: 0.95, armL: 0.24, armR: 0.36 },
   ready: { headX: -0.1, headZ: 0.05, lean: -0.04, eye: 1.6, armL: 0.34, armR: 0.5 },
+  curious: { headX: 0.14, headZ: -0.32, lean: 0.02, eye: 0.6, armL: 0.08, armR: 0.3 },
+  excited: { headX: -0.22, headZ: 0.06, lean: -0.1, eye: 1.4, armL: 0.48, armR: 0.46 },
+  proud: { headX: -0.02, headZ: 0.0, lean: -0.02, eye: 1.0, armL: 0.18, armR: 0.18 },
 };
 
 export function usePrefersReducedMotion() {

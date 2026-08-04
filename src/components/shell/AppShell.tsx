@@ -4,6 +4,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { ReferralClaim } from "@/components/referral/ReferralClaim";
+import { MascotNudge } from "@/components/shell/MascotNudge";
 import { NxLogo } from "@/components/icons";
 
 /**
@@ -47,6 +48,7 @@ export function AppShell({
         <Topbar />
         <main id="main-content" className="flex-1 overflow-y-auto">{children}</main>
       </div>
+      <MascotNudge />
     </div>
   );
 }
