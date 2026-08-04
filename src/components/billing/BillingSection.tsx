@@ -4,9 +4,10 @@ import { useSubscription } from "@/lib/use-subscription";
 import { useProductLimit } from "@/lib/use-product-limit";
 import { CryptoCheckout } from "./CryptoCheckout";
 import { PricingGrid } from "./PricingGrid";
-import { CheckCircleIcon, ZapIcon, LockIcon } from "@/components/icons";
+import { CheckCircleIcon, ZapIcon, LockIcon, LoaderIcon } from "@/components/icons";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const SUPPORT_EMAIL = "support@nxstudio.dev";
 
@@ -18,7 +19,33 @@ export function BillingSection() {
   const { subscription, state, tier, tierName, projectLimit, loading, refresh } = useSubscription();
   const { count } = useProductLimit();
   const [showPlans, setShowPlans] = useState(false);
+  
+  const [promoCode, setPromoCode] = useState("");
+  const [promoStatus, setPromoStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [promoMessage, setPromoMessage] = useState("");
+
   const periodEnd = subscription?.current_period_end ?? subscription?.current_end ?? null;
+
+  const applyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoStatus("loading");
+    setPromoMessage("");
+    try {
+      const res = await fetch("/api/billing/promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to apply promo code");
+      setPromoStatus("success");
+      setPromoMessage("Promo code applied! You now have Pro access.");
+      refresh();
+    } catch (e) {
+      setPromoStatus("error");
+      setPromoMessage(e instanceof Error ? e.message : "Error applying code.");
+    }
+  };
 
   return (
     <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -93,6 +120,31 @@ export function BillingSection() {
               <CryptoCheckout onActivated={refresh} />
             </div>
           )}
+
+          <div className="mt-6 border-t border-border pt-6">
+            <h3 className="text-sm font-medium mb-3">Have a promo code?</h3>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter promo code"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="max-w-xs"
+                disabled={promoStatus === "loading"}
+              />
+              <Button 
+                variant="secondary" 
+                onClick={applyPromo}
+                disabled={promoStatus === "loading" || !promoCode.trim()}
+              >
+                {promoStatus === "loading" ? <LoaderIcon className="h-4 w-4 animate-spin" /> : "Apply"}
+              </Button>
+            </div>
+            {promoMessage && (
+              <p className={`mt-2 text-sm ${promoStatus === "success" ? "text-emerald-400" : "text-amber-500"}`}>
+                {promoMessage}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
