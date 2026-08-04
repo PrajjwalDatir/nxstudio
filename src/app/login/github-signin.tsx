@@ -8,13 +8,15 @@ import { GithubIcon, LoaderIcon } from "@/components/icons";
  * Kicks off the GitHub OAuth (PKCE) flow. Supabase redirects the browser to
  * GitHub; on return, GitHub → Supabase → our /auth/callback exchanges the code
  * for an httpOnly session cookie. `redirectTo` is where the user lands after.
+ * 
+ * Also provides an Anonymous sign in (Guest Mode).
  */
 export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<"github" | "guest" | false>(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const signIn = async () => {
-    setLoading(true);
+  const signInGithub = async () => {
+    setLoading("github");
     setErr(null);
     const supabase = createClient();
     const callback = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(
@@ -28,23 +30,49 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
       setErr(error.message);
       setLoading(false);
     }
-    // On success the browser navigates away to GitHub — no further work here.
+  };
+
+  const signInGuest = async () => {
+    setLoading("guest");
+    setErr(null);
+    const supabase = createClient();
+    
+    const { error } = await supabase.auth.signInAnonymously();
+    
+    if (error) {
+      setErr(error.message);
+      setLoading(false);
+    } else {
+      // Upon successful anonymous auth, @supabase/ssr writes the cookie.
+      // We can redirect the user to the destination.
+      window.location.href = redirectTo || "/canvas";
+    }
   };
 
   return (
     <div className="space-y-3">
       <button
-        onClick={signIn}
-        disabled={loading}
+        onClick={signInGithub}
+        disabled={loading !== false}
         className="flex h-11 w-full items-center justify-center gap-2.5 rounded-lg bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        {loading ? (
+        {loading === "github" ? (
           <LoaderIcon className="h-4 w-4 animate-spin" />
         ) : (
           <GithubIcon className="h-4 w-4" />
         )}
         Continue with GitHub
       </button>
+
+      <button
+        onClick={signInGuest}
+        disabled={loading !== false}
+        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all hover:bg-secondary disabled:opacity-60"
+      >
+        {loading === "guest" && <LoaderIcon className="h-4 w-4 animate-spin" />}
+        Continue as Guest
+      </button>
+
       {err && <p className="text-center text-sm text-red-400">{err}</p>}
     </div>
   );
