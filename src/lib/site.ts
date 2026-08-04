@@ -29,11 +29,11 @@ export const siteConfig = {
   title: "nxstudio",
   /** Short label for the title template + PWA short_name. */
   shortName: "nxstudio",
-  tagline: "From brief to build prompt.",
+  tagline: "Your staff-level tech cofounder.",
   description:
-    "nxstudio is a founder-mode build tool. Turn a product brief into a derived tech stack and one production-ready build prompt, then shape its brand, 3D and motion in a live visual Studio. Built for founders shipping products with AI coding agents.",
+    "Bring your product brief. We'll architect the right tech stack and generate a production-ready build prompt so your AI agents can ship it flawlessly.",
   url: resolveSiteUrl(),
-  ogImage: "/opengraph-image",
+  ogImage: "/opengraph-image.png",
   themeColor: "#08080A",
   brandColor: "#8B5CF6",
   locale: "en_US",
