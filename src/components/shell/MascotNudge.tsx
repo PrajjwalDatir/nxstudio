@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace-store";
 import { PHASES, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
 import { usePrefersReducedMotion } from "@/components/landing/MachineModel";
@@ -23,17 +24,77 @@ const PROGRESS_NUDGE: Record<string, string> = {
 };
 const ALL_DONE_NUDGE = "Every phase is done — you're ready to ship.";
 
-// Said unprompted on a recurring loop while idle — half the time a nudge
-// toward whatever's next, half the time a pointer at some other part of the
-// app, so it reads as company that's paying attention, not a silent pet.
 const EXPLORE_TIPS = [
-  "Press ⌘K anytime — the command palette jumps straight to any phase.",
-  "You can set a due date on any phase right from its header.",
-  "Juggling more than one product? Switch workspaces from the top bar.",
-  "Connect a GitHub repo and I'll show you who's actually shipping commits.",
-  "The canvas has an annotate toolbar now — mark up your flow directly.",
-  "The Canvas view lays out every phase's progress at a glance.",
+  "Press ⌘K to open the command palette. It's the fastest way to jump between phases.",
+  "You can copy your entire build prompt using ⌘C when you're ready to ship.",
+  "Don't get stuck in planning. The moment your Brief is solid, move straight to the Build phase.",
+  "Sync your progress to GitHub with ⌘G to keep your team in the loop.",
+  "I watch your progress in real-time. Keep an eye on my expressions—I'll look proud when you're ready to ship.",
+  "Pressing ⌘K isn't just for navigation—you can search tasks, phases, and your tech stack directly.",
 ];
+
+const PAGE_CONTEXT: Record<string, { title: string; desc: string; tips: string[] }> = {
+  "/studio": {
+    title: "Studio Mode",
+    desc: "The Studio is where your brand comes alive. You can explore Generative p5, 3D scenes, motion, and annotations.",
+    tips: [
+      "Brand consistency starts here: dial in your color tokens first, then generate variations.",
+      "The 3D primitive scene is great for hero backgrounds. Try exporting a static frame for your landing page.",
+      "Motion keyframes can be exported straight to Theatre.js for production use.",
+      "Use the Annotate layer to leave structural notes for your frontend engineers directly on the design."
+    ]
+  },
+  "/projects": {
+    title: "Projects",
+    desc: "Manage all your active projects here. Switch between them or create new ones.",
+    tips: [
+      "Keep an 'Archive' project for experiments that didn't pan out, so you don't lose the ideas.",
+      "Your billing limit applies per workspace. Switching projects keeps your resources organized."
+    ]
+  },
+  "/team": {
+    title: "Team",
+    desc: "Manage your collaborators and team permissions.",
+    tips: [
+      "Invite a domain expert strictly as a 'Reviewer' so they can comment on the Brief without altering the tech stack.",
+      "Link your GitHub account here first so commits automatically map to the right team members."
+    ]
+  },
+  "/calendar": {
+    title: "Calendar",
+    desc: "Track project timelines, sprints, and schedule milestones.",
+    tips: [
+      "Tie your sprint milestones strictly to user-facing features, not just backend infrastructure.",
+      "Missed a date? The timeline adjusts dynamically. Focus on shipping, not rescheduling."
+    ]
+  },
+  "/tasks": {
+    title: "Tasks",
+    desc: "Your implementation checklist. Check off tasks as you build.",
+    tips: [
+      "Every task should take less than a day. If it takes longer, break it down further.",
+      "Keep the checklist open on a second monitor while you build. Ticking these off keeps momentum high."
+    ]
+  },
+  "/settings": {
+    title: "Settings",
+    desc: "Configure your workspace, billing, and API connections.",
+    tips: [
+      "Connect your GitHub account first. We'll automatically sync your commits to the project timeline.",
+      "You can configure webhooks here to trigger external builds when a phase is marked complete."
+    ]
+  },
+  "/canvas": {
+    title: "Canvas",
+    desc: "The main workspace. Here you define the problem, users, and pick your tech stack.",
+    tips: [
+      "Your Brief drives the entire product. The more specific your 'target user', the better the derived tech stack.",
+      "Don't overthink the Tech Stack. The defaults are optimized for speed. Just hit deploy and iterate later.",
+      "The Idea phase isn't a business plan. Treat it like a thesis statement for today's build.",
+      "You can use ⌘K to quickly search through all your phases without leaving the canvas."
+    ]
+  }
+};
 
 // Companion tips — shown once, matched to the field's aria-label when it has
 // one (see IdeaPhase's textareas), otherwise a generic pick.
@@ -173,6 +234,7 @@ function collectPlatforms(excludeEl: HTMLElement | null): Platform[] {
  * completes, or everything's done), not just when clicked.
  */
 export function MascotNudge() {
+  const pathname = usePathname();
   const { data } = useWorkspace();
   const [open, setOpen] = useState(false);
   const [bubble, setBubble] = useState<Anchor>({ above: true, right: false });
@@ -229,6 +291,12 @@ export function MascotNudge() {
   // says something, then picks a fresh interval and keeps going forever.
   const chatterTimer = useRef(360); // ~6s before the first one
   const chatterHold = useRef(0);
+
+  // Keep pathname in ref for the animation loop
+  const pathnameRef = useRef(pathname);
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     openRef.current = open;
@@ -418,10 +486,21 @@ export function MascotNudge() {
           chatterTimer.current -= 1;
           if (chatterTimer.current <= 0) {
             const n = nextRef.current;
+            const currentPath = pathnameRef.current;
+            const matchedPrefix = Object.keys(PAGE_CONTEXT).find(k => currentPath?.startsWith(k));
+            
             const talkNext = n && Math.random() < 0.5;
+            
+            let pool = EXPLORE_TIPS;
+            if (matchedPrefix && !talkNext) {
+              const ctxTips = PAGE_CONTEXT[matchedPrefix].tips;
+              if (Math.random() < 0.6) pool = ctxTips;
+            }
+
             const msg = talkNext
               ? (NEXT_STEP_COPY[n.id] ?? n.description)
-              : EXPLORE_TIPS[Math.floor(Math.random() * EXPLORE_TIPS.length)];
+              : pool[Math.floor(Math.random() * pool.length)];
+
             setAutoAnchor(anchorFor(p));
             setAutoMsg(msg);
             if (autoMsgTimer.current) clearTimeout(autoMsgTimer.current);
@@ -647,6 +726,9 @@ export function MascotNudge() {
     ...(a.right ? { right: 24 } : { left: 24 }),
   });
 
+  const matchedContextKey = pathname ? Object.keys(PAGE_CONTEXT).find(k => pathname.startsWith(k)) : undefined;
+  const context = matchedContextKey ? PAGE_CONTEXT[matchedContextKey] : null;
+
   return (
     <div
       ref={wrapRef}
@@ -710,7 +792,7 @@ export function MascotNudge() {
             <div className="rounded-2xl border border-border bg-card p-4 shadow-xl">
               <div className="flex items-start justify-between gap-2">
                 <span className="text-xs font-semibold tracking-wide text-primary uppercase">
-                  {next ? "Next step" : "You're all set"}
+                  {context ? context.title : (next ? "Next step" : "You're all set")}
                 </span>
                 <button
                   onClick={() => setOpen(false)}
@@ -721,9 +803,9 @@ export function MascotNudge() {
                 </button>
               </div>
               <p className="mt-2 text-sm text-foreground">
-                {next
+                {context ? context.desc : (next
                   ? (NEXT_STEP_COPY[next.id] ?? next.description)
-                  : "Every phase is complete — nothing blocking you right now."}
+                  : "Every phase is complete — nothing blocking you right now.")}
               </p>
               {next && (
                 <Link
@@ -731,7 +813,7 @@ export function MascotNudge() {
                   onClick={() => setOpen(false)}
                   className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                 >
-                  Go to {next.label}
+                  Continue to {next.label}
                   <ArrowRightIcon className="h-3.5 w-3.5" />
                 </Link>
               )}
