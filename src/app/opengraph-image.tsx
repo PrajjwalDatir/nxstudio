@@ -198,7 +198,7 @@ export default function OpengraphImage() {
                   padding: "8px 16px",
                 }}
               >
-                Founder-mode build tool
+                Your Tech Cofounder
               </div>
               <div
                 style={{
@@ -211,7 +211,7 @@ export default function OpengraphImage() {
                   letterSpacing: -2,
                 }}
               >
-                <span>Turn a brief into a</span>
+                <span>Staff-level context</span>
                 <span
                   style={{
                     backgroundImage: `linear-gradient(120deg, #C4B5FD, ${violet} 55%, #7C3AED)`,
@@ -219,7 +219,7 @@ export default function OpengraphImage() {
                     color: "transparent",
                   }}
                 >
-                  shippable build prompt.
+                  for your AI agents.
                 </span>
               </div>
               <div
@@ -231,8 +231,7 @@ export default function OpengraphImage() {
                   color: "#A1A1AA",
                 }}
               >
-                Brief → derived tech stack → one production-ready prompt for your
-                AI coding agent.
+                {siteConfig.description}
               </div>
             </div>
 
@@ -289,7 +288,7 @@ export default function OpengraphImage() {
               ))}
             </div>
             <div style={{ display: "flex", fontSize: 20, color: violet, fontWeight: 600 }}>
-              From brief to build prompt.
+              {siteConfig.tagline}
             </div>
           </div>
         </div>
