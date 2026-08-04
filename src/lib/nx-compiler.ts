@@ -9,6 +9,7 @@
  */
 
 import { compileStack } from "./platform-engine";
+import { getPhase } from "./phases";
 import { CompiledStack, WorkspaceData } from "./types";
 
 export const NX_ROOT = ".nx";
@@ -132,6 +133,7 @@ Target: **${stack?.hosting ?? "TBD"}**
 Configure CI/CD to deploy on push to \`main\`. Add preview deployments for PRs.
 `,
     },
+    { path: `${NX_ROOT}/checklist.md`, content: compileChecklistDoc(data) },
   ];
 
   if (data.customStages && data.customStages.length > 0) {
@@ -216,6 +218,29 @@ When starting a build:
   return files;
 }
 
+/**
+ * Renders the deliverables checklist as markdown checkboxes — the exact same
+ * text both lands in the .nx/ bundle and is what "Copy checklist" copies, so
+ * a straight content diff (see diffNx) is enough to tell whether the studio's
+ * checklist has moved ahead of what's committed to the repo.
+ */
+export function compileChecklistDoc(data: WorkspaceData): string {
+  const defaultSteps = getPhase("checklist")?.steps ?? [];
+  const customSteps = data.customStages.find((s) => s.id === "checklist")?.steps ?? [];
+  const steps = [...defaultSteps, ...customSteps];
+  const done = (id: string) =>
+    (data.checklist["checklist"] ?? []).includes(id) || (data.checklist["build"] ?? []).includes(id);
+
+  const lines = steps.map((s) => `- [${done(s.id) ? "x" : " "}] ${s.label}`);
+
+  return `# Deliverables Checklist
+
+${lines.length ? lines.join("\n") : "_No deliverables yet._"}
+
+Keep this in sync as work lands — check items off, or add new ones, as you go.
+`;
+}
+
 function techStackDoc(stack: CompiledStack): string {
   return `# Tech Stack Decision
 
@@ -269,6 +294,7 @@ export const NX_STANDARD_PATHS = [
   `${NX_ROOT}/decisions/db-schema.md`,
   `${NX_ROOT}/specs/api-routes.md`,
   `${NX_ROOT}/hosting.md`,
+  `${NX_ROOT}/checklist.md`,
 ];
 
 /**

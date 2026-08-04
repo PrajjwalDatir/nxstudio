@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeftIcon, MoreIcon, BadgeCheckIcon } from "@/components/icons";
+import { ArrowLeftIcon, MoreIcon, BadgeCheckIcon, ResetIcon } from "@/components/icons";
 import { useSync, useWorkspace } from "@/lib/workspace-store";
 import { DueDatePicker } from "@/components/ui/due-date";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 type Status = "in-progress" | "ready" | "complete";
@@ -37,7 +43,7 @@ export function PhaseHeader({
   showTeam?: boolean;
 }) {
   const { result } = useSync();
-  const { activeProject, setDueDate } = useWorkspace();
+  const { activeProject, setDueDate, resetPhase } = useWorkspace();
   const contributors = showTeam ? result?.contributors ?? [] : [];
   const due = phaseId ? activeProject.dueDates[phaseId] ?? "" : "";
   return (
@@ -112,9 +118,22 @@ export function PhaseHeader({
               )}
             </div>
           )}
-          <button aria-label="More options" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground">
-            <MoreIcon className="h-4 w-4" />
-          </button>
+          {phaseId && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label="More options"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground outline-none hover:text-foreground data-[state=open]:bg-secondary data-[state=open]:text-foreground"
+              >
+                <MoreIcon className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={() => resetPhase(phaseId)}>
+                  <ResetIcon className="h-4 w-4" />
+                  Reset progress
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </div>
