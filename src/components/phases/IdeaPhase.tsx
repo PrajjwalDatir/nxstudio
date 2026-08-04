@@ -7,7 +7,8 @@ import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
 import { IdeaData } from "@/lib/types";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
-import { PaperclipIcon, MicIcon, WandIcon } from "@/components/icons";
+import Link from "next/link";
+import { PaperclipIcon, MicIcon, WandIcon, ChevronRightIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 const QUESTIONS: {
@@ -310,6 +311,19 @@ export function IdeaPhase() {
         </div>
         <CopyButton value={prompts?.idea.prompt ?? ""} label="Copy" variant="solid" />
       </div>
+
+      {/* Continue */}
+      {answered === QUESTIONS.length && (
+        <div className="mt-6 flex justify-end">
+          <Link
+            href="/canvas/tech-stack"
+            className="inline-flex items-center gap-1 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Continue to Tech Stack
+            <ChevronRightIcon className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
     </>
   );
 }
