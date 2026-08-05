@@ -1,5 +1,5 @@
 export type AccessState = "active" | "grace" | "locked" | "none";
-export type PlanTier = "free" | "pro_10" | "master_50";
+export type PlanTier = "free" | "pro_10";
 
 export interface SubscriptionRow {
   provider?: string | null;
@@ -14,7 +14,7 @@ export interface AccessInfo {
   isPremium: boolean;
   tier: PlanTier;
   tierName: string;
-  projectLimit: number; // 1 for free, 5 for pro_10, Infinity for master_50
+  projectLimit: number; // 1 for free, Infinity for pro_10
   canUseCollections: boolean;
   canUsePromptGallery: boolean;
   canUseMachineWorkflows: boolean;
@@ -41,30 +41,20 @@ export function isPremium(state: AccessState): boolean {
 
 export function derivePlanTier(row: SubscriptionRow | null, state: AccessState): PlanTier {
   if (!isPremium(state) || !row?.plan_id) return "free";
-  if (row.plan_id === "master_50" || row.plan_id === "50") return "master_50";
   if (row.plan_id === "pro_10" || row.plan_id === "10") return "pro_10";
   return "free";
 }
 
 export function getTierInfo(tier: PlanTier) {
   switch (tier) {
-    case "master_50":
-      return {
-        tier,
-        tierName: "Master",
-        projectLimit: Infinity,
-        canUseCollections: true,
-        canUsePromptGallery: true,
-        canUseMachineWorkflows: true,
-      };
     case "pro_10":
       return {
         tier,
         tierName: "Pro",
-        projectLimit: 5,
+        projectLimit: Infinity,
         canUseCollections: true,
         canUsePromptGallery: true,
-        canUseMachineWorkflows: false,
+        canUseMachineWorkflows: true,
       };
     case "free":
     default:
@@ -74,7 +64,7 @@ export function getTierInfo(tier: PlanTier) {
         projectLimit: 1,
         canUseCollections: false,
         canUsePromptGallery: false,
-        canUseMachineWorkflows: false,
+        canUseMachineWorkflows: true,
       };
   }
 }
