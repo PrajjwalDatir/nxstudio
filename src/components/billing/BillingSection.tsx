@@ -3,6 +3,7 @@
 import { useSubscription } from "@/lib/use-subscription";
 import { useProductLimit } from "@/lib/use-product-limit";
 import { CryptoCheckout } from "./CryptoCheckout";
+import { RazorpayCheckout } from "./RazorpayCheckout";
 import { PricingGrid } from "./PricingGrid";
 import { CheckCircleIcon, ZapIcon, LockIcon, LoaderIcon } from "@/components/icons";
 import { useState } from "react";
@@ -111,12 +112,24 @@ export function BillingSection() {
           {showPlans ? (
             <div className="mt-6">
               <PricingGrid currentTier={tier} />
-              <div className="mt-6 rounded-xl border border-border bg-background p-4">
+              <div className="mt-6 rounded-xl border border-border bg-background p-4 space-y-4">
+                <RazorpayCheckout onActivated={() => { refresh(); setShowPlans(false); }} />
+                <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  or
+                  <div className="h-px flex-1 bg-border" />
+                </div>
                 <CryptoCheckout onActivated={() => { refresh(); setShowPlans(false); }} />
               </div>
             </div>
           ) : state !== "active" && (
-            <div className="mt-4 rounded-xl border border-border bg-background p-4">
+            <div className="mt-4 rounded-xl border border-border bg-background p-4 space-y-4">
+              <RazorpayCheckout onActivated={refresh} />
+              <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                <div className="h-px flex-1 bg-border" />
+                or
+                <div className="h-px flex-1 bg-border" />
+              </div>
               <CryptoCheckout onActivated={refresh} />
             </div>
           )}

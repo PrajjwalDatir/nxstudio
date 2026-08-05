@@ -47,7 +47,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Project Collections (Group & organize)",
       "Prompt Gallery of Use Cases & Agent Personas",
       "Agent Targets (.cursor/rules, .claude/CLAUDE.md, etc.)",
-      "Pay in USDC / USDT on Solana",
+      "Pay by card, UPI, or netbanking — or crypto (USDC/USDT on Solana)",
     ],
     highlighted: true,
     cta: "Upgrade to Pro",

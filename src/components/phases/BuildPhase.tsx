@@ -161,7 +161,7 @@ export function BuildPhase() {
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-background/60 p-6 text-sm text-muted-foreground hover:text-foreground"
           >
             <LockIcon className="h-4 w-4" />
-            Premium unlocks your full build prompt — tap to subscribe with crypto.
+            Premium unlocks your full build prompt — tap to subscribe.
           </button>
         ) : (
           <>

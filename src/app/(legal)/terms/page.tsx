@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/site";
 
-const UPDATED = "July 26, 2026";
+const UPDATED = "August 6, 2026";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -65,7 +65,8 @@ export default function TermsPage() {
 
       <h2>6. Pro subscription &amp; billing</h2>
       <p>
-        nxstudio offers a free tier and a paid “Pro” plan billed per 28-day cycle in
+        nxstudio offers a free tier and a paid “Pro” plan billed per 28-day cycle. You
+        can pay by card, UPI, or netbanking (processed by Razorpay) or in
         cryptocurrency (USDC/USDT) on Solana. Billing, access, and cancellation are
         described in our <a href="/refund">Refunds &amp; Billing Policy</a>, which
         forms part of these Terms.
@@ -81,9 +82,9 @@ export default function TermsPage() {
       <h2>8. Third-party services</h2>
       <p>
         nxstudio relies on and integrates with third parties (including GitHub,
-        Supabase, Vercel, the Solana network, and the AI coding agents you choose to
-        use). Your use of those services is governed by their own terms, and we are
-        not responsible for them.
+        Supabase, Vercel, Razorpay, the Solana network, and the AI coding agents you
+        choose to use). Your use of those services is governed by their own terms,
+        and we are not responsible for them.
       </p>
 
       <h2>9. Disclaimers &amp; limitation of liability</h2>

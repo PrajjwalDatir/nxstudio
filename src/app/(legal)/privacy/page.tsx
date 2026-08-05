@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/lib/site";
 
-const UPDATED = "July 26, 2026";
+const UPDATED = "August 6, 2026";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How nxstudio collects, uses, and protects your data — including GitHub sign-in, the briefs you create, and on-chain crypto payments.",
+    "How nxstudio collects, uses, and protects your data — including GitHub sign-in, the briefs you create, and card, UPI, or on-chain crypto payments.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -37,12 +37,21 @@ export default function PrivacyPage() {
       </p>
       <h3>Payment information</h3>
       <p>
-        Pro is paid in cryptocurrency (USDC/USDT) on the Solana network. When you
-        pay, we record the transaction signature, the paying wallet address, the
-        amount, and the timestamp so we can verify your payment on-chain and grant
-        access. We do <strong>not</strong> collect or store card or bank details.
-        If we enable a card processor in the future, payments would be handled by
-        that third party and we would never store your card number.
+        Pro can be paid by card, UPI, or netbanking, or in cryptocurrency (USDC/USDT)
+        on the Solana network.
+      </p>
+      <p>
+        Card, UPI, and netbanking payments are processed by{" "}
+        <strong>Razorpay</strong>. Razorpay collects and stores your payment details
+        directly — we never see or store your card number, UPI ID, or bank
+        credentials. We receive only the payment and subscription status needed to
+        grant access.
+      </p>
+      <p>
+        For crypto payments, we record the transaction signature, the paying wallet
+        address, the amount, and the timestamp so we can verify your payment
+        on-chain and grant access. We do <strong>not</strong> collect or store card
+        or bank details for crypto payments.
       </p>
       <h3>Technical data</h3>
       <p>
@@ -75,6 +84,10 @@ export default function PrivacyPage() {
         <li><strong>Supabase</strong> — authentication and database;</li>
         <li><strong>GitHub</strong> — sign-in (OAuth);</li>
         <li><strong>Vercel</strong> — application hosting;</li>
+        <li>
+          <strong>Razorpay</strong> — to process card, UPI, and netbanking payments
+          and manage subscriptions;
+        </li>
         <li>
           <strong>Solana network &amp; RPC providers</strong> — to verify crypto
           payments. Note that blockchain transactions are public and permanent.

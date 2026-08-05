@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CryptoCheckout } from "./CryptoCheckout";
+import { RazorpayCheckout } from "./RazorpayCheckout";
 import { PricingGrid } from "./PricingGrid";
 import { WandIcon, XIcon, ZapIcon } from "@/components/icons";
 
@@ -65,7 +66,7 @@ export function PremiumDialog({
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                Checkout — Pro (10 USDT)
+                Checkout — Pro
               </h3>
               <button
                 onClick={() => setSelectedTier(null)}
@@ -74,12 +75,24 @@ export function PremiumDialog({
                 ← Back to Plans
               </button>
             </div>
+            <RazorpayCheckout onActivated={onActivated} />
+            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              <div className="h-px flex-1 bg-zinc-800" />
+              or
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
             <CryptoCheckout onActivated={onActivated} />
           </div>
         ) : (
           <div className="mt-6 space-y-6">
             <PricingGrid onSelectTier={(tier) => setSelectedTier(tier)} />
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-4">
+              <RazorpayCheckout onActivated={onActivated} />
+              <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                <div className="h-px flex-1 bg-zinc-800" />
+                or
+                <div className="h-px flex-1 bg-zinc-800" />
+              </div>
               <CryptoCheckout onActivated={onActivated} />
             </div>
           </div>
