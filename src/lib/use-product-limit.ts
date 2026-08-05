@@ -4,9 +4,8 @@ import { useProjects } from "@/lib/workspace-store";
 import { useSubscription } from "@/lib/use-subscription";
 
 /**
- * Free accounts: 1 project.
- * Pro (10 USDT): 5 projects.
- * Master (50 USDT): Unlimited (Infinity).
+ * Free: 1 Active Project Workspace.
+ * Pro (10 USDT): Unlimited.
  */
 export function useProductLimit() {
   const { projects } = useProjects();
