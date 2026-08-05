@@ -4,7 +4,7 @@ import { CheckIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 export interface PricingPlan {
-  id: "free" | "pro_10" | "master_50";
+  id: "free" | "pro_10";
   name: string;
   badge?: string;
   price: string;
@@ -29,6 +29,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Full Brief & Tech Stack Engine",
       "Full Master Build Prompt",
       "Full Depth Prompts compilation",
+      "Autonomous Machine Workflows (.jules/, GitHub Actions)",
       "Sign in with GitHub",
     ],
     cta: "Current Plan",
@@ -39,10 +40,10 @@ export const PRICING_PLANS: PricingPlan[] = [
     badge: "MOST POPULAR",
     price: "10 USDT",
     cadence: "per 28 days",
-    description: "For serial builders & developers scaling multiple products.",
+    description: "Unlimited Project Workspaces, no gates — everything unlocked for serial builders.",
     features: [
-      "Up to 5 Active Workspaces",
-      "ALL ACCESS across 5 projects",
+      "Unlimited Active Project Workspaces",
+      "ALL ACCESS — no gates",
       "Project Collections (Group & organize)",
       "Prompt Gallery of Use Cases & Agent Personas",
       "Agent Targets (.cursor/rules, .claude/CLAUDE.md, etc.)",
@@ -51,36 +52,18 @@ export const PRICING_PLANS: PricingPlan[] = [
     highlighted: true,
     cta: "Upgrade to Pro",
   },
-  {
-    id: "master_50",
-    name: "Master",
-    badge: "UNLIMITED",
-    price: "50 USDT",
-    cadence: "per 28 days",
-    description: "Complete autonomous software machine & pipeline workflows.",
-    features: [
-      "Unlimited Projects & Collections",
-      "ALL ACCESS & ALL RESOURCES",
-      "Autonomous Machine Engine (.jules/ configs)",
-      "GitHub Action Automation (.github/workflows/)",
-      "Issue -> Auto Test Generation & AI Business Logic",
-      "Test-Gated CI/CD Deployment Pipeline",
-    ],
-    vip: true,
-    cta: "Unlock Master",
-  },
 ];
 
 export function PricingGrid({
   currentTier = "free",
   onSelectTier,
 }: {
-  currentTier?: "free" | "pro_10" | "master_50";
-  onSelectTier?: (tier: "pro_10" | "master_50") => void;
+  currentTier?: "free" | "pro_10";
+  onSelectTier?: (tier: "pro_10") => void;
 }) {
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {PRICING_PLANS.map((plan) => {
           const isCurrent = currentTier === plan.id;
           return (
@@ -144,7 +127,7 @@ export function PricingGrid({
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => onSelectTier?.(plan.id as "pro_10" | "master_50")}
+                    onClick={() => onSelectTier?.(plan.id as "pro_10")}
                     className={`w-full font-mono text-xs uppercase tracking-wider ${
                       plan.vip
                         ? "bg-foreground text-background hover:bg-foreground/90"

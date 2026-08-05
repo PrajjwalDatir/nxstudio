@@ -75,7 +75,7 @@ export function PromptGallery() {
             <h2 className="text-xl font-bold tracking-tight">Prompt Gallery & Agent Personas</h2>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Curated production prompt templates & specialized agent personas for Pro & Master builders.
+            Curated production prompt templates & specialized agent personas for Pro builders.
           </p>
         </div>
         {!canUsePromptGallery && (

@@ -71,7 +71,7 @@ export default function ProjectsPage() {
   const startCreate = () => {
     if (atLimit) {
       setPayTitle("Workspace Limit Reached");
-      setPayDesc(`Your current plan is limited to ${limit} active workspace. Upgrade to Pro (10 USDT) or Master (50 USDT) to scale.`);
+      setPayDesc(`Free is capped at ${limit} active project workspace. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.`);
       setPayOpen(true);
       return;
     }
@@ -233,7 +233,7 @@ export default function ProjectsPage() {
         <button
           onClick={() => {
             setPayTitle("Workspace Limit Reached");
-            setPayDesc("Free accounts are limited to 1 active workspace. Upgrade to Pro (10 USDT) or Master (50 USDT) to scale.");
+            setPayDesc("Free is limited to 1 active workspace. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.");
             setPayOpen(true);
           }}
           className="mt-4 flex w-full items-center justify-between rounded-xl border border-primary/30 bg-accent/20 px-4 py-3 text-left text-sm"

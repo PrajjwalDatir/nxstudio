@@ -38,6 +38,7 @@ const PLANS = [
       "Brief → derived tech stack",
       "Full Master Build Prompt",
       "Full Depth Prompts compilation",
+      "Autonomous Machine Workflows (.jules/, GitHub Actions)",
       "Sign in with GitHub",
     ],
     highlighted: false,
@@ -48,9 +49,9 @@ const PLANS = [
     name: "Pro",
     price: "10 USDT",
     cadence: "per 28 days",
-    blurb: "For serial builders scaling multiple products.",
+    blurb: "Unlimited product workspaces, no gates — everything unlocked.",
     features: [
-      "5 Product workspaces (ALL ACCESS)",
+      "Unlimited Product workspaces (ALL ACCESS)",
       "Project Collections (Group & organize)",
       "Prompt Gallery of Use Cases & Personas",
       "Agent Targets (.cursor/rules, .claude, etc.)",
@@ -60,24 +61,6 @@ const PLANS = [
     vip: false,
     badge: "Most popular",
     cta: "Go Pro",
-  },
-  {
-    name: "Master",
-    price: "50 USDT",
-    cadence: "per 28 days",
-    blurb: "Autonomous machine workflows & repo pipeline automation.",
-    features: [
-      "Unlimited Products & Collections",
-      "Autonomous Machine Engine (.jules/ configs)",
-      "GitHub Action Automation (.github/workflows/)",
-      "Issue -> Auto Test Case & Business Logic",
-      "Test-Gated CI/CD Deployment Pipeline",
-      "Priority Web3 verification support",
-    ],
-    highlighted: false,
-    vip: true,
-    badge: "Unlimited",
-    cta: "Unlock Master",
   },
 ];
 
@@ -178,7 +161,7 @@ export default function LandingPage() {
                 No card required — Pro is billed in crypto, verified on-chain.
               </p>
             </div>
-            <div className="mx-auto mt-14 grid max-w-6xl gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto mt-14 grid max-w-3xl gap-4 md:grid-cols-2">
               {PLANS.map((plan) => (
                 <div
                   key={plan.name}
