@@ -95,15 +95,14 @@ export async function POST(request: Request) {
     const currentEndMs = row?.current_period_end ? new Date(row.current_period_end).getTime() : 0;
     const base = Math.max(now, currentEndMs);
     const newEnd = new Date(base + solana.cycleDays() * 86_400_000).toISOString();
-    const finalPlanId = row?.plan_id || (result.amount === "50" ? "master_50" : "pro_10");
 
     const { error: updateErr } = await admin
       .from("subscriptions")
       .update({
         provider: "crypto",
         status: "active",
-        plan_id: finalPlanId,
-        plan_tier: finalPlanId,
+        plan_id: "pro_10",
+        plan_tier: "pro_10",
         plan_amount: Number(result.amount),
         current_period_end: newEnd,
         pending_reference: null,
