@@ -12,9 +12,12 @@ export interface Particle2D {
 
 export class SpatialHashGrid {
   private grid = new Map<number, Particle2D[]>();
+
   constructor(private cellSize = 130) {}
 
-  clear() { this.grid.clear(); }
+  clear() {
+    this.grid.clear();
+  }
 
   private key(x: number, y: number): number {
     const cx = Math.floor(x / this.cellSize);
@@ -37,18 +40,18 @@ export class SpatialHashGrid {
     for (let i = 0; i < particles.length; i++) this.insert(particles[i]);
   }
 
-  getNearby(p: Particle2D): Particle2D[] {
+  getNearby(p: Particle2D, out: Particle2D[] = []): Particle2D[] {
     const cx = Math.floor(p.x / this.cellSize);
     const cy = Math.floor(p.y / this.cellSize);
-    const nearby: Particle2D[] = [];
+    out.length = 0;
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         const k = ((cx + dx) << 16) | ((cy + dy) & 0xFFFF);
         const cell = this.grid.get(k);
-        if (cell) for (let i = 0; i < cell.length; i++) nearby.push(cell[i]);
+        if (cell) for (let i = 0; i < cell.length; i++) out.push(cell[i]);
       }
     }
-    return nearby;
+    return out;
   }
 }
 
