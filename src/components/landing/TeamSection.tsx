@@ -65,12 +65,12 @@ function BrandAvatar({ name, className }: { name: string; className?: string }) 
   );
 }
 
-export function TeamSection() {
+export function TeamSection({ index = "06" }: { index?: string }) {
   return (
     <section id="team" className="scroll-mt-20 border-t border-border">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionKicker index="06" align="center">
+          <SectionKicker index={index} align="center">
             Team
           </SectionKicker>
           <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl">

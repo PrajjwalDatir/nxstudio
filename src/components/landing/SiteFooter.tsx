@@ -14,6 +14,14 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
+    title: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      { label: "Team", href: "/about#team" },
+    ],
+  },
+  {
     title: "Legal",
     links: [
       { label: "Privacy", href: "/privacy" },
@@ -26,7 +34,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
 export function SiteFooter() {
   return (
     <footer className="relative border-t border-border">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 md:grid-cols-[1.2fr_1fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" className="flex items-center gap-2.5" aria-label="nxstudio home">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card">

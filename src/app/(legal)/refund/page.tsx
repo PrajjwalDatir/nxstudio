@@ -83,7 +83,8 @@ export default function RefundPage() {
       <h2>7. Contact</h2>
       <p>
         Billing questions? Email{" "}
-        <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.
+        <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> or
+        visit our <a href="/contact">Contact page</a>.
       </p>
     </article>
   );

@@ -6,13 +6,16 @@ import { NxLogo, MenuIcon, XIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
 
+// Absolute (leading "/") so these still resolve correctly when this nav is
+// reused on a page other than the homepage (e.g. /about) — a bare "#how"
+// would silently no-op there since that id only exists on "/".
 const LINKS = [
-  { href: "#how", label: "How it works" },
-  { href: "#features", label: "Features" },
-  { href: "#studio", label: "Studio" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#team", label: "Team" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#features", label: "Features" },
+  { href: "/#studio", label: "Studio" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/about", label: "About" },
 ];
 
 export function LandingNav() {

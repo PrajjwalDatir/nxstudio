@@ -132,7 +132,8 @@ export default function PrivacyPage() {
       <h2>10. Contact</h2>
       <p>
         Questions about privacy? Email{" "}
-        <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.
+        <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> or
+        visit our <a href="/contact">Contact page</a>.
       </p>
     </article>
   );

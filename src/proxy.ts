@@ -21,7 +21,8 @@ export const config = {
      * Covered by extension (txt/xml/webmanifest) plus the two extension-less
      * generated image routes.
      *
-     * The legal pages stay excluded — fully static, no session needed.
+     * The legal + about/contact pages stay excluded — fully static, no session
+     * needed.
      *
      * The root IS matched (note: no trailing `$` exclusion), so a signed-in
      * visitor gets bounced from the pitch to /canvas. `updateSession` short-
@@ -29,6 +30,6 @@ export const config = {
      * Supabase work, so anonymous landing traffic still costs one cheap cookie
      * read and the page itself stays statically served.
      */
-    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|twitter-image|apple-icon|icon|privacy|terms|refund|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|mp3|ogg|wav|m4a|mp4|webm|woff|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|twitter-image|apple-icon|icon|privacy|terms|refund|about|contact|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|mp3|ogg|wav|m4a|mp4|webm|woff|woff2)$).*)",
   ],
 };

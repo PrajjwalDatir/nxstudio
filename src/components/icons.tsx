@@ -79,6 +79,9 @@ export {
   ShieldCheck as ShieldCheckIcon,
   Coins as CoinsIcon,
   GitBranch as GitBranchIcon,
+  MapPin as MapPinIcon,
+  MessageCircle as MessageCircleIcon,
+  KeyRound as KeyRoundIcon,
 
   // Shell / navigation
   Users as UsersIcon,
