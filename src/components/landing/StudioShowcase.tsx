@@ -152,6 +152,7 @@ export function StudioShowcase() {
             </ul>
 
             <AuthButton
+              source="studio_showcase"
               redirectTo="/studio"
               className="group mt-9 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 font-mono text-xs font-semibold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
             >

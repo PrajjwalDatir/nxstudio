@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { track } from "@vercel/analytics/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      await track("auth_success", { method: "github" });
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
       if (isLocalEnv) {
@@ -27,6 +29,12 @@ export async function GET(request: Request) {
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
+    // Code exchange failing here is the classic in-app-browser symptom: the
+    // PKCE verifier cookie set before the GitHub redirect didn't survive the
+    // round trip, so the code can't be redeemed.
+    await track("auth_error", { method: "github", reason: "code_exchange_failed", message: error.message });
+  } else {
+    await track("auth_error", { method: "github", reason: "no_code" });
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth-callback-failed`);

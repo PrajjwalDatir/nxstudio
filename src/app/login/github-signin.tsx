@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@vercel/analytics";
 import { createClient } from "@/lib/supabase/client";
 import { GithubIcon, LoaderIcon } from "@/components/icons";
 
@@ -22,44 +23,54 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
     const callback = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(
       redirectTo
     )}`;
-    
+
     // Check if user is currently anonymous
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user?.is_anonymous) {
       // Link GitHub identity to the current anonymous user
+      track("auth_start", { method: "github", fromGuest: true });
       const { error } = await supabase.auth.linkIdentity({
         provider: "github",
         options: { redirectTo: callback },
       });
       if (error) {
+        track("auth_error", { method: "github", fromGuest: true, message: error.message });
         setErr(error.message);
         setLoading(false);
       }
     } else {
       // Standard sign in
+      track("auth_start", { method: "github", fromGuest: false });
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: { redirectTo: callback },
       });
       if (error) {
+        track("auth_error", { method: "github", fromGuest: false, message: error.message });
         setErr(error.message);
         setLoading(false);
       }
     }
+    // Success isn't tracked here — it's a full-page redirect to GitHub, so this
+    // component unmounts before any success state exists. /auth/callback is
+    // where a completed sign-in would be tracked server-side.
   };
 
   const signInGuest = async () => {
     setLoading("guest");
     setErr(null);
+    track("auth_start", { method: "guest" });
     const supabase = createClient();
-    
+
     const { error } = await supabase.auth.signInAnonymously();
-    
+
     if (error) {
+      track("auth_error", { method: "guest", message: error.message });
       setErr(error.message);
       setLoading(false);
     } else {
+      track("auth_success", { method: "guest" });
       // Upon successful anonymous auth, @supabase/ssr writes the cookie.
       // We can redirect the user to the destination.
       window.location.href = redirectTo || "/canvas";
