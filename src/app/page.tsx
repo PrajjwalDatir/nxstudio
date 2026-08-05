@@ -55,7 +55,7 @@ const PLANS = [
       "Project Collections (Group & organize)",
       "Prompt Gallery of Use Cases & Personas",
       "Agent Targets (.cursor/rules, .claude, etc.)",
-      "Pay in USDC / USDT on Solana",
+      "Pay by card, UPI, or netbanking — or crypto (USDC/USDT on Solana)",
     ],
     highlighted: true,
     vip: false,
@@ -83,7 +83,7 @@ const FAQ = [
   },
   {
     q: "How does billing work?",
-    a: "Free to start. Pro is a 28-day cycle paid in USDC or USDT on Solana, verified on-chain — no card required. Details live on the Refunds & Billing page.",
+    a: "Free to start. Pro is a 28-day cycle, payable by card, UPI, or netbanking via Razorpay, or in USDC/USDT on Solana, verified on-chain. Details live on the Refunds & Billing page.",
   },
   {
     q: "Do I need to know the tech stack already?",
@@ -158,7 +158,7 @@ export default function LandingPage() {
                 Start free. Go Pro as you create.
               </h2>
               <p className="mt-4 text-muted-foreground">
-                No card required — Pro is billed in crypto, verified on-chain.
+                Pay by card, UPI, or netbanking — or in crypto, verified on-chain.
               </p>
             </div>
             <div className="mx-auto mt-14 grid max-w-3xl gap-4 md:grid-cols-2">
