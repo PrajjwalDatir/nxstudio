@@ -8,17 +8,14 @@ import { solana } from "@/lib/solana/config";
 export const runtime = "nodejs";
 
 /**
- * Start (or resume) a crypto payment. Accepts `{ tier: "pro_10" | "master_50" }`.
+ * Start (or resume) a crypto payment for the Pro plan.
  */
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-
-  const body = (await request.json().catch(() => ({}))) as { tier?: string };
-  const requestedTier = body.tier === "master_50" || body.tier === "50" ? "master_50" : "pro_10";
 
   try {
     const admin = createAdminClient();
@@ -29,15 +26,15 @@ export async function POST(request: Request) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    // Resume an in-flight reference, or mint a fresh one for requested tier.
-    const payment = createPaymentRequest(existing?.pending_reference ?? undefined, requestedTier);
+    // Resume an in-flight reference, or mint a fresh one.
+    const payment = createPaymentRequest(existing?.pending_reference ?? undefined);
 
-    // Persist the reference (+ target tier + amount we're charging) before returning it.
+    // Persist the reference (+ amount we're charging) before returning it.
     const { error } = await admin.from("subscriptions").upsert(
       {
         user_id: user.id,
         provider: "crypto",
-        plan_id: requestedTier,
+        plan_id: "pro_10",
         pending_reference: payment.reference,
         pending_amount: payment.amount,
         pending_mint: solana.usdcMint(),
@@ -50,7 +47,7 @@ export async function POST(request: Request) {
       reference: payment.reference,
       url: payment.url,
       amount: payment.amount,
-      tier: requestedTier,
+      tier: "pro_10",
       wallet: solana.walletAddress(),
       cycleDays: solana.cycleDays(),
     });
