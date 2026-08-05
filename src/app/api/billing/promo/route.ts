@@ -34,7 +34,8 @@ export async function POST(request: Request) {
       .eq("provider", "promo");
 
     if (countErr) {
-      return NextResponse.json({ error: `DB error: ${countErr.message}` }, { status: 500 });
+      console.error(`DB error counting promos: ${countErr.message}`);
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     if (count && count >= 100) {
@@ -77,7 +78,8 @@ export async function POST(request: Request) {
     );
 
     if (upsertErr) {
-      return NextResponse.json({ error: `DB error: ${upsertErr.message}` }, { status: 500 });
+      console.error(`DB error claiming promo: ${upsertErr.message}`);
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const state = deriveAccessState(

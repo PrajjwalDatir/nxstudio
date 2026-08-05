@@ -49,7 +49,8 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .eq("razorpay_subscription_id", body.razorpay_subscription_id);
   if (error) {
-    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+    console.error(`DB error during signature verification sync: ${error.message}`);
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

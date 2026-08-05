@@ -52,7 +52,8 @@ export async function POST(request: Request) {
 
   if (error) {
     // 500 → Razorpay retries with backoff.
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`DB error on webhook sync: ${error.message}`);
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -44,7 +44,10 @@ export async function POST(request: Request) {
       },
       { onConflict: "user_id" }
     );
-    if (error) return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+    if (error) {
+      console.error(`DB error requesting crypto payment: ${error.message}`);
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    }
 
     return NextResponse.json({
       reference: payment.reference,
