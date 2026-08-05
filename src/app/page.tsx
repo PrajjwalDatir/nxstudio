@@ -227,6 +227,7 @@ export default function LandingPage() {
                   </div>
 
                   <AuthButton
+                    source={`pricing_${plan.name.toLowerCase()}`}
                     className={`mt-6 flex h-10 w-full items-center justify-center rounded-lg font-mono text-xs font-semibold uppercase tracking-wider transition-colors ${
                       plan.highlighted
                         ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -284,7 +285,10 @@ export default function LandingPage() {
                 That&apos;s the whole product. What you do with the rest of the
                 afternoon is your business.
               </p>
-              <AuthButton className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_16px_40px_-16px_rgba(139,92,246,0.8)] transition-transform hover:-translate-y-0.5">
+              <AuthButton
+                source="closing"
+                className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_16px_40px_-16px_rgba(139,92,246,0.8)] transition-transform hover:-translate-y-0.5"
+              >
                 Start building — free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>

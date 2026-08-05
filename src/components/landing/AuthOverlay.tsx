@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { track } from "@vercel/analytics";
 import { GitHubSignIn } from "@/app/login/github-signin";
 import { NxLogo, XIcon } from "@/components/icons";
 
@@ -142,16 +143,26 @@ export function AuthButton({
   className,
   children,
   redirectTo = "/canvas",
+  source,
   onMouseEnter,
 }: {
   className?: string;
   children: ReactNode;
   redirectTo?: string;
+  /** Which landing CTA this is, e.g. "hero", "pricing_free" — lets the funnel show where clicks come from. */
+  source: string;
   onMouseEnter?: () => void;
 }) {
   const { open } = useAuthOverlay();
   return (
-    <button className={className} onClick={() => open(redirectTo)} onMouseEnter={onMouseEnter}>
+    <button
+      className={className}
+      onClick={() => {
+        track("cta_click", { source, redirectTo });
+        open(redirectTo);
+      }}
+      onMouseEnter={onMouseEnter}
+    >
       {children}
     </button>
   );

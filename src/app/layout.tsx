@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -153,6 +154,7 @@ export default function RootLayout({
       <body className={`${instrumentSans.variable} ${geistMono.variable} antialiased`}>
         <StructuredData />
         {children}
+        <Analytics />
       </body>
     </html>
   );
