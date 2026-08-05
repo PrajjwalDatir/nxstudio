@@ -120,7 +120,9 @@ export default function TermsPage() {
       <h2>13. Contact</h2>
       <p>
         Questions? Email{" "}
-        <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.
+        <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> or
+        visit our <a href="/contact">Contact page</a>. Learn more about who runs
+        nxstudio on the <a href="/about">About page</a>.
       </p>
     </article>
   );
