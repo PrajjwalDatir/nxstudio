@@ -20,7 +20,7 @@ export function PremiumDialog({
   onClose: () => void;
   onActivated?: () => void;
 }) {
-  const [selectedTier, setSelectedTier] = useState<"pro_10" | "master_50" | null>(null);
+  const [selectedTier, setSelectedTier] = useState<"pro_10" | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -65,7 +65,7 @@ export function PremiumDialog({
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                Checkout — {selectedTier === "master_50" ? "Master (50 USDT)" : "Pro (10 USDT)"}
+                Checkout — Pro (10 USDT)
               </h3>
               <button
                 onClick={() => setSelectedTier(null)}
@@ -74,7 +74,7 @@ export function PremiumDialog({
                 ← Back to Plans
               </button>
             </div>
-            <CryptoCheckout initialTier={selectedTier} onActivated={onActivated} />
+            <CryptoCheckout onActivated={onActivated} />
           </div>
         ) : (
           <div className="mt-6 space-y-6">

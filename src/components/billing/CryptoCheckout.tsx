@@ -20,13 +20,10 @@ interface PayRequest {
 type Phase = "idle" | "requesting" | "awaiting" | "verifying";
 
 export function CryptoCheckout({
-  initialTier = "pro_10",
   onActivated,
 }: {
-  initialTier?: "pro_10" | "master_50";
   onActivated?: () => void;
 }) {
-  const [selectedTier, setSelectedTier] = useState<"pro_10" | "master_50">(initialTier);
   const [phase, setPhase] = useState<Phase>("idle");
   const [req, setReq] = useState<PayRequest | null>(null);
   const [qr, setQr] = useState<string | null>(null);
@@ -40,7 +37,7 @@ export function CryptoCheckout({
       .catch(() => setQr(null));
   }, [req?.url]);
 
-  const start = useCallback(async (tierToPay = selectedTier) => {
+  const start = useCallback(async () => {
     setPhase("requesting");
     setNote(null);
     setNeedsSupport(false);
@@ -48,7 +45,6 @@ export function CryptoCheckout({
       const res = await fetch("/api/billing/crypto/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: tierToPay }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Couldn't start the payment.");
@@ -58,7 +54,7 @@ export function CryptoCheckout({
       setNote(e instanceof Error ? e.message : "Something went wrong.");
       setPhase("idle");
     }
-  }, [selectedTier]);
+  }, []);
 
   const verify = useCallback(async () => {
     setPhase("verifying");
@@ -94,41 +90,13 @@ export function CryptoCheckout({
   if (phase === "idle" || phase === "requesting") {
     return (
       <div className="space-y-4">
-        {/* Tier Selector Tabs */}
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-secondary/30 p-1">
-          <button
-            type="button"
-            onClick={() => setSelectedTier("pro_10")}
-            className={`rounded-lg py-2 text-center text-xs font-semibold transition-all ${
-              selectedTier === "pro_10"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Pro (10 USDT)
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedTier("master_50")}
-            className={`rounded-lg py-2 text-center text-xs font-semibold transition-all ${
-              selectedTier === "master_50"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Master (50 USDT)
-          </button>
-        </div>
-
-        <Button onClick={() => start(selectedTier)} disabled={phase === "requesting"} className="w-full gap-2 font-mono text-xs uppercase">
+        <Button onClick={() => start()} disabled={phase === "requesting"} className="w-full gap-2 font-mono text-xs uppercase">
           {phase === "requesting" ? (
             <LoaderIcon className="h-4 w-4 animate-spin" />
           ) : (
             <ZapIcon className="h-4 w-4" />
           )}
-          {phase === "requesting"
-            ? "Preparing..."
-            : `Pay ${selectedTier === "master_50" ? "50" : "10"} USDT with Solana Pay`}
+          {phase === "requesting" ? "Preparing..." : "Pay 10 USDT with Solana Pay"}
         </Button>
         {note && <p className="text-sm text-red-400">{note}</p>}
       </div>

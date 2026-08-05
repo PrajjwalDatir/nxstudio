@@ -24,12 +24,11 @@ export default function RefundPage() {
 
       <h2>1. Plans</h2>
       <ul>
-        <li><strong>Free</strong> — $0. One full product workspace with complete access: the brief, tech-stack engine, Studio, and the full build &amp; depth prompts.</li>
-        <li><strong>Pro</strong> — $10 per 28-day cycle. Up to 5 workspaces, project collections, the prompt gallery, and agent targets (.cursor/rules, .claude, and more).</li>
-        <li><strong>Master</strong> — $50 per 28-day cycle. Unlimited projects and collections, the autonomous machine engine, and test-gated CI/CD pipeline automation.</li>
+        <li><strong>Free</strong> — $0. One full product workspace with complete access: the brief, tech-stack engine, Studio, the full build &amp; depth prompts, and autonomous machine workflows.</li>
+        <li><strong>Pro</strong> — $10 per 28-day cycle. Unlimited active project workspaces and no gates — includes project collections and the prompt gallery of use cases &amp; agent personas.</li>
       </ul>
       <p>
-        “Paid plan” below refers to Pro or Master. Amounts are quoted
+        “Paid plan” below refers to Pro. Amounts are quoted
         in US dollars and settled in equivalent USDC/USDT.
       </p>
 
