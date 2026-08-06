@@ -329,7 +329,7 @@ export function CanvasPreview() {
             </ul>
           </div>
 
-          <div className="min-w-0 flex-1 p-5 sm:p-6">
+          <div className="min-w-0 flex-1 p-5 min-h-[360px] sm:min-h-[390px] sm:p-6">
             <ActiveView />
           </div>
         </div>
