@@ -33,7 +33,7 @@ export const siteConfig = {
   description:
     "Bring your product brief. We'll architect the right tech stack and generate a production-ready build prompt so your AI agents can ship it flawlessly.",
   url: resolveSiteUrl(),
-  ogImage: "/opengraph-image.png",
+  ogImage: "/opengraph-image.png?v=20260807",
   themeColor: "#08080A",
   brandColor: "#8B5CF6",
   locale: "en_US",
