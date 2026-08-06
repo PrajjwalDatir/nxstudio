@@ -621,42 +621,43 @@ function FloorSpotlight({ heroX }: { heroX: number }) {
           />
         </mesh>
 
-        {/* Glowing Tungsten Yellow Light Bulb Core */}
+        {/* Glowing Tungsten Yellow Light Bulb Core — High Brightness */}
         <mesh position={[0, 0.12, 0]}>
           <sphereGeometry args={[0.13, 20, 16]} />
           <meshStandardMaterial
             color="#FFE066"
             emissive="#FFB700"
-            emissiveIntensity={isLight ? 6.0 : 18.0}
+            emissiveIntensity={isLight ? 15.0 : 45.0}
             toneMapped={false}
           />
         </mesh>
 
-        {/* Photorealistic Upward Volumetric Light Cone — smooth opacity falloff */}
+        {/* Photorealistic Upward Volumetric Light Cone — High Beam Visibility */}
         <VolumetricLightCone
-          position={[0, 1.8, 0]}
-          height={3.5}
-          topRadius={1.2}
-          bottomRadius={0.2}
+          position={[0, 2.0, 0]}
+          height={4.2}
+          topRadius={1.5}
+          bottomRadius={0.25}
           color="#FDE047"
+          peakOpacity={isLight ? 0.25 : 0.55}
         />
 
-        {/* Radiant Studio Point Light */}
+        {/* Radiant Studio Point Light — Brightened */}
         <pointLight
           position={[0, 0.22, 0]}
-          intensity={isLight ? 120 : 550}
-          distance={32}
+          intensity={isLight ? 300 : 1350}
+          distance={36}
           color="#FFD000"
         />
 
-        {/* Upward High-Intensity Warm Yellow Studio Spotlight */}
+        {/* Upward High-Intensity Warm Yellow Studio Spotlight — Brightened */}
         <spotLight
           position={[0, 0.22, 0]}
           target-position={[heroX > 0 ? 3.3 : 0, 1.2, 0]}
-          angle={0.85}
-          penumbra={0.4}
-          intensity={isLight ? 180 : 650}
-          distance={30}
+          angle={0.9}
+          penumbra={0.35}
+          intensity={isLight ? 450 : 1800}
+          distance={36}
           color="#FFD000"
         />
       </group>
