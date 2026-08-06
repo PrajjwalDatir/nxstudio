@@ -19,6 +19,7 @@ import {
   PencilLineIcon,
   PaletteIcon,
   ArrowRightIcon,
+  LockIcon,
 } from "@/components/icons";
 import {
   DropdownMenu,
@@ -42,7 +43,6 @@ export default function CanvasPage() {
   const { data, customStages } = useWorkspace();
   const { status, result } = useSync();
   const { open } = useCommand();
-  const healthy = status === "ok";
 
   const [activeDiff, setActiveDiff] = useState<{
     path: string;
@@ -51,19 +51,28 @@ export default function CanvasPage() {
     current: string;
   } | null>(null);
 
-  // Read side of the loop: compare the .nx/ committed in the repo against what
-  // the studio would emit now, so agent-made changes surface here.
+  const [driftCategory, setDriftCategory] = useState<"all" | "drifted" | "synced" | "extra">("all");
+
+  // Hydrated .nx/ file tracking across both studio emit and repo state
   const docs = result?.context?.docs;
-  const changed = useMemo(() => {
-    if (!docs) return [];
-    // memory.json is nxstudio's own bookkeeping — re-emitted every compile, so it
-    // would show as drifted on every sync. Exclude it to keep the signal on files
-    // the agent actually authored.
-    const memoryPath = `${NX_ROOT}/memory.json`;
-    return diffNx(docs, data).filter(
-      (d) => (d.status === "drifted" || d.status === "extra") && d.path !== memoryPath
-    );
+
+  // Compile all .nx/ files from studio + compare with repo
+  const allNxFiles = useMemo(() => {
+    const repoDocs = docs ?? {};
+    return diffNx(repoDocs, data);
   }, [docs, data]);
+
+  const driftedCount = useMemo(() => allNxFiles.filter((f) => f.status === "drifted").length, [allNxFiles]);
+  const extraCount = useMemo(() => allNxFiles.filter((f) => f.status === "extra").length, [allNxFiles]);
+  const syncedCount = useMemo(() => allNxFiles.filter((f) => f.status === "unchanged").length, [allNxFiles]);
+
+  const visibleNxFiles = useMemo(() => {
+    if (driftCategory === "drifted") return allNxFiles.filter((f) => f.status === "drifted");
+    if (driftCategory === "synced") return allNxFiles.filter((f) => f.status === "unchanged");
+    if (driftCategory === "extra") return allNxFiles.filter((f) => f.status === "extra");
+    return allNxFiles;
+  }, [allNxFiles, driftCategory]);
+
   const shortPath = (p: string) => p.replace(`${NX_ROOT}/`, "");
 
   const [filter, setFilter] = useState<StatusFilter>("all");
@@ -75,14 +84,14 @@ export default function CanvasPage() {
   });
   const customIds = new Set(customStages.map((s) => s.id));
 
-  const handleOpenDiff = (path: string, status: NxDriftStatus) => {
+  const handleOpenDiff = (path: string, fileStatus: NxDriftStatus) => {
     const emittedFiles = compileNxFiles(data);
     const original = emittedFiles.find((f) => f.path === path)?.content ?? "";
     const current = docs ? (docs[path] ?? "") : "";
 
     setActiveDiff({
       path,
-      status,
+      status: fileStatus,
       original,
       current,
     });
@@ -156,92 +165,153 @@ export default function CanvasPage() {
         </span>
       </button>
 
-      {/* Drift dashboard — the loop's read side, one box per changed context file */}
-      {healthy && changed.length > 0 && (
-        <section className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
-                <GitBranchIcon className="h-4 w-4" />
-              </span>
-              <h2 className="text-sm font-semibold tracking-tight">
-                Context drift
-                <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
-                  {changed.length} file{changed.length === 1 ? "" : "s"} changed since the last brief
+      {/* Persistent .nx/ Context Directory & Drift Dashboard (Zero layout shift / hydration safe) */}
+      <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary shadow-xs">
+              <GitBranchIcon className="h-4 w-4" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold tracking-tight">.nx/ Context Directory</h2>
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium text-primary uppercase">
+                  {status === "syncing" ? "Syncing..." : "Live Tracked"}
                 </span>
-              </h2>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Complete context bundle tracked across studio compilations and agent iterations.
+              </p>
             </div>
-            <span className="text-xs text-muted-foreground">Tap any file card to view line-by-line Diff</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {changed.map((d) => {
-              const isNew = d.status === "extra";
-              return (
-                <div
-                  key={d.path}
-                  onClick={() => handleOpenDiff(d.path, d.status)}
-                  className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-md"
-                >
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/40 text-muted-foreground group-hover:border-primary/30 group-hover:text-primary transition-colors">
-                    <FileTextIcon className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="truncate font-mono text-sm text-foreground font-medium group-hover:text-primary transition-colors" title={shortPath(d.path)}>
-                        {shortPath(d.path)}
-                      </p>
-                      <span className="text-xs text-muted-foreground group-hover:text-foreground">
-                        View Diff →
-                      </span>
-                    </div>
+          {/* Glancable Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto rounded-full border border-border bg-secondary/30 p-1">
+            <button
+              onClick={() => setDriftCategory("all")}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                driftCategory === "all"
+                  ? "bg-foreground text-background shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All ({allNxFiles.length})
+            </button>
+            {driftedCount > 0 && (
+              <button
+                onClick={() => setDriftCategory("drifted")}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  driftCategory === "drifted"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                    : "text-primary hover:bg-primary/10"
+                }`}
+              >
+                Drifted ({driftedCount})
+              </button>
+            )}
+            {extraCount > 0 && (
+              <button
+                onClick={() => setDriftCategory("extra")}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  driftCategory === "extra"
+                    ? "bg-emerald-500 text-white shadow-xs font-semibold"
+                    : "text-emerald-400 hover:bg-emerald-500/10"
+                }`}
+              >
+                New ({extraCount})
+              </button>
+            )}
+            <button
+              onClick={() => setDriftCategory("synced")}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                driftCategory === "synced"
+                  ? "bg-foreground text-background shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Synced ({syncedCount})
+            </button>
+          </div>
+        </div>
+
+        {/* 100% Glancable Grid of ALL .nx/ Files */}
+        <div className="mt-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleNxFiles.map((d) => {
+            const isNew = d.status === "extra";
+            const isDrifted = d.status === "drifted";
+            const isSynced = d.status === "unchanged";
+
+            return (
+              <div
+                key={d.path}
+                onClick={() => handleOpenDiff(d.path, d.status)}
+                className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-3.5 transition-all hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5"
+              >
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary transition-colors">
+                  <FileTextIcon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="truncate font-mono text-xs font-semibold text-foreground group-hover:text-primary transition-colors" title={shortPath(d.path)}>
+                      {shortPath(d.path)}
+                    </p>
+                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground">
+                      Diff →
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between">
                     <span
                       className={cn(
-                        "mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                        isNew
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                          : "border-primary/30 bg-primary/10 text-primary"
+                        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase",
+                        isDrifted && "border-primary/40 bg-primary/10 text-primary",
+                        isNew && "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+                        isSynced && "border-border bg-secondary/60 text-muted-foreground"
                       )}
                     >
-                      {isNew ? <PlusIcon className="h-2.5 w-2.5" /> : <PencilLineIcon className="h-2.5 w-2.5" />}
-                      {isNew ? "New file" : "Edited in repo"}
+                      {isDrifted && <PencilLineIcon className="h-2.5 w-2.5" />}
+                      {isNew && <PlusIcon className="h-2.5 w-2.5" />}
+                      {isSynced && <CheckIcon className="h-2.5 w-2.5 text-emerald-400" />}
+                      {isDrifted ? "Drifted" : isNew ? "New file" : "Synced"}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground/60">
+                      .nx/
                     </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-3 flex items-center justify-between text-xs leading-snug text-muted-foreground">
-            <p>
-              The repo has moved past the studio&apos;s last compile. Tap any file card to view temporal diffs.
-            </p>
-            <Link href="/tasks" className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary transition-colors">
-              Review Sprint Tasks <ArrowRightIcon className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* Phase grid (glass cards over an ambient glow) */}
-      <div className="relative mt-6">
-        <div className="canvas-glow" aria-hidden />
-        <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((phase) => (
-            <PhaseCard key={phase.id} phase={phase} isCustom={customIds.has(phase.id)} />
-          ))}
+              </div>
+            );
+          })}
         </div>
 
-        {visible.length === 0 && (
-          <p className="relative z-10 mt-2 text-sm text-muted-foreground">
-            No stages match this filter.
-          </p>
+        {visibleNxFiles.length === 0 && (
+          <div className="mt-4 rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+            No files found matching the selected filter.
+          </div>
         )}
+
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-border/60 pt-3.5 text-xs text-muted-foreground">
+          <p>
+            Tap any file card to view line-by-line diffs and temporal history across time.
+          </p>
+          <Link href="/tasks" className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary transition-colors">
+            Review Sprint Tasks <ArrowRightIcon className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Grid of phase cards */}
+      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((phase) => (
+          <PhaseCard key={phase.id} phase={phase} isCustom={customIds.has(phase.id)} />
+        ))}
       </div>
 
-      {/* Footer space */}
-      <div className="mt-10 border-t border-border pt-4">
-      </div>
+      {visible.length === 0 && (
+        <div className="mt-12 rounded-xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
+          No phases match the filter &quot;{FILTERS.find((f) => f.value === filter)?.label}&quot;.
+        </div>
+      )}
     </div>
   );
 }

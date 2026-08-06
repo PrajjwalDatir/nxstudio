@@ -25,24 +25,42 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
 
   const shortPath = path.replace(/^\.nx\//, "");
 
+  const statusBadge = useMemo(() => {
+    switch (status) {
+      case "drifted":
+        return { label: "Context Drifted", class: "border-primary/30 bg-primary/10 text-primary" };
+      case "extra":
+        return { label: "New File in Repo", class: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" };
+      case "unchanged":
+        return { label: "Synced & In-Bounds", class: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" };
+      case "missing":
+        return { label: "Pending Sync", class: "border-muted/40 bg-muted/20 text-muted-foreground" };
+      default:
+        return { label: status, class: "border-border bg-secondary text-muted-foreground" };
+    }
+  }, [status]);
+
   const timelineEvents = [
     {
       title: "Initial Studio Compile (t₀)",
       time: "Workspace Creation",
-      desc: "Original .nx/ context generated from project brief.",
+      desc: "Original .nx/ context generated from project brief and derived stack.",
       badge: "Studio Emitted",
     },
     {
-      title: "Agent Execution & Iteration (t₁)",
-      time: "AI Build Run",
-      desc: "AI coding agent (Cursor/Claude Code) modified file in local repo.",
-      badge: "Repo Edited",
+      title: "Agent Execution & Revision (t₁)",
+      time: "AI Build Phase",
+      desc: "AI agent (Cursor / Claude Code) read .nx/ context and executed repo updates.",
+      badge: "Agent Run",
     },
     {
-      title: "Current Detected State (t₂)",
-      time: "Live Status",
-      desc: `Detected ${diffResult.additions} additions and ${diffResult.deletions} deletions vs studio baseline.`,
-      badge: "Live Drift",
+      title: "Temporal Git Revision State (t₂)",
+      time: "Current Detected State",
+      desc:
+        diffResult.additions === 0 && diffResult.deletions === 0
+          ? "File is completely in sync with studio baseline."
+          : `Detected ${diffResult.additions} additions and ${diffResult.deletions} deletions vs studio baseline.`,
+      badge: status === "unchanged" ? "In Sync" : "Live Drift",
     },
   ];
 
@@ -77,21 +95,15 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-mono text-base font-bold text-foreground">{shortPath}</h3>
-                  <span
-                    className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase ${
-                      status === "extra"
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                        : "border-primary/30 bg-primary/10 text-primary"
-                    }`}
-                  >
-                    {status === "extra" ? "New File in Repo" : "Context Drifted"}
+                  <h3 className="font-mono text-base font-bold text-foreground">.nx/{shortPath}</h3>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase ${statusBadge.class}`}>
+                    {statusBadge.label}
                   </span>
                 </div>
                 <div className="mt-1 flex items-center gap-3 font-mono text-xs text-muted-foreground">
                   <span className="text-emerald-400">+{diffResult.additions} additions</span>
                   <span className="text-rose-400">-{diffResult.deletions} deletions</span>
-                  <span>{diffResult.unchanged} unchanged</span>
+                  <span>{diffResult.unchanged} unchanged lines</span>
                 </div>
               </div>
             </div>
@@ -104,28 +116,28 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
             </button>
           </div>
 
-          {/* Sub-header Navigation Tabs */}
+          {/* Navigation Tabs */}
           <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-5 py-2.5">
             <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
               <button
                 onClick={() => setActiveTab("diff")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                   activeTab === "diff"
-                    ? "bg-foreground text-background shadow-xs"
+                    ? "bg-foreground text-background shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <GitBranchIcon className="h-3.5 w-3.5" /> Diff View
+                <GitBranchIcon className="h-3.5 w-3.5" /> Line-by-Line Diff
               </button>
               <button
                 onClick={() => setActiveTab("timeline")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                   activeTab === "timeline"
-                    ? "bg-foreground text-background shadow-xs"
+                    ? "bg-foreground text-background shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <LockIcon className="h-3.5 w-3.5" /> Temporal History
+                <LockIcon className="h-3.5 w-3.5" /> Temporal History Timeline
               </button>
             </div>
 
@@ -138,7 +150,7 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
             </button>
           </div>
 
-          {/* Body Content */}
+          {/* Content Body */}
           <div className="flex-1 overflow-y-auto bg-background p-4">
             {activeTab === "diff" ? (
               <div className="rounded-xl border border-border bg-black/40 font-mono text-xs leading-relaxed overflow-x-auto">
@@ -175,7 +187,7 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
               /* Temporal Timeline View */
               <div className="space-y-6 p-4 max-w-2xl mx-auto">
                 <div className="mb-4 text-xs text-muted-foreground text-center">
-                  Git temporal history tracks how this file evolved over time between studio emissions and agent runs.
+                  Temporal revision history tracks the progression of <span className="font-mono text-primary">.nx/{shortPath}</span> across studio compilations and agent edits.
                 </div>
                 {timelineEvents.map((evt, idx) => (
                   <div key={idx} className="relative flex items-start gap-4">
