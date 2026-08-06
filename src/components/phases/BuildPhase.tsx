@@ -33,6 +33,15 @@ const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
   deploy: RocketIcon,
 };
 
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  visual: "from-purple-500/15 via-indigo-500/10 to-background/40",
+  security: "from-amber-500/15 via-orange-500/10 to-background/40",
+  qa: "from-emerald-500/15 via-teal-500/10 to-background/40",
+  performance: "from-cyan-500/15 via-blue-500/10 to-background/40",
+  deploy: "from-fuchsia-500/15 via-pink-500/10 to-background/40",
+  general: "from-secondary/60 via-background to-background/40",
+};
+
 const CATEGORY_TABS: { id: PromptCategory | "all"; label: string }[] = [
   { id: "all", label: "All" },
   { id: "visual", label: "Visual & HIG" },
@@ -48,7 +57,7 @@ export function BuildPhase() {
   const { prompts, locked, loading, refresh } = useCompiledPrompts();
 
   const [showMaster, setShowMaster] = useState(false);
-  const [openDepth, setOpenDepth] = useState<string | null>(null);
+  const [previewPrompt, setPreviewPrompt] = useState<CompiledPrompt | null>(null);
   const [payOpen, setPayOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<PromptCategory | "all">("all");
@@ -209,38 +218,39 @@ export function BuildPhase() {
         the editor to get the details right.
       </p>
 
-      {/* Depth prompts — optional, after it exists */}
-      <div className="mt-10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* ── Refine after it's built (HIG Gallery Grid) ────────────────────────── */}
+      <div className="mt-12">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold">Refine after it&apos;s built</h2>
+              <h2 className="text-xl font-bold tracking-tight">Refine after it&apos;s built</h2>
               <button
                 onClick={() => setSubmitOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-all hover:bg-primary/20 hover:-translate-y-0.5"
               >
                 <PlusIcon className="h-3.5 w-3.5" /> Submit Prompt
               </button>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               Optional. Paste any of these into your project once it exists — each reads your{" "}
-              <span className="font-mono text-primary">.nx/</span> context and reviews one dimension
-              in depth.
+              <span className="font-mono text-primary">.nx/</span> context and reviews one dimension in depth.
             </p>
           </div>
+        </div>
 
-          {/* Category Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
+        {/* Apple HIG Segmented Pill Controls (Centered / Full-Width Pill Row) */}
+        <div className="mt-6 flex overflow-x-auto pb-1 scrollbar-none">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card p-1.5 shadow-sm">
             {CATEGORY_TABS.map((tab) => {
               const active = selectedCategory === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setSelectedCategory(tab.id)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
                     active
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      ? "bg-foreground text-background shadow-md font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                   }`}
                 >
                   {tab.label}
@@ -250,69 +260,146 @@ export function BuildPhase() {
           </div>
         </div>
 
-        <div className="mt-4 space-y-3">
+        {/* Gallery Grid (Responsive 1/2/3 Column Grid matching reference UI) */}
+        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {depthPrompts.map((p) => {
             const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
-            const isOpen = openDepth === p.id;
+            const gradient = CATEGORY_GRADIENTS[p.category] ?? CATEGORY_GRADIENTS.general;
             return (
-              <div key={p.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
-                      <Icon className="h-4 w-4" />
+              <div
+                key={p.id}
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-xl"
+              >
+                {/* Visual Header / Gallery Card Window Cover Frame */}
+                <div
+                  onClick={() => setPreviewPrompt(p)}
+                  className={`relative flex h-36 w-full cursor-pointer flex-col justify-between border-b border-border bg-gradient-to-br ${gradient} p-3.5 transition-colors group-hover:brightness-105`}
+                >
+                  {/* Window Chrome macOS Dots */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/80" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/80" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/80" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{p.title}</span>
-                        {p.category && (
-                          <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary uppercase">
-                            {p.category}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 text-sm text-muted-foreground">{p.description}</div>
-                    </div>
+                    {p.category && (
+                      <span className="rounded-full border border-primary/25 bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-primary uppercase shadow-xs backdrop-blur-md">
+                        {p.category}
+                      </span>
+                    )}
                   </div>
-                  {locked ? (
-                    <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
-                  ) : (
-                    <CopyButton value={p.prompt} label="Copy" />
-                  )}
+
+                  {/* Luminous Center Emblem Badge */}
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background/90 text-primary shadow-md backdrop-blur-md transition-transform group-hover:scale-110">
+                    <Icon className="h-6 w-6" />
+                  </div>
+
+                  {/* Simulated Code Lines */}
+                  <div className="space-y-1 opacity-40">
+                    <div className="h-1.5 w-24 rounded-full bg-foreground/30" />
+                    <div className="h-1.5 w-16 rounded-full bg-foreground/20" />
+                  </div>
                 </div>
 
-                {!locked && (
-                  <>
-                    <button
-                      onClick={() => setOpenDepth(isOpen ? null : p.id)}
-                      className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                {/* Card Content Area */}
+                <div className="flex flex-1 flex-col justify-between p-4">
+                  <div>
+                    <h3
+                      onClick={() => setPreviewPrompt(p)}
+                      className="cursor-pointer text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
                     >
-                      {isOpen ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-                      {isOpen ? "Hide" : "Preview"}
+                      {p.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {p.description}
+                    </p>
+                  </div>
+
+                  {/* Footer Action Bar */}
+                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
+                    <button
+                      onClick={() => setPreviewPrompt(p)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <ChevronRightIcon className="h-3.5 w-3.5 text-primary" /> Preview
                     </button>
-                    {isOpen && (
-                      <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                        {p.prompt}
-                      </pre>
+                    {locked ? (
+                      <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
+                    ) : (
+                      <CopyButton value={p.prompt} label="Copy" />
                     )}
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
             );
           })}
-
-          {depthPrompts.length === 0 && (
-            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              No prompts found in this category.
-            </div>
-          )}
-
-          {loading && !prompts && (
-            <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
-              <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
-            </div>
-          )}
         </div>
+
+        {depthPrompts.length === 0 && (
+          <div className="mt-6 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            No refinement prompts found in this category.
+          </div>
+        )}
+
+        {loading && !prompts && (
+          <div className="mt-6 flex items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
+            <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
+          </div>
+        )}
       </div>
+
+      {/* HIG Prompt Preview Modal */}
+      {previewPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-2xl flex flex-col">
+            <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  {(() => {
+                    const Icon = DEPTH_ICONS[previewPrompt.id] ?? BadgeCheckIcon;
+                    return <Icon className="h-5 w-5" />;
+                  })()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold tracking-tight">{previewPrompt.title}</h3>
+                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase text-primary">
+                      {previewPrompt.category}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{previewPrompt.description}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewPrompt(null)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4">
+              <pre className="overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                {previewPrompt.prompt}
+              </pre>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+              <button
+                onClick={() => setPreviewPrompt(null)}
+                className="rounded-lg px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                Close
+              </button>
+              {locked ? (
+                <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
+              ) : (
+                <CopyButton value={previewPrompt.prompt} label="Copy Prompt" variant="solid" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
