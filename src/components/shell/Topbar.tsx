@@ -8,6 +8,7 @@ import { ProductNameCrumb } from "@/components/shell/ProductNameCrumb";
 import { Notifications } from "@/components/shell/Notifications";
 import { WorkspacesMenu } from "@/components/shell/WorkspacesMenu";
 import { SearchIcon, GithubIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/landing/LandingNav";
 import Link from "next/link";
 
 export function Topbar() {
@@ -61,7 +62,9 @@ export function Topbar() {
       </nav>
 
       {/* Right controls */}
-      <div className="flex shrink-0 items-center gap-4 pr-1">
+      <div className="flex shrink-0 items-center gap-3 pr-1">
+        <ThemeToggle />
+
         <button
           onClick={open}
           aria-label="Search (⌘K)"
