@@ -19,8 +19,6 @@ import {
   UserIcon,
   SaveIcon,
   ZapIcon,
-  SunIcon,
-  MoonIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,32 +35,6 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
   const [open, setOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [name, setName] = useState("");
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof document !== "undefined") {
-      return document.documentElement.classList.contains("light") ? "light" : "dark";
-    }
-    return "dark";
-  });
-
-  const handleThemeToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const next = theme === "dark" ? "light" : "dark";
-    const root = document.documentElement;
-
-    const applyThemeClass = () => {
-      setTheme(next);
-      localStorage.setItem("theme", next);
-      if (next === "light") {
-        root.classList.add("light");
-      } else {
-        root.classList.remove("light");
-      }
-    };
-
-    const origin = { x: e.clientX, y: e.clientY };
-    import("@/components/landing/theme-transition").then(({ runRadialThemeTransition }) => {
-      runRadialThemeTransition(origin, applyThemeClass);
-    });
-  };
 
   const handleNew = () => {
     const trimmed = name.trim();
@@ -97,28 +69,14 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
               <NxLogo className="h-3.5 w-3.5 text-primary" />
             </div>
             <span className="font-semibold tracking-tight">nxstudio</span>
-            <div className="ml-auto flex items-center gap-1">
-              <button
-                onClick={handleThemeToggle}
-                title="Toggle Theme"
-                aria-label="Toggle Theme"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              >
-                {theme === "dark" ? (
-                  <SunIcon className="h-4 w-4 text-amber-300" />
-                ) : (
-                  <MoonIcon className="h-4 w-4 text-indigo-500" />
-                )}
-              </button>
-              <button
-                onClick={toggle}
-                title="Collapse sidebar"
-                aria-label="Collapse sidebar"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              >
-                <PanelLeftIcon className="h-4 w-4" />
-              </button>
-            </div>
+            <button
+              onClick={toggle}
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+              className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <PanelLeftIcon className="h-4 w-4" />
+            </button>
           </>
         )}
       </div>
