@@ -58,7 +58,7 @@ export function ModeToolbar() {
   return (
     <nav
       aria-label="Studio Modes"
-      className="pointer-events-auto flex items-center gap-1 rounded-2xl border border-white/10 bg-zinc-950/85 p-1 shadow-[0_16px_36px_rgba(0,0,0,0.6)] backdrop-blur-2xl select-none"
+      className="pointer-events-auto flex items-center gap-1 rounded-2xl border border-border bg-card/85 p-1 shadow-[0_16px_36px_rgba(0,0,0,0.6)] backdrop-blur-2xl select-none"
       onPointerDown={stopLeak}
       onMouseDown={stopLeak}
       onTouchStart={stopLeak}
@@ -80,13 +80,13 @@ export function ModeToolbar() {
             aria-pressed={active}
             className={cn(
               "relative flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium transition-colors cursor-pointer pointer-events-auto z-10",
-              active ? "text-violet-200" : "text-zinc-400 hover:text-zinc-100"
+              active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {active && (
               <motion.div
                 layoutId="mode-header-pill"
-                className="absolute inset-0 rounded-xl bg-violet-600/20 border border-violet-500/35 shadow-[0_0_12px_rgba(139,92,246,0.3)] z-0"
+                className="absolute inset-0 rounded-xl bg-primary/20 border border-primary/35 shadow-[0_0_12px_rgba(139,92,246,0.3)] z-0"
                 transition={{ type: "spring", stiffness: 450, damping: 32 }}
               />
             )}
@@ -96,11 +96,11 @@ export function ModeToolbar() {
         );
       })}
 
-      <div className="mx-1 h-4 w-px bg-white/10" aria-hidden="true" />
+      <div className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
       
       <Link
         href="/canvas"
-        className="flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer z-10 pointer-events-auto"
+        className="flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer z-10 pointer-events-auto"
         title="Back to Canvas"
       >
         <ScaffoldIcon className="h-4 w-4 shrink-0" />

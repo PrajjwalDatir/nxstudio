@@ -22,9 +22,9 @@ export function SectionKicker({
         centered ? "justify-center" : ""
       }`}
     >
-      {centered && <span className="h-px w-6 bg-white/10" />}
+      {centered && <span className="h-px w-6 bg-border" />}
       <span className="tabular-nums text-accent-foreground font-medium">{index}</span>
-      <span className="h-px w-6 bg-white/10" />
+      <span className="h-px w-6 bg-border" />
       <span className="text-muted-foreground/90">{children}</span>
     </div>
   );

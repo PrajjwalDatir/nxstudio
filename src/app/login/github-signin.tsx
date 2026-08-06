@@ -82,7 +82,7 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
       <button
         onClick={signInGithub}
         disabled={loading !== false}
-        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] border border-[#333333] bg-transparent text-[15px] font-medium text-white transition-all hover:bg-white/5 disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] border border-border bg-card text-[15px] font-medium text-foreground transition-all hover:bg-muted disabled:opacity-60"
       >
         {loading === "github" ? (
           <LoaderIcon className="h-4 w-4 animate-spin" />
@@ -94,19 +94,19 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/10" />
+          <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-[#111111] px-3 text-[#555555]">or</span>
+          <span className="bg-card px-3 text-muted-foreground">or</span>
         </div>
       </div>
 
       <button
         onClick={signInGuest}
         disabled={loading !== false}
-        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] bg-white text-[15px] font-medium text-black transition-all hover:bg-zinc-200 disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] bg-primary text-[15px] font-medium text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-60"
       >
-        {loading === "guest" && <LoaderIcon className="h-4 w-4 animate-spin text-black" />}
+        {loading === "guest" && <LoaderIcon className="h-4 w-4 animate-spin text-primary-foreground" />}
         Continue as Guest
       </button>
 

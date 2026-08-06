@@ -40,18 +40,18 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
   }, [line]);
 
   return (
-    <div className="relative inline-flex max-w-sm items-start gap-2.5 rounded-xl border border-white/12 bg-background/90 py-2.5 pl-3 pr-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_10px_30px_-10px_rgba(0,0,0,0.85)] backdrop-blur-md">
+    <div className="relative inline-flex max-w-sm items-start gap-2.5 rounded-xl border border-border bg-background/90 py-2.5 pl-3 pr-4 shadow-[inset_0_1px_0_0_var(--border),0_10px_30px_-10px_rgba(0,0,0,0.85)] backdrop-blur-md">
       {/* Speech tail */}
       {(tail === true || tail === "right") && (
         <span
           aria-hidden
-          className="absolute right-[-6px] top-6 hidden h-3 w-3 rotate-45 rounded-[1px] border-r border-t border-white/12 bg-background/90 md:block"
+          className="absolute right-[-6px] top-6 hidden h-3 w-3 rotate-45 rounded-[1px] border-r border-t border-border bg-background/90 md:block"
         />
       )}
       {tail === "bottom" && (
         <span
           aria-hidden
-          className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 rounded-[1px] border-b border-r border-white/12 bg-background/90"
+          className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 rounded-[1px] border-b border-r border-border bg-background/90"
         />
       )}
       {/* Live status lamp — matching status pulse. */}

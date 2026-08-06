@@ -44,8 +44,8 @@ export function MachineWorkflowsView({ data }: { data: WorkspaceData }) {
       </div>
 
       {/* Code Editor view */}
-      <div className="rounded-xl border border-zinc-800 bg-[#09090A] p-4 space-y-3">
-        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
             <span className="font-mono text-xs font-semibold text-foreground">{activeFile.path}</span>
             <p className="text-[11px] text-muted-foreground">{activeFile.description}</p>
@@ -54,7 +54,7 @@ export function MachineWorkflowsView({ data }: { data: WorkspaceData }) {
         </div>
 
         <div className="relative">
-          <pre className="max-h-96 overflow-x-auto overflow-y-auto rounded-lg bg-black/60 p-4 font-mono text-xs text-zinc-300 leading-relaxed">
+          <pre className="max-h-96 overflow-x-auto overflow-y-auto rounded-lg bg-background/80 p-4 font-mono text-xs text-foreground leading-relaxed">
             {activeFile.content}
           </pre>
         </div>

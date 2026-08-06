@@ -21,20 +21,20 @@ export default async function LoginPage({
       : "/canvas";
 
   return (
-    <div className="flex min-h-screen bg-black">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* Form Side - Left */}
-      <div className="relative flex w-full flex-col items-center justify-center px-8 py-12 bg-[#111111] lg:w-[45%] xl:px-12">
+      <div className="relative flex w-full flex-col items-center justify-center px-8 py-12 bg-card border-r border-border lg:w-[45%] xl:px-12">
         <div className="mx-auto flex w-full max-w-[340px] flex-col items-center text-center z-10 pb-24">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[#888888] transition-colors hover:text-white">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeftIcon className="h-3.5 w-3.5" />
             Home
           </Link>
 
           <div className="mt-10 mb-10">
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Create your free account
             </h1>
-            <p className="mt-3 text-[13px] text-[#888888]">
+            <p className="mt-3 text-[13px] text-muted-foreground">
               Sign in to turn your brief into a tech stack and one build prompt. No credit card required.
             </p>
           </div>
@@ -48,13 +48,13 @@ export default async function LoginPage({
 
             <GitHubSignIn redirectTo={safeRedirect} />
             
-            <p className="mt-8 text-xs text-[#888888]">
+            <p className="mt-8 text-xs text-muted-foreground">
               By continuing, you agree to nxstudio&apos;s{" "}
-              <Link href="/terms" className="underline underline-offset-2 hover:text-white transition-colors">
+              <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-colors">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="underline underline-offset-2 hover:text-white transition-colors">
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">
                 Privacy Policy
               </Link>.
             </p>
@@ -63,23 +63,23 @@ export default async function LoginPage({
 
         {/* Footer Area */}
         <div className="absolute bottom-8 left-0 right-0 w-full px-8 text-center">
-          <p className="text-sm text-[#888888] mb-8">
-            Already have an account? <Link href="/login" className="font-medium text-white hover:underline">Log in</Link>
+          <p className="text-sm text-muted-foreground mb-8">
+            Already have an account? <Link href="/login" className="font-medium text-foreground hover:underline">Log in</Link>
           </p>
-          <p className="text-[11px] text-[#555555] mb-5">Trusted by teams at</p>
+          <p className="text-[11px] text-muted-foreground/70 mb-5">Trusted by teams at</p>
           <div className="flex justify-center items-center gap-6 opacity-40 grayscale">
             {/* Generic placeholders for logos to match reference layout */}
-            <span className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
-              <span className="h-4 w-4 rounded-full bg-white"></span>
+            <span className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-1.5">
+              <span className="h-4 w-4 rounded-full bg-foreground"></span>
               headspace
             </span>
-            <span className="text-sm font-bold tracking-tight text-white flex items-center gap-1">
+            <span className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1">
               airbnb
             </span>
-            <span className="text-sm font-bold tracking-tight text-white">
+            <span className="text-sm font-bold tracking-tight text-foreground">
               Revolut
             </span>
-            <span className="text-sm font-bold tracking-tighter text-white">
+            <span className="text-sm font-bold tracking-tighter text-foreground">
               duolingo
             </span>
           </div>
@@ -87,7 +87,7 @@ export default async function LoginPage({
       </div>
 
       {/* Dynamic Canvas Side - Right */}
-      <div className="relative hidden w-full overflow-hidden bg-black lg:flex lg:w-[55%] border-l border-white/10">
+      <div className="relative hidden w-full overflow-hidden bg-background lg:flex lg:w-[55%] border-l border-border">
         <div className="absolute inset-0 flex items-center justify-center [perspective:2000px]">
           {/* Scaled and angled to create an immersive edge-to-edge collage effect */}
           <div className="w-[1400px] xl:w-[1600px] origin-center opacity-80 pointer-events-none transition-transform [transform:rotateX(25deg)_rotateY(-15deg)_rotateZ(20deg)_scale(0.85)] xl:[transform:rotateX(25deg)_rotateY(-15deg)_rotateZ(20deg)_scale(1.0)] translate-x-20">

@@ -150,7 +150,7 @@ export function LandingNav() {
 
       {/* Mobile sheet */}
       {open && (
-        <div className="mx-auto mt-2 max-w-4xl rounded-2xl border border-white/10 bg-background/95 backdrop-blur-xl md:hidden">
+        <div className="mx-auto mt-2 max-w-4xl rounded-2xl border border-border bg-background/95 backdrop-blur-xl md:hidden">
           <div className="px-4 py-4">
             <div className="flex flex-col gap-1">
               {LINKS.map((l) => (

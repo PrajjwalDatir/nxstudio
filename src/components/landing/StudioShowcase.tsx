@@ -193,7 +193,7 @@ export function StudioShowcase() {
                       className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
                         on
                           ? "border-primary/40 bg-primary/15 text-accent-foreground"
-                          : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                          : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
                       <Icon className="h-4 w-4" />

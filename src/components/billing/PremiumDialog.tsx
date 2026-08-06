@@ -40,10 +40,10 @@ export function PremiumDialog({
       aria-modal="true"
     >
       <div
-        className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-800 bg-[#09090A] p-6 sm:p-8 shadow-2xl"
+        className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-zinc-800 pb-5">
+        <div className="flex items-start justify-between border-b border-border pb-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary border border-primary/30">
               <ZapIcon className="h-6 w-6" />
@@ -77,21 +77,21 @@ export function PremiumDialog({
             </div>
             <RazorpayCheckout onActivated={onActivated} />
             <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              <div className="h-px flex-1 bg-zinc-800" />
+              <div className="h-px flex-1 bg-border" />
               or
-              <div className="h-px flex-1 bg-zinc-800" />
+              <div className="h-px flex-1 bg-border" />
             </div>
             <CryptoCheckout onActivated={onActivated} />
           </div>
         ) : (
           <div className="mt-6 space-y-6">
             <PricingGrid onSelectTier={(tier) => setSelectedTier(tier)} />
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-4">
+            <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-4">
               <RazorpayCheckout onActivated={onActivated} />
               <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                <div className="h-px flex-1 bg-zinc-800" />
+                <div className="h-px flex-1 bg-border" />
                 or
-                <div className="h-px flex-1 bg-zinc-800" />
+                <div className="h-px flex-1 bg-border" />
               </div>
               <CryptoCheckout onActivated={onActivated} />
             </div>

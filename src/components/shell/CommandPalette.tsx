@@ -161,7 +161,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       {children}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-start justify-center bg-black/50 pt-[12vh]"
+          className="fixed inset-0 z-[100] flex items-start justify-center bg-background/80 backdrop-blur-sm pt-[12vh]"
           onClick={close}
         >
           <div
