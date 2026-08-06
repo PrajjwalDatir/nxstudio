@@ -153,10 +153,10 @@ export function Hero() {
                 href="https://www.npmjs.com/package/nxhuman"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs font-medium text-foreground transition-all hover:border-white/20 hover:bg-white/[0.08] align-middle"
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs font-medium text-foreground transition-all hover:border-white/20 hover:bg-white/[0.08] align-baseline mx-0.5"
               >
-                <NpmMark className="h-3.5 w-3.5 fill-current text-[#CB3837] shrink-0" />
-                nxhuman
+                <NpmMark className="h-3 w-3 fill-current text-[#CB3837] shrink-0" />
+                <span>nxhuman</span>
               </a>.
             </p>
 
