@@ -35,7 +35,7 @@ export const siteConfig = {
   url: resolveSiteUrl(),
   ogImage: "/opengraph-image.png?v=20260807",
   themeColor: "#08080A",
-  brandColor: "#8B5CF6",
+  brandColor: "#C4B5FD",
   locale: "en_US",
 
   // ── People / entity ────────────────────────────────────────────────────
