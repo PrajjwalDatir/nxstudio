@@ -11,6 +11,7 @@ import {
   BoxIcon,
   PlayIcon,
   PencilIcon,
+  GitBranchIcon,
 } from "@/components/icons";
 import { PHASES } from "@/lib/phases";
 import type { Project } from "@/lib/projects";
@@ -33,7 +34,16 @@ export const MAIN_NAV_ITEMS: NavItem[] = [
     description: "Main workspace canvas and lifecycle stages",
     icon: ScaffoldIcon,
     group: "Pages",
-    match: (p) => p.startsWith("/canvas"),
+    match: (p) => p === "/canvas",
+  },
+  {
+    id: "nav-context",
+    href: "/canvas/context",
+    label: ".nx Context",
+    description: "Full .nx/ context directory, diffs, and temporal git history",
+    icon: GitBranchIcon,
+    group: "Pages",
+    match: (p) => p.startsWith("/canvas/context"),
   },
   {
     id: "nav-studio",

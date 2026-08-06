@@ -4,11 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { PHASES, customStageToPhase, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
-import { diffNx, NX_ROOT, NxDriftStatus, compileNxFiles } from "@/lib/nx-compiler";
+import { diffNx, NX_ROOT } from "@/lib/nx-compiler";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { PhaseCard } from "@/components/canvas/PhaseCard";
-import { DriftDiffModal } from "@/components/canvas/DriftDiffModal";
-import { NxContextDirectoryModal } from "@/components/canvas/NxContextDirectoryModal";
 import {
   NxLogo,
   ArrowUpIcon,
@@ -42,17 +40,8 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
 
 export default function CanvasPage() {
   const { data, customStages } = useWorkspace();
-  const { status, result } = useSync();
+  const { result } = useSync();
   const { open } = useCommand();
-
-  const [activeDiff, setActiveDiff] = useState<{
-    path: string;
-    status: NxDriftStatus;
-    original: string;
-    current: string;
-  } | null>(null);
-
-  const [dirOpen, setDirOpen] = useState(false);
 
   // Read side of the loop: compare .nx/ docs committed in repo vs studio emit
   const docs = result?.context?.docs;
@@ -81,44 +70,8 @@ export default function CanvasPage() {
   });
   const customIds = new Set(customStages.map((s) => s.id));
 
-  const handleOpenDiff = (path: string, fileStatus: NxDriftStatus) => {
-    const emittedFiles = compileNxFiles(data);
-    const original = emittedFiles.find((f) => f.path === path)?.content ?? "";
-    const current = docs ? (docs[path] ?? "") : "";
-
-    setActiveDiff({
-      path,
-      status: fileStatus,
-      original,
-      current,
-    });
-  };
-
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      {/* Line-by-Line Diff & Temporal History Modal */}
-      {activeDiff && (
-        <DriftDiffModal
-          path={activeDiff.path}
-          status={activeDiff.status}
-          originalContent={activeDiff.original}
-          currentContent={activeDiff.current}
-          onClose={() => setActiveDiff(null)}
-        />
-      )}
-
-      {/* Complete .nx/ Context Directory Modal (Behind the Click) */}
-      {dirOpen && (
-        <NxContextDirectoryModal
-          files={allNxFiles}
-          docs={docs}
-          onClose={() => setDirOpen(false)}
-          onSelectFile={(path, fileStatus) => {
-            handleOpenDiff(path, fileStatus);
-          }}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -174,7 +127,7 @@ export default function CanvasPage() {
         </span>
       </button>
 
-      {/* Context Drift Inline Section (Only changed files inline + Full Directory behind click) */}
+      {/* Context Drift Inline Section (Only changed files inline + Full Directory Page Link) */}
       <section className="mt-8">
         {changed.length > 0 ? (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
@@ -196,14 +149,14 @@ export default function CanvasPage() {
                 </div>
               </div>
 
-              {/* Behind the Click Button */}
-              <button
-                onClick={() => setDirOpen(true)}
+              {/* Dedicated Route Page Link */}
+              <Link
+                href="/canvas/context"
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-3.5 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-secondary hover:border-foreground/30"
               >
                 <FolderIcon className="h-3.5 w-3.5 text-primary" />
                 View Full .nx/ Directory ({allNxFiles.length})
-              </button>
+              </Link>
             </div>
 
             {/* Changed Files Inline Grid */}
@@ -211,9 +164,9 @@ export default function CanvasPage() {
               {changed.map((d) => {
                 const isNew = d.status === "extra";
                 return (
-                  <div
+                  <Link
                     key={d.path}
-                    onClick={() => handleOpenDiff(d.path, d.status)}
+                    href={`/canvas/context?file=${encodeURIComponent(d.path)}`}
                     className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-3.5 transition-all hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5"
                   >
                     <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary transition-colors">
@@ -225,7 +178,7 @@ export default function CanvasPage() {
                           {shortPath(d.path)}
                         </p>
                         <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground">
-                          View Diff →
+                          Inspect →
                         </span>
                       </div>
 
@@ -244,14 +197,14 @@ export default function CanvasPage() {
                         <span className="font-mono text-[10px] text-muted-foreground/60">.nx/</span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
 
             <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3.5 text-xs text-muted-foreground">
               <p>
-                The repo has moved past the studio&apos;s last compile. Tap any file to view line-by-line diffs.
+                The repo has moved past the studio&apos;s last compile. Tap any file to inspect line-by-line diffs.
               </p>
               <Link href="/tasks" className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary transition-colors">
                 Review Sprint Tasks <ArrowRightIcon className="h-3.5 w-3.5" />
@@ -273,13 +226,13 @@ export default function CanvasPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => setDirOpen(true)}
+            <Link
+              href="/canvas/context"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-3.5 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-secondary hover:border-foreground/30"
             >
               <FolderIcon className="h-3.5 w-3.5 text-primary" />
               View Full .nx/ Directory ({allNxFiles.length})
-            </button>
+            </Link>
           </div>
         )}
       </section>
