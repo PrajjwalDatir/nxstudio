@@ -419,6 +419,7 @@ export function Machine({
   dynamicsRef,
   line,
   hitRef,
+  facing = -0.44,
 }: {
   reduce: boolean;
   onPoke?: () => void;
@@ -435,6 +436,12 @@ export function Machine({
   line?: string;
   /** Collision tracker passed from the scene to trigger flinch reactions */
   hitRef?: MutableRefObject<MachineHitState | null>;
+  /**
+   * Base yaw (radians) the idle sway oscillates around — which way the unit
+   * reads as "facing". Hero faces left (negative); other scenes can pass
+   * their own so this one change doesn't spin every instance of the model.
+   */
+  facing?: number;
 }) {
   const isLight = useIsLightMode();
   const group = useRef<THREE.Group>(null);
@@ -476,7 +483,7 @@ export function Machine({
       // Idle sway — heavy and slow, like something powered down but not off.
       // The dance adds an upward bounce and a hip sway on top of the idle.
       group.current.position.y = Math.sin(t * 0.6) * 0.06 - 0.1 + jolt * 0.12 + bob * 0.16;
-      group.current.rotation.y = Math.sin(t * 0.25) * 0.12 + sway * 0.18;
+      group.current.rotation.y = facing + Math.sin(t * 0.25) * 0.12 + sway * 0.18;
       group.current.rotation.z = -0.035 + sway * 0.1;
     }
     if (torso.current) {
@@ -550,7 +557,7 @@ export function Machine({
   return (
     // Whole unit turned a few degrees off-axis and tipped at the shoulders, so
     // the silhouette is asymmetric before anything else is even read.
-    <group ref={group} onPointerDown={poke} rotation={[0, 0.44, 0]}>
+    <group ref={group} onPointerDown={poke} rotation={[0, facing, 0]}>
       {/* Everything above the hips leans as one, pivoting at the waist. */}
       <group ref={torso}>
       {/* Head — centered and aligned with CAD-grade precision symmetry. */}
@@ -585,19 +592,36 @@ export function Machine({
           />
         </mesh>
 
-        {/* Temple ear-sensor nodules — perfectly mirrored */}
-        {[-0.52, 0.52].map((x) => (
-          <group key={x} position={[x, 0.08, 0.1]} rotation={[0, 0, Math.PI / 2]}>
-            <mesh>
-              <cylinderGeometry args={[0.085, 0.085, 0.1, 12]} />
-              <Joint />
-            </mesh>
-            <mesh position={[0, 0.055 * Math.sign(x), 0]}>
-              <sphereGeometry args={[0.05, 10, 8]} />
-              <meshStandardMaterial color="#A78BFA" emissive="#C084FC" emissiveIntensity={2.8} toneMapped={false} />
-            </mesh>
-          </group>
-        ))}
+        {/* Ears — an open outer-helix curve plus a lobe, read as ears rather
+            than a flat sensor disc. The amber sensor glint (vs. the eyes'
+            violet) codes them as the "listening" organ at a glance. */}
+        {[-0.54, 0.54].map((x) => {
+          const side = Math.sign(x);
+          return (
+            <group key={x} position={[x, 0.04, 0.08]} rotation={[0.1, side * -0.35, 0]}>
+              {/* Outer helix: an open C so it reads as a curled rim, not a ring */}
+              <mesh rotation={[0, Math.PI / 2, side * 2.0]}>
+                <torusGeometry args={[0.11, 0.026, 10, 20, Math.PI * 1.4]} />
+                <Joint />
+              </mesh>
+              {/* Lobe — soft, flattened, hangs below the helix */}
+              <mesh position={[side * 0.01, -0.1, 0.01]} scale={[0.62, 1, 0.8]}>
+                <sphereGeometry args={[0.06, 14, 12]} />
+                <Joint />
+              </mesh>
+              {/* Canal recess — the shadowed inner well the helix curls around */}
+              <mesh position={[side * 0.028, -0.005, 0.01]} rotation={[0, Math.PI / 2, 0]}>
+                <circleGeometry args={[0.052, 16]} />
+                <Recess />
+              </mesh>
+              {/* Sensor glint — amber, distinct from the eyes' violet */}
+              <mesh position={[side * 0.045, -0.005, 0.012]}>
+                <sphereGeometry args={[0.02, 10, 8]} />
+                <meshStandardMaterial color="#FDBA74" emissive="#F59E0B" emissiveIntensity={2.6} toneMapped={false} />
+              </mesh>
+            </group>
+          );
+        })}
 
         {/* Jaw seam tuck */}
         <mesh position={[0, -0.22, 0.5]} rotation={[0.34, 0, 0]}>
@@ -611,22 +635,31 @@ export function Machine({
           <meshStandardMaterial color={isLight ? "#9490B0" : "#06050C"} roughness={0.1} metalness={isLight ? 0.78 : 0.95} />
         </mesh>
 
-        {/* Eyes: precision multi-layer optical lens assemblies with catchlight reflections */}
+        {/* Eyes: almond-proportioned lens assemblies (wide, flattened — not
+            circular camera lenses) with a two-tone iris and a brow arc, so
+            they read as eyes rather than optical sensors. */}
         {[-0.2, 0.2].map((x) => (
           <group key={x} position={[x, 0.06, 0.46]} rotation={[0.04, x * 0.28, 0]}>
-            {/* Outer chamfered chrome lens bezel */}
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
+            {/* Outer chamfered bezel — stretched wide and flattened tall, the
+                classic almond proportion */}
+            <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.28, 0.8, 1]}>
               <cylinderGeometry args={[0.125, 0.12, 0.06, 24]} />
               <Joint />
             </mesh>
             {/* Inner dark optical well */}
-            <mesh position={[0, 0, 0.012]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh position={[0, 0, 0.012]} rotation={[Math.PI / 2, 0, 0]} scale={[1.28, 0.8, 1]}>
               <cylinderGeometry args={[0.1, 0.095, 0.05, 24]} />
               <Recess />
             </mesh>
-            {/* Core radiant lilac emissive lens */}
-            <mesh position={[0, 0, 0.024]}>
-              <sphereGeometry args={[0.082, 24, 20]} />
+            {/* Iris — warm amber ring around the core, the way a real iris
+                reads as a distinct band rather than one flat color */}
+            <mesh position={[0, 0, 0.026]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.062, 0.016, 14, 28]} />
+              <meshStandardMaterial color="#FCD34D" emissive="#F59E0B" emissiveIntensity={1.8} toneMapped={false} />
+            </mesh>
+            {/* Core radiant lilac emissive pupil */}
+            <mesh position={[0, 0, 0.03]} scale={[1.12, 0.86, 1]}>
+              <sphereGeometry args={[0.068, 24, 20]} />
               <meshStandardMaterial
                 ref={(m) => {
                   if (m) eyes.current[x < 0 ? 0 : 1] = m;
@@ -638,8 +671,8 @@ export function Machine({
               />
             </mesh>
             {/* Concentric aperture glow ring */}
-            <mesh position={[0, 0, 0.042]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.05, 0.012, 16, 32]} />
+            <mesh position={[0, 0, 0.046]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.04, 0.01, 16, 32]} />
               <meshStandardMaterial
                 color="#FFFFFF"
                 emissive="#FAF5FF"
@@ -648,14 +681,20 @@ export function Machine({
               />
             </mesh>
             {/* Glossy glass catchlight reflection dot */}
-            <mesh position={[0.028, 0.028, 0.065]}>
-              <sphereGeometry args={[0.018, 12, 10]} />
+            <mesh position={[0.03, 0.024, 0.068]}>
+              <sphereGeometry args={[0.017, 12, 10]} />
               <meshStandardMaterial
                 color="#FFFFFF"
                 emissive="#FFFFFF"
                 emissiveIntensity={2.5}
                 toneMapped={false}
               />
+            </mesh>
+            {/* Brow arc — a slim raised crease above the eye, angled up at
+                the outer corner for an alert, expressive read */}
+            <mesh position={[x > 0 ? 0.01 : -0.01, 0.095, 0.03]} rotation={[0, 0, x > 0 ? -0.18 : 0.18]}>
+              <torusGeometry args={[0.11, 0.012, 8, 20, Math.PI * 0.62]} />
+              <Joint />
             </mesh>
           </group>
         ))}

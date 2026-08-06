@@ -11,8 +11,14 @@ import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
 import { IdeFlipper } from "./IdeFlipper";
 
-// WebGL — client only, so the page still prerenders statically.
-const MachineScene = dynamic(() => import("./MachineScene"), { ssr: false });
+// WebGL — client only, so the page still prerenders statically. No GLTF asset
+// to fetch (the machine is built from primitive geometry), so the delay
+// visitors see is purely the three.js/@react-three chunk downloading and
+// compiling; a fallback here avoids a blank pop-in once it lands.
+const MachineScene = dynamic(() => import("./MachineScene"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full animate-pulse rounded-xl bg-white/[0.02]" aria-hidden />,
+});
 
 /** Section id → the line the machine says when you reach it. */
 const SECTION_TRIGGERS: [string, DialogueTrigger][] = [
@@ -143,8 +149,8 @@ export function Hero() {
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 rounded-full bg-[#C4B5FD] px-4 py-2 text-sm font-bold text-[#1B1030] shadow-sm transition-all hover:-translate-y-0.5 hover:brightness-105"
               >
+                <span>Featured on</span>
                 <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
-                <span>Featured on Indie Hackers</span>
               </a>
               <a
                 href="https://www.producthunt.com/products/nxstudio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-nxstudio"

@@ -7,6 +7,7 @@ import { NxLogo, MenuIcon, XIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
 import { runLightOnTransition, runDarkSnapTransition } from "./theme-transition";
+import { lampOrigin } from "./lamp-origin";
 
 // True once hydrated on the client, false during SSR — no effect-driven
 // setState needed, so no cascading render on mount.
@@ -42,10 +43,17 @@ function ThemeToggle() {
       root.classList.add("theme-transitioning");
       setTimeout(() => root.classList.remove("theme-transitioning"), 900);
 
+      // Prefer the hero lamp's live screen position (it's the "light" in
+      // "light mode") — fall back to the toggle button on pages or scroll
+      // positions where the lamp hasn't reported one yet.
       const rect = btnRef.current?.getBoundingClientRect();
-      const origin = rect
+      const fallback = rect
         ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
         : { x: window.innerWidth - 40, y: 40 };
+      const origin =
+        lampOrigin.x !== null && lampOrigin.y !== null
+          ? { x: lampOrigin.x, y: lampOrigin.y }
+          : fallback;
       runLightOnTransition(origin, applyThemeClass);
     } else {
       // No crossfade — the swap should read as an instant cut inside the flash.
