@@ -58,6 +58,8 @@ export {
   Zap as ZapIcon,
 
   // Additional common icons
+  Sun as SunIcon,
+  Moon as MoonIcon,
   X as XIcon,
   Menu as MenuIcon,
   Search as SearchIcon,

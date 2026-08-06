@@ -2,9 +2,55 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { NxLogo, MenuIcon, XIcon } from "@/components/icons";
+import { NxLogo, MenuIcon, XIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
+
+function ThemeToggle() {
+  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    setMounted(true);
+    const isLight = document.documentElement.classList.contains("light");
+    setTheme(isLight ? "light" : "dark");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    const root = document.documentElement;
+
+    // Apply smooth transition to all elements during the swap
+    root.classList.add("theme-transitioning");
+
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    if (next === "light") {
+      root.classList.add("light");
+    } else {
+      root.classList.remove("light");
+    }
+
+    // Clean up the transition class after animation completes
+    setTimeout(() => {
+      root.classList.remove("theme-transitioning");
+    }, 450);
+  };
+
+  if (!mounted) {
+    return <div className="h-9 w-9 rounded-full border border-border/40 bg-card/40" />;
+  }
+
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card/60 text-foreground transition-all hover:bg-card hover:scale-105"
+    >
+      {theme === "dark" ? <SunIcon className="h-4 w-4 text-amber-300" /> : <MoonIcon className="h-4 w-4 text-indigo-500" />}
+    </button>
+  );
+}
 
 // Absolute (leading "/") so these still resolve correctly when this nav is
 const LINKS = [
@@ -37,16 +83,14 @@ export function LandingNav() {
     <header className="sticky top-0 z-50 px-4 pt-3 sm:pt-4">
       <nav
         className={cn(
-          "mx-auto flex h-14 max-w-4xl items-center justify-between rounded-full border pl-4 pr-2 transition-colors duration-300",
+          "mx-auto flex h-14 max-w-4xl items-center justify-between rounded-full border pl-4 pr-2 transition-all duration-300 backdrop-blur-xl",
           scrolled || open
-            ? "border-white/10 bg-background/70 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
-            : "border-white/5 bg-background/40 backdrop-blur-md"
+            ? "border-border/60 bg-card/80 shadow-sm"
+            : "border-border/40 bg-card/50 shadow-sm"
         )}
       >
-        <Link href="/" className="flex items-center gap-2.5" aria-label="nxstudio home">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card">
-            <NxLogo className="h-4 w-4 text-primary" />
-          </span>
+        <Link href="/" className="flex items-center gap-2" aria-label="nxstudio home">
+          <NxLogo className="h-7 w-7 text-primary" />
           <span className="text-[15px] font-semibold tracking-tight">nxstudio</span>
         </Link>
 
@@ -62,10 +106,11 @@ export function LandingNav() {
           ))}
         </div>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-2.5 md:flex">
+          <ThemeToggle />
           <button
             onClick={() => openAuth()}
-            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_8px_24px_-12px_rgba(139,92,246,0.7)] transition-transform hover:-translate-y-0.5"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 hover:opacity-90"
           >
             Start building
           </button>

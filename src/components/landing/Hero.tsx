@@ -106,20 +106,20 @@ export function Hero() {
       {/* Filmic grain — a faint tactile texture over the whole stage */}
       <div className="grain-overlay pointer-events-none absolute inset-0 z-30" aria-hidden />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-10 pt-8 sm:px-6 sm:pt-10 md:pb-14">
-        <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] md:gap-8">
+      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-6 sm:pt-10 md:pb-16">
+        <div className="grid items-center gap-6 md:grid-cols-2 md:gap-8 lg:gap-12">
           {/* Copy — left rail */}
-          <div className="relative z-10 text-center md:text-left">
+          <div className="relative z-10 text-center md:text-left max-w-2xl lg:max-w-3xl">
             {/* Top Proof Badges — Indie Hackers + Product Hunt */}
             <div
               style={{ animationDelay: "0.12s" }}
-              className="reveal-rise mb-3.5 flex flex-wrap items-center justify-center gap-2 md:justify-start"
+              className="reveal-rise mb-4 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
             >
               <a
                 href="https://www.indiehackers.com/nxstudio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
+                className="group inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/40 px-3.5 py-1 text-xs font-medium text-foreground transition-all hover:-translate-y-0.5 hover:bg-card/70"
               >
                 <IndieHackersMark className="h-3.5 w-3.5 rounded shrink-0" />
                 <span>Featured on Indie Hackers</span>
@@ -128,7 +128,7 @@ export function Hero() {
                 href="https://www.producthunt.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
+                className="group inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/40 px-3.5 py-1 text-xs font-medium text-foreground transition-all hover:-translate-y-0.5 hover:bg-card/70"
               >
                 <ProductHuntMark className="h-3.5 w-3.5 fill-current text-[#DA552F] shrink-0" />
                 <span>Product Hunt</span>
@@ -137,25 +137,18 @@ export function Hero() {
 
             <h1
               style={{ animationDelay: "0.28s" }}
-              className="reveal-rise text-3xl font-extrabold leading-[1.22] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.5rem] [text-wrap:balance]"
+              className="reveal-rise text-3xl font-extrabold leading-[1.2] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.6rem]"
             >
-              Product context for <IdeFlipper />
+              Product context
+              <br />
+              for <IdeFlipper />
             </h1>
 
             <p
               style={{ animationDelay: "0.48s" }}
-              className="reveal-rise mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-relaxed md:mx-0"
+              className="reveal-rise mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-relaxed md:mx-0 [text-wrap:balance]"
             >
-              Never prompt from scratch again. Map your spec into a .nx/ context bundle powered by{" "}
-              <a
-                href="https://www.npmjs.com/package/nxhuman"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs font-medium text-foreground transition-all hover:border-white/20 hover:bg-white/[0.08] align-baseline mx-0.5"
-              >
-                <NpmMark className="h-3 w-3 fill-current text-[#CB3837] shrink-0" />
-                <span>nxhuman</span>
-              </a>.
+              Stop re-explaining your vision. Engineer the exact context bundle your AI agent needs to build it right.
             </p>
 
             <div
@@ -165,14 +158,14 @@ export function Hero() {
               <AuthButton
                 source="hero"
                 onMouseEnter={() => say("cta-hover")}
-                className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_0_32px_-4px_rgba(139,92,246,0.6),inset_0_1px_0_0_rgba(255,255,255,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_38px_-2px_rgba(139,92,246,0.7),inset_0_1px_0_0_rgba(255,255,255,0.4)] sm:w-auto"
+                className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:opacity-90 sm:w-auto"
               >
                 Start building — free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
               <a
                 href="#how"
-                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-foreground backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.09] sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-border/50 bg-secondary/50 px-6 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:bg-secondary/80 sm:w-auto"
               >
                 See how it works
               </a>
