@@ -312,16 +312,16 @@ export default function AssemblyScene({
       <Suspense fallback={null}>
         <group position={[0, -0.35, 0]}>
           {reduce ? (
-            <Machine reduce pose={pose} dynamicsRef={dynamicsRef} />
+            <Machine reduce pose={pose} dynamicsRef={dynamicsRef} facing={0.44} />
           ) : (
             <Float speed={1} rotationIntensity={0.1} floatIntensity={0.25}>
-              <Machine reduce={false} pose={pose} dynamicsRef={dynamicsRef} />
+              <Machine reduce={false} pose={pose} dynamicsRef={dynamicsRef} facing={0.44} />
             </Float>
           )}
           {!reduce && <DancingSprites dynamicsRef={dynamicsRef} />}
         </group>
-        {/* Ambient dust — cool violet, denser once online. */}
-        <Sparkles count={24} scale={[6, 5, 3.5]} size={1.6} speed={0.16} color="#C4B5FD" opacity={0.22} />
+        {/* Ambient dust — cool violet placed far back in background depth */}
+        <Sparkles count={24} scale={[6, 5, 2]} position={[0, 0, -3.5]} raycast={() => null} size={1.6} speed={0.16} color="#C4B5FD" opacity={0.22} />
       </Suspense>
     </Canvas>
   );
