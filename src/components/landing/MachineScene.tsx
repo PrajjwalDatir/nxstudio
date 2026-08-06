@@ -155,7 +155,7 @@ const SPARK_IGNITE_S = 0.1;
 const SPARK_SETTLE_S = 0.65;
 
 // Ceiling on the swing angle toward the machine for safety margin
-const MAX_SWING_TOWARD_MACHINE = 0.75;
+const MAX_SWING_TOWARD_MACHINE = 1.15;
 
 function SwingingLamp({ heroX }: { heroX: number }) {
   const isLight = useIsLightMode();
@@ -185,9 +185,9 @@ function SwingingLamp({ heroX }: { heroX: number }) {
       const now = performance.now();
       const dxPixels = e.clientX - dragLastClientX.current;
       const dt = Math.max(1, now - dragLastTime.current) / 1000;
-      // A full-width swipe traces a wide but still natural-feeling arc.
-      const angleDelta = (dxPixels / window.innerWidth) * 2.6;
-      swingAngle.current = THREE.MathUtils.clamp(swingAngle.current + angleDelta, -1.1, 1.1);
+      // A full-width swipe traces a wide, fluid, natural-feeling arc.
+      const angleDelta = (dxPixels / window.innerWidth) * 3.2;
+      swingAngle.current = THREE.MathUtils.clamp(swingAngle.current + angleDelta, -1.3, 1.3);
       dragAngularVelocity.current = angleDelta / dt;
       dragLastClientX.current = e.clientX;
       dragLastTime.current = now;
@@ -204,7 +204,7 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     };
     const onPointerUp = () => {
       // Hand off to the spring with the last drag velocity as the throw.
-      endDrag(THREE.MathUtils.clamp(dragAngularVelocity.current * 0.16, -0.6, 0.6));
+      endDrag(THREE.MathUtils.clamp(dragAngularVelocity.current * 0.22, -0.8, 0.8));
     };
     // A dropped drag (alt-tab mid-hold, a touch gesture the OS hijacks, a
     // right-click opening the context menu) fires pointercancel instead of
@@ -250,13 +250,12 @@ function SwingingLamp({ heroX }: { heroX: number }) {
       const currentY = window.scrollY;
       const delta = currentY - lastScrollY.current;
       if (Math.abs(delta) > 1) {
-        // Natural pendulum reaction to scroll velocity: impulse is capped so
-        // scroll never overpowers gravity or pins the lamp to the ceiling limit.
-        const impulse = Math.min(Math.abs(delta) * 0.0004, 0.018) * Math.sign(delta);
+        // Fluid, expressive pendulum reaction to scroll velocity
+        const impulse = Math.min(Math.abs(delta) * 0.0008, 0.045) * Math.sign(delta);
         swingVelocity.current = THREE.MathUtils.clamp(
           swingVelocity.current + impulse,
-          -0.25,
-          0.25
+          -0.5,
+          0.5
         );
       }
       lastScrollY.current = currentY;
@@ -283,39 +282,39 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     const elapsed = state.clock.getElapsedTime() - initialLoadTime.current;
 
     let loadImpulse = 0;
-    if (elapsed < 4.0 && !isDragging.current) {
-      // Gentle initial swing on page load
-      loadImpulse = Math.sin(elapsed * 2.0) * Math.exp(-elapsed * 0.8) * 0.2;
+    if (elapsed < 5.0 && !isDragging.current) {
+      // Wide, soft initial swing on page load
+      loadImpulse = Math.sin(elapsed * 1.6) * Math.exp(-elapsed * 0.5) * 0.35;
     }
 
-    // Pendulum physics loop: gravity restoring force pulls toward 0 (hanging straight down).
+    // Pendulum physics loop: low spring rigidity allows long, fluid, buttery-smooth arcs.
     if (!isDragging.current) {
       swingAngle.current += swingVelocity.current;
-      // Smooth physical damping
-      swingVelocity.current *= 0.96;
-      // Strong gravity restoring force ensures lamp always swings cleanly back down
-      swingVelocity.current -= swingAngle.current * 0.055;
+      // High momentum retention (0.982) for graceful carry across frames
+      swingVelocity.current *= 0.982;
+      // Soft spring constant (0.024) reduces rigidity so swings flow far and wide
+      swingVelocity.current -= swingAngle.current * 0.024;
     }
 
     let totalZ = swingAngle.current + loadImpulse;
 
-    // Elastic boundary pushback near max swing to prevent hard locking or jamming
+    // Soft elastic boundary pushback near max swing limit
     const pivotX = heroX > 0 ? 0.9 : 0;
     if (heroX - pivotX > 1 && totalZ > MAX_SWING_TOWARD_MACHINE) {
       const excess = totalZ - MAX_SWING_TOWARD_MACHINE;
-      swingVelocity.current -= excess * 0.2;
-      totalZ = MAX_SWING_TOWARD_MACHINE + excess * 0.2;
+      swingVelocity.current -= excess * 0.12;
+      totalZ = MAX_SWING_TOWARD_MACHINE + excess * 0.15;
     }
 
     // Held: no synthetic sway on top of the hand — the shade goes exactly
     // where the cursor takes it. Free-swinging: subtle natural sway.
     const totalX = isDragging.current
       ? 0
-      : Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.15;
+      : Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
 
     if (lampRef.current) {
-      // Responsive follow rate ensures visual mesh stays in sync with physics state
-      const followRate = isDragging.current ? 1 : 0.12;
+      // Buttery smooth visual follow rate
+      const followRate = isDragging.current ? 1 : 0.08;
       lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, followRate);
       lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, followRate);
 
