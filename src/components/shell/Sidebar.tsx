@@ -5,7 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useProjects } from "@/lib/workspace-store";
 import { useProductLimit } from "@/lib/use-product-limit";
+import { useSubscription } from "@/lib/use-subscription";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
+import { RazorpayCheckout } from "@/components/billing/RazorpayCheckout";
 import { useSidebar } from "@/components/shell/sidebar-context";
 import { motion } from "framer-motion";
 import { MAIN_NAV_ITEMS } from "@/lib/navigation";
@@ -16,6 +18,7 @@ import {
   NxLogo,
   UserIcon,
   SaveIcon,
+  ZapIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +30,7 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
   const router = useRouter();
   const { createProject } = useProjects();
   const { atLimit } = useProductLimit();
+  const { state, refresh } = useSubscription();
   const { collapsed, toggle } = useSidebar();
   const [open, setOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -195,7 +199,35 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
           </PopoverContent>
         </Popover>
         )}
-        <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => setPayOpen(false)} />
+        <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => { setPayOpen(false); refresh(); }} />
+        {state !== "active" && (
+          <div className="mt-4">
+            {isAnonymous ? (
+              <Button
+                variant="default"
+                className={cn(
+                  "w-full font-bold text-[11px] uppercase tracking-wider bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]",
+                  collapsed ? "justify-center px-0 h-10" : "gap-2 h-10"
+                )}
+                onClick={() => router.push("/login")}
+              >
+                <ZapIcon className={collapsed ? "h-4 w-4 fill-current" : "h-3.5 w-3.5 fill-current"} />
+                {!collapsed && "Upgrade to Pro"}
+              </Button>
+            ) : (
+              <RazorpayCheckout 
+                buttonText={collapsed ? undefined : "Upgrade to Pro"}
+                icon={<ZapIcon className={collapsed ? "h-4 w-4 fill-current" : "h-3.5 w-3.5 fill-current"} />}
+                variant="default"
+                className={cn(
+                  "w-full font-bold text-[11px] uppercase tracking-wider bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]",
+                  collapsed ? "justify-center px-0 h-10" : "gap-2 h-10"
+                )}
+                onActivated={refresh}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Account + sign out */}

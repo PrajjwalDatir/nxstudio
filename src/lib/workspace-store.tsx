@@ -30,7 +30,6 @@ import {
   SyncResult,
   connectGitHub,
   disconnectGitHub,
-  getGitHubStatus,
   syncRepo,
 } from "./github";
 
@@ -139,6 +138,7 @@ export function WorkspaceProvider({
   initialProjects,
   initialCollections = [],
   userId,
+  initialGitHubStatus = { connected: false },
 }: {
   children: React.ReactNode;
   /** Projects loaded on the server (source of truth on first paint). */
@@ -146,6 +146,8 @@ export function WorkspaceProvider({
   /** Collections loaded on the server. */
   initialCollections?: Collection[];
   userId: string;
+  /** GitHub connection status loaded on the server. */
+  initialGitHubStatus?: GitHubStatus;
 }) {
   const [store, setStore] = useState<Store>(() => initStore(initialProjects, initialCollections));
   const [isHydrated, setIsHydrated] = useState(false);
@@ -218,8 +220,10 @@ export function WorkspaceProvider({
 
   const initialProjectsRef = useRef(initialProjects);
   const initialCollectionsRef = useRef(initialCollections);
-  initialProjectsRef.current = initialProjects;
-  initialCollectionsRef.current = initialCollections;
+  useEffect(() => {
+    initialProjectsRef.current = initialProjects;
+    initialCollectionsRef.current = initialCollections;
+  }, [initialProjects, initialCollections]);
 
   // Hydrate device-local bits (active project, legacy migration) once on mount.
   useEffect(() => {
@@ -244,19 +248,19 @@ export function WorkspaceProvider({
           github: { repo: p.github?.repo ?? null, branch: p.github?.branch ?? "main" },
           dueDates: p.dueDates ?? {},
         }));
-        setStore((s) => ({ ...s, projects: migrated, activeId: migrated[0].id }));
+        setTimeout(() => setStore((s) => ({ ...s, projects: migrated, activeId: migrated[0].id })), 0);
       }
     }
 
     // Restore the active-project preference (kept per-device, not in Supabase).
     const storedActive = getStoredValue<string | null>("activeProject", null);
     if (storedActive) {
-      setStore((s) =>
+      setTimeout(() => setStore((s) =>
         s.projects.some((p) => p.id === storedActive) ? { ...s, activeId: storedActive } : s
-      );
+      ), 0);
     }
 
-    setIsHydrated(true);
+    setTimeout(() => setIsHydrated(true), 0);
   }, []);
 
   // Debounced autosave: collapse bursts of edits into a single write per project.
@@ -503,27 +507,15 @@ export function WorkspaceProvider({
   /* GitHub sync — single shared engine for every consumer of useSync ---- */
   const repo = activeProject.github.repo;
   const branch = activeProject.github.branch;
-  const [ghStatus, setGhStatus] = useState<GitHubStatus>({ connected: false });
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("checking");
+  const [ghStatus, setGhStatus] = useState<GitHubStatus>(initialGitHubStatus);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(
+    initialGitHubStatus.connected ? (repo ? "syncing" : "no-repo") : "disconnected"
+  );
   const [resultByRepo, setResultByRepo] = useState<Record<string, SyncResult>>({});
   const [syncError, setSyncError] = useState<string | null>(null);
   const syncInFlight = useRef(false);
 
   const syncResult = repo ? resultByRepo[repo] ?? null : null;
-
-  // Verify the GitHub connection once on mount.
-  useEffect(() => {
-    let alive = true;
-    getGitHubStatus().then((s) => {
-      if (!alive) return;
-      setGhStatus(s);
-      setSyncStatus(s.connected ? (repo ? "ok" : "no-repo") : "disconnected");
-    });
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const runSync = useCallback(async () => {
     if (!ghStatus.connected) {
@@ -553,14 +545,14 @@ export function WorkspaceProvider({
   // Sync on repo/connection change, then poll every 60s.
   useEffect(() => {
     if (!ghStatus.connected) {
-      setSyncStatus("disconnected");
+      setTimeout(() => setSyncStatus("disconnected"), 0);
       return;
     }
     if (!repo) {
-      setSyncStatus("no-repo");
+      setTimeout(() => setSyncStatus("no-repo"), 0);
       return;
     }
-    runSync();
+    setTimeout(runSync, 0);
     const id = setInterval(runSync, 60_000);
     return () => clearInterval(id);
   }, [ghStatus.connected, repo, branch, runSync]);

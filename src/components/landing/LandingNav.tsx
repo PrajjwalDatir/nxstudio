@@ -7,14 +7,9 @@ import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
 
 // Absolute (leading "/") so these still resolve correctly when this nav is
-// reused on a page other than the homepage (e.g. /about) — a bare "#how"
-// would silently no-op there since that id only exists on "/".
 const LINKS = [
-  { href: "/#how", label: "How it works" },
-  { href: "/#features", label: "Features" },
-  { href: "/#studio", label: "Studio" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/#faq", label: "FAQ" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ];
 
@@ -70,12 +65,6 @@ export function LandingNav() {
         <div className="hidden items-center gap-1 md:flex">
           <button
             onClick={() => openAuth()}
-            className="rounded-full px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Sign in
-          </button>
-          <button
-            onClick={() => openAuth()}
             className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_8px_24px_-12px_rgba(139,92,246,0.7)] transition-transform hover:-translate-y-0.5"
           >
             Start building
@@ -109,15 +98,6 @@ export function LandingNav() {
               ))}
             </div>
             <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  openAuth();
-                }}
-                className="rounded-lg border border-border px-4 py-2.5 text-center text-sm text-foreground"
-              >
-                Sign in
-              </button>
               <button
                 onClick={() => {
                   setOpen(false);

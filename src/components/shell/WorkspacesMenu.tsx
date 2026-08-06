@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   CheckIcon,
-  ChevronDownIcon,
   FolderIcon,
   ProjectIcon,
 } from "@/components/icons";
@@ -74,12 +73,11 @@ export function WorkspacesMenu() {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         className={cn(
-          "group flex shrink-0 items-center gap-1 truncate rounded-md px-1.5 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:text-foreground",
+          "group flex shrink-0 items-center gap-1 truncate rounded-md px-1.5 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:text-foreground",
         )}
         aria-label="Switch workspace"
       >
         Workspaces
-        <ChevronDownIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="max-h-[70vh] w-64 overflow-y-auto">

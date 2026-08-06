@@ -44,7 +44,9 @@ export function useCompiledPrompts() {
   });
 
   const dataRef = useRef(data);
-  dataRef.current = data;
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const compile = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }));

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CryptoCheckout } from "./CryptoCheckout";
 import { RazorpayCheckout } from "./RazorpayCheckout";
 import { PricingGrid } from "./PricingGrid";
-import { WandIcon, XIcon, ZapIcon } from "@/components/icons";
+import { XIcon, ZapIcon } from "@/components/icons";
 
 const SUPPORT_EMAIL = "support@nxstudio.dev";
 

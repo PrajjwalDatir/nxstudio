@@ -10,7 +10,7 @@
  * on change and re-seeded on seed change, without tearing down the instance.
  * p5 touches `window`, so it's imported dynamically on the client.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import type P5 from "p5";
 import { useToolcraftEvaluatedValues } from "@/toolcraft/runtime/react";
 import { GEN_TARGETS, BRAND_TARGETS } from "@/lib/studio/schema";
@@ -37,7 +37,7 @@ export function GenerativeRenderer() {
   const rawInkColor = parseColor(values[GEN_TARGETS.color], "");
   const rawBrandPrimary = parseColor(values[BRAND_TARGETS.primary], "#8B5CF6");
 
-  const params: GenParams = {
+  const params: GenParams = useMemo(() => ({
     // Ink color defaults to brand primary color unless explicitly customized
     primary: rawInkColor || rawBrandPrimary,
     background: parseColor(values[GEN_TARGETS.background], "#08080A"),
@@ -46,14 +46,17 @@ export function GenerativeRenderer() {
     connectionDist: num(values[GEN_TARGETS.connectionDist], 130),
     speed: num(values[GEN_TARGETS.speed], 1),
     seed: Math.round(num(values[GEN_TARGETS.seed], 1)),
-  };
+  }), [rawInkColor, rawBrandPrimary, values]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pRef = useRef<P5 | null>(null);
   const sketchRef = useRef<Sketch | null>(null);
   const paramsRef = useRef(params);
   const sketchIdRef = useRef<SketchId>(sketchId);
-  paramsRef.current = params;
+  
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
 
   // Create the p5 instance once.
   useEffect(() => {

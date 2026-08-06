@@ -9,11 +9,11 @@ import { useSubscription } from "@/lib/use-subscription";
  */
 export function useProductLimit() {
   const { projects } = useProjects();
-  const { projectLimit, tier, loading } = useSubscription();
+  const { projectLimit, tier } = useSubscription();
 
   const count = projects.length;
   const isInfinite = !isFinite(projectLimit);
-  const atLimit = !loading && !isInfinite && count >= projectLimit;
+  const atLimit = !isInfinite && count >= projectLimit;
 
-  return { count, limit: projectLimit, tier, atLimit, loading, isInfinite };
+  return { count, limit: projectLimit, tier, atLimit, isInfinite };
 }

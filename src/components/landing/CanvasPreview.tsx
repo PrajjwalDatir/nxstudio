@@ -17,7 +17,6 @@ const PREVIEW_PROGRESS: Record<PhaseId, PhaseProgress> = {
   idea: { done: 4, total: 4, percent: 100 },
   "tech-stack": { done: 2, total: 5, percent: 40 },
   build: { done: 1, total: 1, percent: 100 },
-  checklist: { done: 0, total: 3, percent: 0 },
 };
 
 export function CanvasPreview() {

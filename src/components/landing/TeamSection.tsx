@@ -73,10 +73,10 @@ export function TeamSection({ index = "06" }: { index?: string }) {
           <SectionKicker index={index} align="center">
             Team
           </SectionKicker>
-          <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Two people. One tight loop.
           </h2>
-          <p className="mt-4 text-muted-foreground">
+          <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
             One builds the product, one puts it in front of the people who need it.
           </p>
         </div>

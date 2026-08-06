@@ -1,17 +1,19 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useWorkspace } from "@/lib/workspace-store";
+import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { getPhase } from "@/lib/phases";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { ProductNameCrumb } from "@/components/shell/ProductNameCrumb";
 import { Notifications } from "@/components/shell/Notifications";
 import { WorkspacesMenu } from "@/components/shell/WorkspacesMenu";
-import { ChevronRightIcon, SearchIcon } from "@/components/icons";
+import { SearchIcon, GithubIcon } from "@/components/icons";
+import Link from "next/link";
 
 export function Topbar() {
   const pathname = usePathname();
   const { customStages } = useWorkspace();
+  const { status: syncStatus } = useSync();
   const { open } = useCommand();
 
   // Breadcrumb: Workspaces › [editable product name] › [Phase]
@@ -42,15 +44,15 @@ export function Topbar() {
     <header className="relative z-30 pointer-events-auto flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-sidebar px-5">
       {/* Breadcrumbs. The project name sits between "Workspaces" and the
           optional phase crumb, and renames in place rather than navigating. */}
-      <nav className="flex items-center gap-2 text-sm min-w-0">
+      <nav className="flex items-center gap-2.5 text-sm min-w-0">
         <WorkspacesMenu />
 
-        <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <span className="text-muted-foreground/40 font-light select-none">/</span>
         <ProductNameCrumb isLast={crumbs.length === 1} />
 
         {crumbs.slice(1).map((c) => (
-          <span key={c.label} className="flex min-w-0 items-center gap-2">
-            <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <span key={c.label} className="flex min-w-0 items-center gap-2.5">
+            <span className="text-muted-foreground/40 font-light select-none">/</span>
             <span className="truncate font-medium text-foreground">
               {c.label}
             </span>
@@ -59,18 +61,27 @@ export function Topbar() {
       </nav>
 
       {/* Right controls */}
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-4 pr-1">
         <button
           onClick={open}
-          aria-label="Search tasks, phases (⌘K)"
-          className="relative hidden h-9 w-56 items-center rounded-lg border border-border bg-secondary/40 pl-9 pr-3 text-left text-sm text-muted-foreground hover:border-ring sm:flex gap-2"
+          aria-label="Search (⌘K)"
+          className="group flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
         >
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <span className="flex-1 truncate">Search tasks, phases...</span>
-          <kbd className="ml-auto shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px]">
-            ⌘K
-          </kbd>
+          <SearchIcon className="h-[18px] w-[18px]" />
         </button>
+
+        <Link
+          href="/settings"
+          aria-label={syncStatus === "ok" ? "GitHub Connected" : "GitHub Not Connected"}
+          className={`group relative flex items-center justify-center transition-colors ${
+            syncStatus === "ok" 
+              ? "text-foreground" 
+              : "text-muted-foreground opacity-60 hover:opacity-100 hover:text-foreground"
+          }`}
+        >
+          <GithubIcon className="h-[18px] w-[18px]" />
+        </Link>
+
         <Notifications />
       </div>
     </header>

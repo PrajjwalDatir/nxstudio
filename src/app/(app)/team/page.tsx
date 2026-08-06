@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSync } from "@/lib/workspace-store";
 import { useSubscription } from "@/lib/use-subscription";
 import { GithubIcon } from "@/components/icons";
@@ -9,6 +10,14 @@ export default function TeamPage() {
   const { github, result, status } = useSync();
   const { isAnonymous } = useSubscription();
   const contributors = result?.contributors ?? [];
+
+  const getRole = (name?: string | null) => {
+    if (!name) return null;
+    const lower = name.toLowerCase();
+    if (lower.includes("nxstudio")) return "Founder & Product";
+    if (lower.includes("contributor")) return "Distribution & Content Partner";
+    return null;
+  };
 
   if (isAnonymous) {
     return (
@@ -47,8 +56,7 @@ export default function TeamPage() {
           </h2>
           <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
             {github.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={github.avatar} alt={github.login} className="h-10 w-10 rounded-full" />
+              <Image src={github.avatar} alt={github.login || "user"} width={40} height={40} className="h-10 w-10 rounded-full" />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
                 <GithubIcon className="h-5 w-5" />
@@ -56,7 +64,7 @@ export default function TeamPage() {
             )}
             <div>
               <div className="font-medium">{github.name || github.login}</div>
-              <div className="text-sm text-muted-foreground">@{github.login} · owner</div>
+              <div className="text-sm text-muted-foreground">@{github.login} · {getRole(github.name || github.login) || "owner"}</div>
             </div>
           </div>
         </section>
@@ -72,8 +80,7 @@ export default function TeamPage() {
             {contributors.map((c) => (
               <div key={c.login} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
                 {c.avatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.avatar} alt={c.login} className="h-10 w-10 rounded-full" />
+                  <Image src={c.avatar} alt={c.login} width={40} height={40} className="h-10 w-10 rounded-full" />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-medium uppercase">
                     {c.login.slice(0, 2)}
@@ -82,7 +89,7 @@ export default function TeamPage() {
                 <div className="min-w-0">
                   <div className="truncate font-medium">{c.login}</div>
                   <div className="text-sm text-muted-foreground">
-                    {c.commits} recent commit{c.commits === 1 ? "" : "s"}
+                    {getRole(c.login) || `${c.commits} recent commit${c.commits === 1 ? "" : "s"}`}
                   </div>
                 </div>
               </div>

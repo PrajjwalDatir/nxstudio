@@ -12,7 +12,7 @@
 import { compileStack } from "./platform-engine";
 import { PhaseProgress, WorkspaceData } from "./types";
 
-export type PhaseId = "idea" | "tech-stack" | "build" | "checklist";
+export type PhaseId = "idea" | "tech-stack" | "build";
 
 export interface PhaseDef {
   id: PhaseId;
@@ -51,19 +51,6 @@ export const PHASES: PhaseDef[] = [
     description: "Core development prompts and architecture context.",
     icon: "play",
     total: 1,
-  },
-  {
-    id: "checklist",
-    label: "Checklist",
-    workspaceTitle: "Project Checklist",
-    description: "Interactive project deliverables and task checklist.",
-    icon: "check-square",
-    total: 3,
-    steps: [
-      { id: "foundation", label: "Project Foundation & Setup", description: "Environment, workspace, shared utilities." },
-      { id: "core", label: "Core Features Implementation", description: "Data models, auth, main modules." },
-      { id: "polish", label: "Polish & Deployment", description: "Optimization and production pipeline." },
-    ],
   },
 ];
 

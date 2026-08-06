@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CopyButton } from "@/components/phases/CopyButton";
 import { Button } from "@/components/ui/button";
-import { SparklesIcon, LockIcon, ShieldCheckIcon, ZapIcon } from "@/components/icons";
+import { SparklesIcon, LockIcon } from "@/components/icons";
 import { useSubscription } from "@/lib/use-subscription";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
 

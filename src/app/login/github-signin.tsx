@@ -78,11 +78,11 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <button
         onClick={signInGithub}
         disabled={loading !== false}
-        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-lg bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] border border-[#333333] bg-transparent text-[15px] font-medium text-white transition-all hover:bg-white/5 disabled:opacity-60"
       >
         {loading === "github" ? (
           <LoaderIcon className="h-4 w-4 animate-spin" />
@@ -92,16 +92,25 @@ export function GitHubSignIn({ redirectTo }: { redirectTo: string }) {
         Continue with GitHub
       </button>
 
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-white/10" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-[#111111] px-3 text-[#555555]">or</span>
+        </div>
+      </div>
+
       <button
         onClick={signInGuest}
         disabled={loading !== false}
-        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all hover:bg-secondary disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] bg-white text-[15px] font-medium text-black transition-all hover:bg-zinc-200 disabled:opacity-60"
       >
-        {loading === "guest" && <LoaderIcon className="h-4 w-4 animate-spin" />}
+        {loading === "guest" && <LoaderIcon className="h-4 w-4 animate-spin text-black" />}
         Continue as Guest
       </button>
 
-      {err && <p className="text-center text-sm text-red-400">{err}</p>}
+      {err && <p className="text-center text-sm text-red-400 mt-4">{err}</p>}
     </div>
   );
 }

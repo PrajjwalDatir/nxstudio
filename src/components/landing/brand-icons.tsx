@@ -63,15 +63,35 @@ export function AndroidMark({ className }: IconProps) {
   );
 }
 
-/**
- * X (formerly Twitter). Distinct from `XIcon` in components/icons, which is
- * Lucide's close glyph — a bare ✕ that reads as "dismiss", not as the social
- * platform.
- */
+/** X (formerly Twitter). Distinct from `XIcon` in components/icons. */
 export function XMark({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+/** Indie Hackers — official IH glyph logo. */
+export function IndieHackersMark({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 120 120" className={className} aria-hidden>
+      <rect x="0" y="0" height="120" width="120" rx="20" fill="#FFFFFF" />
+      <g fill="hsl(210, 60%, 14%)">
+        <rect x="27" y="34" height="52" width="12" />
+        <rect x="51" y="34" height="52" width="12" />
+        <rect x="61" y="54" height="12" width="22" />
+        <rect x="81" y="34" height="52" width="12" />
+      </g>
+    </svg>
+  );
+}
+
+/** npm — official npm package manager logo. */
+export function NpmMark({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M0 7.334v8.666h9.333v-6h4v6h10.667v-8.666h-24zM7.333 14.666h-2.666v-4.666h2.666v4.666zM18.667 14.666h-2.667v-4.666h2.667v4.666z" />
     </svg>
   );
 }

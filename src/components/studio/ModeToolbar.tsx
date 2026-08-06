@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { useToolcraft } from "@/toolcraft/runtime/react";
 import { STUDIO_MODE, type StudioMode } from "@/lib/studio/schema";
-import { WavesIcon, BoxIcon, FilmIcon, PencilLineIcon } from "@/components/icons";
+import { WavesIcon, BoxIcon, FilmIcon, PencilLineIcon, ScaffoldIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 interface ModeConfig {
@@ -94,6 +95,17 @@ export function ModeToolbar() {
           </button>
         );
       })}
+
+      <div className="mx-1 h-4 w-px bg-white/10" aria-hidden="true" />
+      
+      <Link
+        href="/canvas"
+        className="flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer z-10 pointer-events-auto"
+        title="Back to Canvas"
+      >
+        <ScaffoldIcon className="h-4 w-4 shrink-0" />
+        <span className="font-medium tracking-tight">Canvas</span>
+      </Link>
     </nav>
   );
 }

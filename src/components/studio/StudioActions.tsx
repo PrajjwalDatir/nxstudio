@@ -64,7 +64,7 @@ async function composeToBlob(container: HTMLElement): Promise<Blob | null> {
 }
 
 export function StudioActions({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
-  const { isActive, loading } = useSubscription();
+  const { isActive } = useSubscription();
   const [copied, setCopied] = useState(false);
 
   const copyPng = useCallback(
@@ -169,7 +169,6 @@ export function StudioActions({ containerRef }: { containerRef: RefObject<HTMLEl
       <button
         type="button"
         onClick={exportPng}
-        disabled={loading}
         className={cn(
           btn,
           isActive

@@ -16,7 +16,7 @@ import gsap from "gsap";
  * when a new line arrives mid-reveal.
  */
 
-export function MachineReadout({ line, tail = false }: { line: string; tail?: boolean }) {
+export function MachineReadout({ line, tail = false }: { line: string; tail?: boolean | "right" | "bottom" }) {
   const textRef = useRef<HTMLSpanElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
@@ -41,11 +41,17 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
 
   return (
     <div className="relative inline-flex max-w-sm items-start gap-2.5 rounded-xl border border-white/12 bg-background/90 py-2.5 pl-3 pr-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_10px_30px_-10px_rgba(0,0,0,0.85)] backdrop-blur-md">
-      {/* Speech tail on the right edge, pointing across to the unit beside it. */}
-      {tail && (
+      {/* Speech tail */}
+      {(tail === true || tail === "right") && (
         <span
           aria-hidden
           className="absolute right-[-6px] top-6 hidden h-3 w-3 rotate-45 rounded-[1px] border-r border-t border-white/12 bg-background/90 md:block"
+        />
+      )}
+      {tail === "bottom" && (
+        <span
+          aria-hidden
+          className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 rounded-[1px] border-b border-r border-white/12 bg-background/90"
         />
       )}
       {/* Live status lamp — matching status pulse. */}
@@ -68,57 +74,4 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
   );
 }
 
-export function AudioControl({
-  enabled,
-  playing,
-  onToggle,
-}: {
-  enabled: boolean;
-  playing: boolean;
-  onToggle: () => void;
-}) {
-  const barsRef = useRef<HTMLDivElement>(null);
 
-  // Bars dance only while audio is genuinely playing, so the control never
-  // implies sound that a blocked autoplay isn't actually producing.
-  useEffect(() => {
-    const el = barsRef.current;
-    if (!el) return;
-    const bars = Array.from(el.children);
-    if (!playing) {
-      gsap.killTweensOf(bars);
-      gsap.to(bars, { scaleY: 0.25, duration: 0.2, transformOrigin: "bottom" });
-      return;
-    }
-    const tweens = bars.map((b, i) =>
-      gsap.to(b, {
-        scaleY: () => 0.35 + Math.random() * 0.65,
-        duration: 0.3 + i * 0.07,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-        transformOrigin: "bottom",
-        delay: i * 0.06,
-      })
-    );
-    return () => tweens.forEach((t) => t.kill());
-  }, [playing]);
-
-  return (
-    <button
-      onClick={onToggle}
-      aria-pressed={enabled}
-      aria-label={enabled ? "Mute audio" : "Unmute audio"}
-      className="group flex items-center gap-2.5 rounded-full border border-border bg-background/70 py-1.5 pl-3 pr-3.5 backdrop-blur-sm transition-colors hover:border-primary/40"
-    >
-      <div ref={barsRef} className="flex h-3 items-end gap-[2px]" aria-hidden>
-        {[0, 1, 2, 3].map((i) => (
-          <span key={i} className="h-full w-[2px] rounded-full bg-primary" />
-        ))}
-      </div>
-      <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground transition-colors group-hover:text-foreground">
-        {enabled ? (playing ? "Audio" : "Armed") : "Muted"}
-      </span>
-    </button>
-  );
-}

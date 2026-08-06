@@ -25,9 +25,9 @@ const AssemblyScene = dynamic(() => import("./AssemblyScene"), { ssr: false });
 
 const STEPS = [
   {
-    kicker: "Cold start",
-    title: "It knows nothing yet",
-    body: "Half a spec, a couple of screenshots in your head, strong opinions about what it shouldn't be. Write it the way you'd explain it to a friend — there's no template to fill in.",
+    kicker: "The Brain-Dump",
+    title: "It knows nothing yet.",
+    body: "Write your brief exactly how you'd explain it to a friend. Tell us who it's for and how it works. No rigid templates, just pure vision.",
     // The real Brief field from the Idea phase, mid-typing.
     artifact: (
       <div className="glass rounded-xl p-4">
@@ -45,9 +45,9 @@ const STEPS = [
     ),
   },
   {
-    kicker: "Powering up",
-    title: "It picks a direction",
-    body: "It reads the brief and commits to a stack — platform, framework, data layer, where it deploys. Opinionated on purpose, so you're not weighing six databases at 1am.",
+    kicker: "The Hard Calls",
+    title: "It picks a direction.",
+    body: "nxstudio reads your vibe and derives an opinionated, production-ready stack. No more agonizing over six different database options at 1 AM.",
     // The Tech Stack phase card, exactly as it renders on the board.
     artifact: (
       <div className="max-w-[280px]">
@@ -61,9 +61,9 @@ const STEPS = [
     ),
   },
   {
-    kicker: "Online",
-    title: "It knows what you meant",
-    body: "Context, constraints and build order compile into a single prompt. Your agent opens it already briefed — no forty-message warm-up, no re-explaining yourself.",
+    kicker: "The Handoff",
+    title: "It knows exactly what you meant.",
+    body: "Your context, schemas, and build constraints compile into a single context bundle. You aren't just generating a prompt — you're wiring your agent's brain.",
     // The compiled prompt panel from the Build phase, with its real Copy control.
     artifact: (
       <div className="glass overflow-hidden rounded-xl">
@@ -148,7 +148,7 @@ export function HowItWorks() {
           </h2>
           <p className="mt-4 max-w-xl text-muted-foreground">
             Your agent doesn&apos;t start clever. It starts blank. Three steps is
-            all it takes to get it standing up and pointed the right way.
+            all it takes to get it standing up and pointed the exact right way.
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export function HowItWorks() {
               A tall sticky box (not a short top-anchored one) is what keeps the
               machine at eye level instead of riding up under the section title. */}
           <div
-            className="sticky top-16 z-10 -mx-5 flex h-[50vh] min-w-0 items-center justify-center bg-background/70 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[calc(100dvh-7rem)] md:bg-transparent md:backdrop-blur-none"
+            className="sticky top-16 z-10 -mx-5 flex h-[50vh] min-w-0 items-center justify-center bg-background/70 backdrop-blur-sm sm:-mx-6 md:top-24 md:mx-0 md:h-[500px] md:bg-transparent md:backdrop-blur-none"
           >
             <div ref={stageRef} aria-hidden className="canvas-bleed h-full w-full">
               {mountScene && <AssemblyScene step={active} paused={!stageInView} />}
@@ -191,7 +191,7 @@ export function HowItWorks() {
                 ref={(el) => {
                   stepRefs.current[i] = el;
                 }}
-                className="relative flex min-h-[64vh] flex-col justify-center py-10 pl-10 md:min-h-[88vh]"
+                className="relative flex flex-col justify-center py-8 pl-10 md:py-12"
               >
                 {/* numbered node on the spine — the only 'chrome' the step has */}
                 <span

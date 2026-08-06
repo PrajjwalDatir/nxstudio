@@ -199,11 +199,11 @@
    backdrop behind the hero. Purely decorative. */
 @utility grid-bg {
   background-image:
-    linear-gradient(to right, rgba(139, 92, 246, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(139, 92, 246, 0.06) 1px, transparent 1px);
-  background-size: 48px 48px;
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 0%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 0%, #000 30%, transparent 100%);
 }
 
 /* Filmic grain overlay. A tiled SVG turbulence tile, blended soft-light so it
@@ -247,15 +247,26 @@
 .hero-glow::before {
   content: "";
   position: absolute;
-  top: -220px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -240px;
+  right: -100px;
   width: 900px;
-  height: 620px;
+  height: 650px;
   border-radius: 9999px;
-  filter: blur(150px);
-  opacity: 0.3;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.45), transparent 68%);
+  filter: blur(160px);
+  opacity: 0.28;
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.4), rgba(45, 212, 191, 0.12), transparent 70%);
+}
+.hero-glow::after {
+  content: "";
+  position: absolute;
+  top: -180px;
+  left: -200px;
+  width: 700px;
+  height: 500px;
+  border-radius: 9999px;
+  filter: blur(140px);
+  opacity: 0.18;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.35), transparent 70%);
 }
 
 /* Legal / long-form prose (privacy, terms, refund). No typography plugin, so

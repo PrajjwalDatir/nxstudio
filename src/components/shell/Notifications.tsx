@@ -29,11 +29,11 @@ export function Notifications() {
       <PopoverTrigger asChild>
         <button
           aria-label={`Notifications${badge ? ` (${badge} open issues)` : ""}`}
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="relative flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
         >
-          <BellIcon className="h-4 w-4" />
+          <BellIcon className="h-[18px] w-[18px]" />
           {badge > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-none text-primary-foreground">
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-semibold leading-none text-white shadow-[0_0_0_2px_var(--sidebar)]">
               {badge > 9 ? "9+" : badge}
             </span>
           )}
@@ -77,12 +77,13 @@ export function Notifications() {
                     href={i.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-start gap-2.5 px-4 py-2 hover:bg-secondary/60"
+                    className="group flex items-start gap-2.5 px-4 py-2.5 transition-colors hover:bg-primary/5 border-l-2 border-transparent hover:border-primary"
                   >
-                    <CircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                    <span className="min-w-0 flex-1 truncate text-sm">{i.title}</span>
-                    <span className="shrink-0 text-[11px] text-muted-foreground">#{i.number}</span>
-                    <ExternalLinkIcon className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                    <CircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">{i.title}</span>
+                      <span className="text-[11px] text-muted-foreground">#{i.number} — Action required</span>
+                    </div>
                   </a>
                 ))}
               </Section>
@@ -97,6 +98,29 @@ export function Notifications() {
                   </div>
                 ))}
               </Section>
+            )}
+          </div>
+        )}
+
+        {result?.repo && (
+          <div className="flex items-center justify-between border-t border-border bg-muted/30 px-4 py-2.5">
+            <a 
+              href={`https://github.com/${result.repo}`} 
+              target="_blank" 
+              rel="noreferrer"
+              className="text-xs font-medium text-primary hover:underline flex items-center gap-1.5"
+            >
+              View Repository <ExternalLinkIcon className="h-3 w-3" />
+            </a>
+            {badge > 0 && (
+              <a 
+                href={`https://github.com/${result.repo}/issues`} 
+                target="_blank" 
+                rel="noreferrer"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Action Items ({badge})
+              </a>
             )}
           </div>
         )}

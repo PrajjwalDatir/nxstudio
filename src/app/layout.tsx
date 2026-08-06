@@ -29,9 +29,6 @@ export const metadata: Metadata = {
   creator: siteConfig.authorName,
   publisher: siteConfig.name,
   category: "technology",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     siteName: siteConfig.name,

@@ -114,6 +114,11 @@ export default function ProjectsPage() {
     router.push("/canvas");
   };
 
+  const openStudio = (id: string) => {
+    switchProject(id);
+    router.push("/studio");
+  };
+
   // Group projects by collection; anything without a (known) collection is "Ungrouped".
   const sortedCollections = useMemo(
     () => [...collections].sort((a, b) => a.sort - b.sort),
@@ -190,7 +195,10 @@ export default function ProjectsPage() {
 
         <div className="mt-5 flex items-center gap-2">
           <Button size="sm" onClick={() => open(p.id)}>
-            Open
+            Open Canvas
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => openStudio(p.id)}>
+            Studio
           </Button>
           <button
             onClick={() => {
