@@ -106,47 +106,45 @@ export function Hero() {
       {/* Filmic grain — a faint tactile texture over the whole stage */}
       <div className="grain-overlay pointer-events-none absolute inset-0 z-30" aria-hidden />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-14 pt-14 sm:px-6 sm:pt-16 md:pb-20">
+      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-10 pt-8 sm:px-6 sm:pt-10 md:pb-14">
         <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] md:gap-8">
           {/* Copy — left rail */}
           <div className="relative z-10 text-center md:text-left">
             {/* Top Proof Badges — Indie Hackers + Product Hunt */}
             <div
               style={{ animationDelay: "0.12s" }}
-              className="reveal-rise mb-5 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
+              className="reveal-rise mb-3.5 flex flex-wrap items-center justify-center gap-2 md:justify-start"
             >
               <a
                 href="https://www.indiehackers.com/prajj"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
               >
-                <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
+                <IndieHackersMark className="h-3.5 w-3.5 rounded shrink-0" />
                 <span>Featured on Indie Hackers</span>
               </a>
               <a
                 href="https://www.producthunt.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
               >
-                <ProductHuntMark className="h-4 w-4 fill-current text-[#DA552F] shrink-0" />
+                <ProductHuntMark className="h-3.5 w-3.5 fill-current text-[#DA552F] shrink-0" />
                 <span>Product Hunt</span>
               </a>
             </div>
 
             <h1
               style={{ animationDelay: "0.28s" }}
-              className="reveal-rise text-3xl font-extrabold leading-[1.18] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.5rem]"
+              className="reveal-rise text-3xl font-extrabold leading-[1.22] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.5rem] [text-wrap:balance]"
             >
-              Product context
-              <br className="hidden sm:block" />
-              for <IdeFlipper />
+              Product context for <IdeFlipper />
             </h1>
 
             <p
               style={{ animationDelay: "0.48s" }}
-              className="reveal-rise mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-relaxed md:mx-0"
+              className="reveal-rise mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-relaxed md:mx-0"
             >
               Never prompt from scratch again. Map your spec into a .nx/ context bundle powered by{" "}
               <a
@@ -162,19 +160,19 @@ export function Hero() {
 
             <div
               style={{ animationDelay: "0.65s" }}
-              className="reveal-rise mx-auto mt-9 flex max-w-[17rem] flex-col items-center gap-3.5 sm:max-w-none sm:flex-row md:mx-0 md:justify-start"
+              className="reveal-rise mx-auto mt-6 flex max-w-[17rem] flex-col items-center gap-3 sm:max-w-none sm:flex-row md:mx-0 md:justify-start"
             >
               <AuthButton
                 source="hero"
                 onMouseEnter={() => say("cta-hover")}
-                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[0_0_32px_-4px_rgba(139,92,246,0.6),inset_0_1px_0_0_rgba(255,255,255,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_38px_-2px_rgba(139,92,246,0.7),inset_0_1px_0_0_rgba(255,255,255,0.4)] sm:w-auto"
+                className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_0_32px_-4px_rgba(139,92,246,0.6),inset_0_1px_0_0_rgba(255,255,255,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_38px_-2px_rgba(139,92,246,0.7),inset_0_1px_0_0_rgba(255,255,255,0.4)] sm:w-auto"
               >
                 Start building — free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
               <a
                 href="#how"
-                className="inline-flex h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-7 text-sm font-semibold text-foreground backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.09] sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-foreground backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.09] sm:w-auto"
               >
                 See how it works
               </a>
@@ -182,7 +180,7 @@ export function Hero() {
 
             <p
               style={{ animationDelay: "0.8s" }}
-              className="reveal-rise mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground/80 md:justify-start"
+              className="reveal-rise mt-3.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground/80 md:justify-start"
             >
               <GithubIcon className="h-3.5 w-3.5" />
               Free · GitHub sign-in · Works with any agent
