@@ -1,9 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { computeLineDiff } from "@/lib/nx-diff";
-import { FileTextIcon, GitBranchIcon, LockIcon, CheckIcon, CopyIcon } from "@/components/icons";
+import { fetchFileCommits, fetchFileContentAtSha, TemporalCommit } from "@/lib/github-temporal";
+import {
+  FileTextIcon,
+  GitBranchIcon,
+  LockIcon,
+  CheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+} from "@/components/icons";
 
 export interface DriftDiffModalProps {
   path: string | null;
@@ -13,13 +21,47 @@ export interface DriftDiffModalProps {
   onClose: () => void;
 }
 
-export function DriftDiffModal({ path, status, originalContent, currentContent, onClose }: DriftDiffModalProps) {
+export function DriftDiffModal({
+  path,
+  status,
+  originalContent,
+  currentContent,
+  onClose,
+}: DriftDiffModalProps) {
   const [activeTab, setActiveTab] = useState<"diff" | "timeline">("diff");
   const [copied, setCopied] = useState(false);
 
+  // GitHub Temporal Commit History State
+  const [commits, setCommits] = useState<TemporalCommit[]>([]);
+  const [loadingCommits, setLoadingCommits] = useState(false);
+  const [selectedCommit, setSelectedCommit] = useState<TemporalCommit | null>(null);
+  const [revisionContent, setRevisionContent] = useState<string | null>(null);
+  const [loadingRevision, setLoadingRevision] = useState(false);
+
+  // Compute current baseline vs current head diff
   const diffResult = useMemo(() => {
-    return computeLineDiff(originalContent || "", currentContent || "");
-  }, [originalContent, currentContent]);
+    const target = revisionContent !== null ? revisionContent : currentContent;
+    return computeLineDiff(originalContent || "", target || "");
+  }, [originalContent, currentContent, revisionContent]);
+
+  useEffect(() => {
+    if (!path) return;
+    setLoadingCommits(true);
+    fetchFileCommits(path).then((data) => {
+      setCommits(data);
+      setLoadingCommits(false);
+    });
+  }, [path]);
+
+  const handleSelectCommit = async (commit: TemporalCommit) => {
+    if (!path) return;
+    setSelectedCommit(commit);
+    setLoadingRevision(true);
+    const text = await fetchFileContentAtSha(commit.sha, path);
+    setRevisionContent(text ?? currentContent);
+    setLoadingRevision(false);
+    setActiveTab("diff"); // Jump to diff tab to inspect this historical revision!
+  };
 
   if (!path) return null;
 
@@ -32,37 +74,13 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
       case "extra":
         return { label: "New File in Repo", class: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" };
       case "unchanged":
-        return { label: "Synced & In-Bounds", class: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" };
+        return { label: "Synced", class: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" };
       case "missing":
         return { label: "Pending Sync", class: "border-muted/40 bg-muted/20 text-muted-foreground" };
       default:
         return { label: status, class: "border-border bg-secondary text-muted-foreground" };
     }
   }, [status]);
-
-  const timelineEvents = [
-    {
-      title: "Initial Studio Compile (t₀)",
-      time: "Workspace Creation",
-      desc: "Original .nx/ context generated from project brief and derived stack.",
-      badge: "Studio Emitted",
-    },
-    {
-      title: "Agent Execution & Revision (t₁)",
-      time: "AI Build Phase",
-      desc: "AI agent (Cursor / Claude Code) read .nx/ context and executed repo updates.",
-      badge: "Agent Run",
-    },
-    {
-      title: "Temporal Git Revision State (t₂)",
-      time: "Current Detected State",
-      desc:
-        diffResult.additions === 0 && diffResult.deletions === 0
-          ? "File is completely in sync with studio baseline."
-          : `Detected ${diffResult.additions} additions and ${diffResult.deletions} deletions vs studio baseline.`,
-      badge: status === "unchanged" ? "In Sync" : "Live Drift",
-    },
-  ];
 
   const copyDiffText = () => {
     const raw = diffResult.lines
@@ -79,16 +97,17 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-md">
+      {/* Light, non-intrusive backdrop: keeps the webapp completely visible in the background */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          exit={{ opacity: 0, scale: 0.96 }}
           transition={{ duration: 0.15 }}
-          className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+          className="flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border p-5">
+          <div className="flex items-center justify-between border-b border-border p-5 bg-card/50">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <FileTextIcon className="h-5 w-5" />
@@ -99,6 +118,11 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
                   <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase ${statusBadge.class}`}>
                     {statusBadge.label}
                   </span>
+                  {selectedCommit && (
+                    <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] text-amber-400">
+                      Comparing SHA: {selectedCommit.sha}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 flex items-center gap-3 font-mono text-xs text-muted-foreground">
                   <span className="text-emerald-400">+{diffResult.additions} additions</span>
@@ -110,7 +134,7 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
 
             <button
               onClick={onClose}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               ✕
             </button>
@@ -118,7 +142,7 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
 
           {/* Navigation Tabs */}
           <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-5 py-2.5">
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-xs">
               <button
                 onClick={() => setActiveTab("diff")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
@@ -137,23 +161,40 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <LockIcon className="h-3.5 w-3.5" /> Temporal History Timeline
+                <LockIcon className="h-3.5 w-3.5" /> Git Temporal History ({commits.length})
               </button>
             </div>
 
-            <button
-              onClick={copyDiffText}
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {copied ? <CheckIcon className="h-3.5 w-3.5 text-emerald-400" /> : <CopyIcon className="h-3.5 w-3.5" />}
-              {copied ? "Copied Diff" : "Copy Diff"}
-            </button>
+            <div className="flex items-center gap-2">
+              {selectedCommit && (
+                <button
+                  onClick={() => {
+                    setSelectedCommit(null);
+                    setRevisionContent(null);
+                  }}
+                  className="rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-amber-400 hover:bg-secondary transition-colors"
+                >
+                  Reset to Live Head
+                </button>
+              )}
+              <button
+                onClick={copyDiffText}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {copied ? <CheckIcon className="h-3.5 w-3.5 text-emerald-400" /> : <CopyIcon className="h-3.5 w-3.5" />}
+                {copied ? "Copied" : "Copy Diff"}
+              </button>
+            </div>
           </div>
 
           {/* Content Body */}
-          <div className="flex-1 overflow-y-auto bg-background p-4">
-            {activeTab === "diff" ? (
-              <div className="rounded-xl border border-border bg-black/40 font-mono text-xs leading-relaxed overflow-x-auto">
+          <div className="flex-1 overflow-y-auto bg-background/60 p-4">
+            {loadingRevision ? (
+              <div className="flex h-48 items-center justify-center text-xs text-muted-foreground">
+                Fetching revision content from GitHub...
+              </div>
+            ) : activeTab === "diff" ? (
+              <div className="rounded-xl border border-border bg-black/50 font-mono text-xs leading-relaxed overflow-x-auto">
                 {diffResult.lines.map((line, idx) => {
                   let bgClass = "hover:bg-secondary/30 text-muted-foreground/80";
                   let prefix = " ";
@@ -184,40 +225,68 @@ export function DriftDiffModal({ path, status, originalContent, currentContent, 
                 })}
               </div>
             ) : (
-              /* Temporal Timeline View */
-              <div className="space-y-6 p-4 max-w-2xl mx-auto">
-                <div className="mb-4 text-xs text-muted-foreground text-center">
-                  Temporal revision history tracks the progression of <span className="font-mono text-primary">.nx/{shortPath}</span> across studio compilations and agent edits.
+              /* Temporal Git Revision Timeline View */
+              <div className="space-y-4 p-2 max-w-2xl mx-auto">
+                <div className="mb-2 text-xs text-muted-foreground text-center">
+                  Real Git commit history fetched from GitHub for <span className="font-mono text-primary">.nx/{shortPath}</span>. Tap any commit to inspect its exact historical diff.
                 </div>
-                {timelineEvents.map((evt, idx) => (
-                  <div key={idx} className="relative flex items-start gap-4">
-                    {idx < timelineEvents.length - 1 && (
-                      <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-border" />
-                    )}
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary z-10">
-                      <LockIcon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 rounded-xl border border-border bg-card p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground">{evt.title}</span>
-                        <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-[10px] text-primary">
-                          {evt.badge}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{evt.desc}</p>
-                      <div className="mt-2 text-[10px] font-mono text-muted-foreground/60">{evt.time}</div>
-                    </div>
+
+                {loadingCommits ? (
+                  <div className="py-8 text-center text-xs text-muted-foreground">
+                    Fetching commit history from GitHub API…
                   </div>
-                ))}
+                ) : commits.length > 0 ? (
+                  commits.map((c, idx) => {
+                    const isSelected = selectedCommit?.sha === c.sha;
+                    return (
+                      <div
+                        key={c.sha}
+                        onClick={() => handleSelectCommit(c)}
+                        className={`group cursor-pointer rounded-xl border p-4 transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border bg-card hover:border-primary/50 hover:bg-secondary/40"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-primary">{c.sha}</span>
+                            <span className="text-xs font-semibold text-foreground truncate max-w-md">{c.message}</span>
+                          </div>
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLinkIcon className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>Author: {c.author}</span>
+                          <span>{c.date}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                    No remote git commit history found yet for this file.
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 border-t border-border p-4 bg-card">
+          <div className="flex items-center justify-between border-t border-border p-4 bg-card/60">
+            <span className="text-xs text-muted-foreground">
+              {selectedCommit ? `Inspecting commit ${selectedCommit.sha}` : "Live workspace baseline vs head"}
+            </span>
             <button
               onClick={onClose}
-              className="rounded-xl px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="rounded-xl border border-border bg-secondary/40 px-4 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
             >
               Close
             </button>
