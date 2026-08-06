@@ -169,6 +169,12 @@ html.light .hero-glow::after {
 ::view-transition-new(root) {
   animation: none !important;
   mix-blend-mode: normal !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  transform: none !important;
 }
 
 ::view-transition-old(root) {

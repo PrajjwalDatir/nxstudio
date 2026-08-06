@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import Link from "next/link";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { track } from "@vercel/analytics";
 import { GitHubSignIn } from "@/app/login/github-signin";
@@ -128,7 +121,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               </div>
 
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                By continuing you agree to the terms of service and privacy policy.
+                By continuing, you agree to nxstudio&apos;s{" "}
+                <Link
+                  href="/terms"
+                  onClick={close}
+                  className="underline underline-offset-2 hover:text-foreground transition-colors"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  onClick={close}
+                  className="underline underline-offset-2 hover:text-foreground transition-colors"
+                >
+                  Privacy Policy
+                </Link>.
               </p>
             </motion.div>
           </motion.div>
