@@ -43,17 +43,11 @@ function ThemeToggle() {
       root.classList.add("theme-transitioning");
       setTimeout(() => root.classList.remove("theme-transitioning"), 900);
 
-      // Prefer the hero lamp's live screen position (it's the "light" in
-      // "light mode") — fall back to the toggle button on pages or scroll
-      // positions where the lamp hasn't reported one yet.
+      // Start the light transition directly from the navbar light icon button
       const rect = btnRef.current?.getBoundingClientRect();
-      const fallback = rect
+      const origin = rect
         ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
         : { x: window.innerWidth - 40, y: 40 };
-      const origin =
-        lampOrigin.x !== null && lampOrigin.y !== null
-          ? { x: lampOrigin.x, y: lampOrigin.y }
-          : fallback;
       runLightOnTransition(origin, applyThemeClass);
     } else {
       // No crossfade — the swap should read as an instant cut inside the flash.
