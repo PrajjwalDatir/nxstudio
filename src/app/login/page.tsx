@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowLeftIcon } from "@/components/icons";
+import {
+  ArrowLeftIcon,
+  InspectorLogo,
+  CompassLogo,
+  LoopsMgmtLogo,
+  WickLogo,
+} from "@/components/icons";
 import { GitHubSignIn } from "./github-signin";
 import { CanvasPreview } from "@/components/landing/CanvasPreview";
 
@@ -67,20 +73,22 @@ export default async function LoginPage({
             Already have an account? <Link href="/login" className="font-medium text-foreground hover:underline">Log in</Link>
           </p>
           <p className="text-[11px] text-muted-foreground/70 mb-5">Trusted by teams at</p>
-          <div className="flex justify-center items-center gap-6 opacity-40 grayscale">
-            {/* Generic placeholders for logos to match reference layout */}
-            <span className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-1.5">
-              <span className="h-4 w-4 rounded-full bg-foreground"></span>
-              headspace
+          <div className="flex flex-wrap justify-center items-center gap-5 sm:gap-6 opacity-60 transition-opacity hover:opacity-100">
+            <span className="text-xs font-semibold tracking-tight text-foreground flex items-center gap-1.5 font-sans">
+              <InspectorLogo className="h-4 w-4 text-foreground" />
+              Inspector
             </span>
-            <span className="text-sm font-bold tracking-tight text-foreground flex items-center gap-1">
-              airbnb
+            <span className="text-xs font-semibold tracking-tight text-foreground flex items-center gap-1.5 font-sans">
+              <CompassLogo className="h-4 w-4 text-foreground" />
+              Compass
             </span>
-            <span className="text-sm font-bold tracking-tight text-foreground">
-              Revolut
+            <span className="text-xs font-semibold tracking-tight text-foreground flex items-center gap-1.5 font-sans">
+              <LoopsMgmtLogo className="h-4 w-4 text-foreground" />
+              Loops MGMT
             </span>
-            <span className="text-sm font-bold tracking-tighter text-foreground">
-              duolingo
+            <span className="text-xs font-semibold tracking-tight text-foreground flex items-center gap-1.5 font-sans">
+              <WickLogo className="h-4 w-4 text-foreground" />
+              Wick
             </span>
           </div>
         </div>
