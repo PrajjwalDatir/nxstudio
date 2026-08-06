@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useIsMobile } from "./use-is-mobile";
 import { CanvasPreview } from "./CanvasPreview";
 import { ArrowRightIcon, GithubIcon } from "@/components/icons";
-import { IndieHackersMark, NpmMark } from "./brand-icons";
+import { IndieHackersMark, NpmMark, ProductHuntMark } from "./brand-icons";
 import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
 import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
@@ -102,64 +102,79 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="grid-bg absolute inset-0" aria-hidden />
       <div className="hero-glow" aria-hidden />
-      {/* Filmic grain — a faint tactile texture over the whole stage, blended so
-          it grips the dark background without lifting it to grey. */}
+      {/* Filmic grain — a faint tactile texture over the whole stage */}
       <div className="grain-overlay pointer-events-none absolute inset-0 z-30" aria-hidden />
 
       <div className="relative z-10 mx-auto max-w-6xl px-5 pb-14 pt-14 sm:px-6 sm:pt-16 md:pb-20">
         <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] md:gap-8">
           {/* Copy — left rail */}
           <div className="relative z-10 text-center md:text-left">
-            <h1
-              style={{ animationDelay: "0.28s" }}
-              className="reveal-rise text-3xl font-extrabold leading-[1.25] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.5rem] [text-wrap:balance]"
+            {/* Top Proof Badges — Indie Hackers + Product Hunt */}
+            <div
+              style={{ animationDelay: "0.12s" }}
+              className="reveal-rise mb-5 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
             >
-              Product context for <IdeFlipper />
-            </h1>
-
-            <p
-              style={{ animationDelay: "0.48s" }}
-              className="reveal-rise mx-auto mt-5 max-w-xl text-base leading-snug text-muted-foreground sm:text-lg md:mx-0"
-            >
-              Never prompt from scratch again. Map your spec into a .nx/ bundle powered by{" "}
-              <a
-                href="https://www.npmjs.com/package/nxhuman"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-md border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 text-xs font-medium text-red-200 transition-all hover:border-red-500/40 hover:bg-red-500/20 align-middle"
-              >
-                <NpmMark className="h-3 w-3 fill-current text-red-400 shrink-0" />
-                nxhuman
-              </a>{" "}
-              &amp; shared on{" "}
               <a
                 href="https://www.indiehackers.com/prajj"
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Indie Hackers (@prajj)"
-                className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 p-1 text-xs transition-all hover:border-white/20 hover:bg-white/10 align-middle"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-foreground backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.08] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.5)]"
               >
-                <IndieHackersMark className="h-3.5 w-3.5 rounded-sm shrink-0" />
+                <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
+                <span>Featured on Indie Hackers</span>
+              </a>
+              <a
+                href="https://www.producthunt.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 rounded-full border border-[#DA552F]/30 bg-[#DA552F]/10 px-3.5 py-1.5 text-xs font-semibold text-orange-200 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-[#DA552F]/50 hover:bg-[#DA552F]/20 shadow-[0_2px_12px_-2px_rgba(218,85,47,0.3)]"
+              >
+                <ProductHuntMark className="h-4 w-4 fill-current text-[#DA552F] shrink-0" />
+                <span>Product Hunt</span>
+              </a>
+            </div>
+
+            <h1
+              style={{ animationDelay: "0.28s" }}
+              className="reveal-rise text-3xl font-extrabold leading-[1.18] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.5rem]"
+            >
+              Product context
+              <br className="hidden sm:block" />
+              for <IdeFlipper />
+            </h1>
+
+            <p
+              style={{ animationDelay: "0.48s" }}
+              className="reveal-rise mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-relaxed md:mx-0"
+            >
+              Never prompt from scratch again. Map your spec into a .nx/ context bundle powered by{" "}
+              <a
+                href="https://www.npmjs.com/package/nxhuman"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-200 transition-all hover:border-red-500/40 hover:bg-red-500/20 align-middle shadow-[0_2px_8px_-2px_rgba(239,68,68,0.3)]"
+              >
+                <NpmMark className="h-3.5 w-3.5 fill-current text-red-400 shrink-0" />
+                nxhuman
               </a>.
             </p>
 
             <div
               style={{ animationDelay: "0.65s" }}
-              className="reveal-rise mx-auto mt-9 flex max-w-[17rem] flex-col items-center gap-3 sm:max-w-none sm:flex-row md:mx-0 md:justify-start"
+              className="reveal-rise mx-auto mt-9 flex max-w-[17rem] flex-col items-center gap-3.5 sm:max-w-none sm:flex-row md:mx-0 md:justify-start"
             >
               <AuthButton
                 source="hero"
                 onMouseEnter={() => say("cta-hover")}
-                className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] transition-all hover:-translate-y-0.5 hover:bg-primary/90 sm:w-auto"
+                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[0_0_32px_-4px_rgba(139,92,246,0.6),inset_0_1px_0_0_rgba(255,255,255,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_38px_-2px_rgba(139,92,246,0.7),inset_0_1px_0_0_rgba(255,255,255,0.4)] sm:w-auto"
               >
                 Start building — free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
               <a
                 href="#how"
-                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-medium text-foreground backdrop-blur-md transition-colors hover:border-white/30 hover:bg-white/[0.09] sm:w-auto"
+                className="inline-flex h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-7 text-sm font-semibold text-foreground backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.09] sm:w-auto"
               >
                 See how it works
               </a>
@@ -167,7 +182,7 @@ export function Hero() {
 
             <p
               style={{ animationDelay: "0.8s" }}
-              className="reveal-rise mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground md:justify-start"
+              className="reveal-rise mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground/80 md:justify-start"
             >
               <GithubIcon className="h-3.5 w-3.5" />
               Free · GitHub sign-in · Works with any agent

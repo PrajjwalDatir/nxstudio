@@ -541,9 +541,6 @@ export function Machine({
           <Shell />
         </mesh>
 
-        {/* Dialogue speech line anchored directly near his mouth in 3D */}
-        {line && line.trim().length > 0 && <MouthDialogue line={line} />}
-
         {/* Antenna — a bent stalk, the one asymmetric detail on the whole unit */}
         <mesh position={[0.2, 0.58, -0.08]} rotation={[0.12, 0, -0.28]}>
           <cylinderGeometry args={[0.022, 0.03, 0.5, 6]} />
