@@ -5,7 +5,14 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { AnimatePresence, motion } from "framer-motion";
 import { track } from "@vercel/analytics";
 import { GitHubSignIn } from "@/app/login/github-signin";
-import { NxLogo, XIcon } from "@/components/icons";
+import {
+  NxLogo,
+  XIcon,
+  InspectorLogo,
+  CompassLogo,
+  LoopsMgmtLogo,
+  WickLogo,
+} from "@/components/icons";
 
 /**
  * Sign-in as an overlay on the landing page.
@@ -138,6 +145,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   Privacy Policy
                 </Link>.
               </p>
+
+              <div className="mt-6 border-t border-border/50 pt-4">
+                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-2.5">Trusted by teams at</p>
+                <div className="flex flex-wrap justify-center items-center gap-4 opacity-70">
+                  <span className="text-[11px] font-medium tracking-tight text-foreground flex items-center gap-1 font-sans">
+                    <InspectorLogo className="h-3.5 w-3.5" />
+                    Inspector
+                  </span>
+                  <span className="text-[11px] font-medium tracking-tight text-foreground flex items-center gap-1 font-sans">
+                    <CompassLogo className="h-3.5 w-3.5" />
+                    Compass
+                  </span>
+                  <span className="text-[11px] font-medium tracking-tight text-foreground flex items-center gap-1 font-sans">
+                    <LoopsMgmtLogo className="h-3.5 w-3.5" />
+                    Loops MGMT
+                  </span>
+                  <span className="text-[11px] font-medium tracking-tight text-foreground flex items-center gap-1 font-sans">
+                    <WickLogo className="h-3.5 w-3.5" />
+                    Wick
+                  </span>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

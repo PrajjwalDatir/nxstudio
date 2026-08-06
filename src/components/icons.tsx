@@ -140,3 +140,57 @@ export function PhaseIcon({ name, className }: { name: string; className?: strin
   const Icon = ICON_MAP[name] ?? BoxIcon;
   return <Icon className={className} />;
 }
+
+/* Brand Partner Logos (Inspector, Compass, Loops MGMT, Wick) */
+export function InspectorLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 100 100" fill="currentColor">
+      <circle cx="50" cy="50" r="48" />
+      <path
+        d="M34 30L68 48L49 57L39 74L34 30Z"
+        fill="var(--background, #000)"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+export function CompassLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 100 100" fill="none" stroke="currentColor">
+      <circle cx="50" cy="50" r="46" strokeWidth="3" strokeDasharray="3 3" />
+      <path d="M50 8V92 M8 50H92" strokeWidth="2" opacity="0.6" />
+      <polygon points="50,20 57,47 50,44 43,47" fill="currentColor" stroke="none" />
+      <polygon points="50,80 57,53 50,56 43,53" fill="currentColor" stroke="none" />
+      <polygon points="20,50 47,43 44,50 47,57" fill="currentColor" stroke="none" />
+      <polygon points="80,50 53,43 56,50 53,57" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function LoopsMgmtLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 100 100" fill="none" stroke="currentColor">
+      <circle cx="50" cy="50" r="46" strokeWidth="3" fill="currentColor" fillOpacity="0.1" />
+      <path
+        d="M50 14 C70 14, 86 30, 86 50 C86 70, 70 86, 50 86 C30 86, 14 70, 14 50 C14 30, 30 14, 50 14 Z M50 26 C36 26, 26 36, 26 50 C26 64, 36 74, 50 74 C64 74, 74 64, 74 50 C74 36, 64 26, 50 26 Z"
+        fill="currentColor"
+        fillRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+export function WickLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 100 100" fill="currentColor">
+      <rect x="8" y="8" width="84" height="84" rx="24" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="3" />
+      <rect x="25" y="28" width="14" height="44" rx="3" fill="currentColor" />
+      <rect x="45" y="44" width="10" height="20" rx="2" fill="currentColor" />
+      <line x1="50" y1="36" x2="50" y2="44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <line x1="50" y1="64" x2="50" y2="70" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path d="M63 28H77V72L70 65L63 72V28Z" fill="currentColor" />
+    </svg>
+  );
+}
