@@ -17,6 +17,7 @@ import { ContactShadows, Environment, Float, Sparkles } from "@react-three/drei"
 import CameraControls from "camera-controls";
 import * as THREE from "three";
 import { Machine, usePrefersReducedMotion, useIsLightMode, type MachineHitState } from "./MachineModel";
+import { lampOrigin } from "./lamp-origin";
 
 function SceneLighting({ heroX }: { heroX: number }) {
   const isLight = useIsLightMode();
@@ -169,6 +170,7 @@ function SwingingLamp({ heroX }: { heroX: number }) {
   const bulbMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
   const sparkRef = useRef<THREE.Mesh>(null);
   const sparkElapsed = useRef<number | null>(null);
+  const originFrameCount = useRef(0);
 
   // Grab-and-throw: while held, pointer movement drives swingAngle directly
   // (the spring in useFrame stands down) and the drag's last velocity sample
@@ -192,22 +194,45 @@ function SwingingLamp({ heroX }: { heroX: number }) {
       dragLastClientX.current = e.clientX;
       dragLastTime.current = now;
     };
-    const onPointerUp = () => {
+    // Shared release path for pointerup/pointercancel/unmount — every exit
+    // from a drag must restore the cursor and re-enable touch scrolling, or
+    // they stay stuck the next time this runs.
+    const endDrag = (throwVelocity: number) => {
       if (!isDragging.current) return;
       isDragging.current = false;
-      // Hand off to the spring with the last drag velocity as the throw.
-      swingVelocity.current = THREE.MathUtils.clamp(dragAngularVelocity.current * 0.16, -0.6, 0.6);
+      swingVelocity.current = throwVelocity;
       document.body.style.cursor = "";
+      document.body.style.touchAction = "";
     };
+    const onPointerUp = () => {
+      // Hand off to the spring with the last drag velocity as the throw.
+      endDrag(THREE.MathUtils.clamp(dragAngularVelocity.current * 0.16, -0.6, 0.6));
+    };
+    // A dropped drag (alt-tab mid-hold, a touch gesture the OS hijacks, a
+    // right-click opening the context menu) fires pointercancel instead of
+    // pointerup — without this, isDragging never clears, the lamp freezes
+    // (the physics step in useFrame stands down whenever it's true), and the
+    // cursor/touch-action stay stuck. Release with zero throw, since an
+    // aborted grab isn't a real throw.
+    const onPointerCancel = () => endDrag(0);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      // Guard against unmounting mid-drag leaving the cursor/touch-action stuck.
+      endDrag(0);
     };
   }, []);
 
   const handleLampPointerDown = (e: ThreeEvent<PointerEvent>) => {
+    // Only the primary pointer/button grabs the lamp — a right-click or a
+    // second touch point shouldn't start a drag (and for a right-click,
+    // stopPropagation doesn't stop the native context menu from opening,
+    // which would otherwise leave us mid-"drag" with no matching pointerup).
+    if (e.nativeEvent.button !== 0 || !e.nativeEvent.isPrimary) return;
     e.stopPropagation();
     isDragging.current = true;
     swingVelocity.current = 0;
@@ -215,6 +240,10 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     dragLastTime.current = performance.now();
     dragAngularVelocity.current = 0;
     document.body.style.cursor = "grabbing";
+    // Only suppressed for the drag's duration (restored on every release
+    // path above) — R3F doesn't set this itself, so without it a touch-drag
+    // on the lamp also pans the page underneath it.
+    document.body.style.touchAction = "none";
   };
 
   useEffect(() => {
@@ -284,12 +313,31 @@ function SwingingLamp({ heroX }: { heroX: number }) {
       if (swingVelocity.current > 0) swingVelocity.current *= -0.4;
     }
 
-    const totalX = Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
+    // Held: no synthetic sway on top of the hand — the shade goes exactly
+    // where the cursor takes it. Free-swinging: the usual idle wobble.
+    const totalX = isDragging.current
+      ? 0
+      : Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
 
     if (lampRef.current) {
-      // Slow lerp for buttery-smooth visual interpolation (no jitter)
-      lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, 0.045);
-      lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, 0.045);
+      // While held, snap straight to the cursor-driven angle — any lerp here
+      // reads as the shade lagging behind the hand. The slow spring lerp is
+      // for the free-swinging settle after release, not for the grab itself.
+      const followRate = isDragging.current ? 1 : 0.045;
+      lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, followRate);
+      lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, followRate);
+
+      // Project the shade's screen position every few frames so the theme
+      // toggle can expand its reveal from the lamp instead of the button —
+      // no DOM element to read a rect from, so this is the handoff.
+      originFrameCount.current += 1;
+      if (originFrameCount.current % 4 === 0) {
+        const worldPos = lampRef.current.localToWorld(new THREE.Vector3(0, -3.4, 0));
+        const ndc = worldPos.project(state.camera);
+        const rect = state.gl.domElement.getBoundingClientRect();
+        lampOrigin.x = rect.left + (ndc.x * 0.5 + 0.5) * rect.width;
+        lampOrigin.y = rect.top + (1 - (ndc.y * 0.5 + 0.5)) * rect.height;
+      }
     }
 
     // Post-snap flourish: a hot spark near the bulb, then its glow settles red → yellow.
@@ -336,7 +384,7 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     }
   });
 
-  const wallPivot: [number, number, number] = [heroX > 0 ? 0.9 : 0, 3.8, -0.6];
+  const wallPivot: [number, number, number] = [heroX > 0 ? 0.9 : 0, 4.3, -0.6];
 
   return (
     <group position={wallPivot}>
@@ -724,22 +772,24 @@ export default function MachineScene({
           )}
         </group>
 
-        {/* Ambient Studio Atmospheric Dust Motes reflecting light in 3D air */}
+        {/* Ambient Studio Atmospheric Dust Motes placed far back in background depth */}
         <Sparkles
           count={120}
-          scale={[12, 8, 6]}
-          position={[0, 0, 0]}
+          scale={[14, 9, 3]}
+          position={[0, 0, -4]}
+          raycast={() => null}
           size={2.6}
           speed={0.22}
           color={isLight ? "#8B5CF6" : "#DDD6FE"}
           opacity={isLight ? 0.45 : 0.65}
         />
 
-        {/* Dense Volumetric Dust Particles focused in the Spotlight Beams (Tyndall Effect) */}
+        {/* Dense Volumetric Dust Particles placed far back behind the spotlight beams */}
         <Sparkles
           count={80}
-          scale={[5, 6, 3.5]}
-          position={[heroX * 0.6, 0.2, 0.3]}
+          scale={[6, 6, 2]}
+          position={[heroX * 0.6, 0.2, -3]}
+          raycast={() => null}
           size={3.6}
           speed={0.42}
           color={isLight ? "#A78BFA" : "#EDE9FE"}
