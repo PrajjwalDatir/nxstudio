@@ -768,10 +768,10 @@ export function MascotNudge() {
           aria-label="nx — what's next"
           className="relative z-10 flex h-full w-full items-center justify-center drop-shadow-xl transition-transform hover:scale-105"
         >
-          <div className="h-full w-full pointer-events-none">
+          <div className="absolute -inset-6 pointer-events-none">
             <Canvas
               dpr={[1, 1.5]}
-              camera={{ position: [0, 0.05, 5.0], fov: 42 }}
+              camera={{ position: [0, 0.2, 5.5], fov: 36 }}
               gl={{ alpha: true, antialias: true }}
               style={{ background: "transparent" }}
             >
@@ -780,7 +780,7 @@ export function MascotNudge() {
               <pointLight position={[0.4, 1.2, 2.5]} intensity={14} color="#C4B5FD" />
               <pointLight position={[0, 1.5, -2.5]} intensity={22} color="#8B5CF6" />
               <Suspense fallback={null}>
-                <group position={[0, -0.75, 0]} scale={[0.92, 0.92, 0.92]}>
+                <group position={[0, -0.8, 0]} scale={[0.75, 0.75, 0.75]}>
                   <Machine reduce={reduce} pose={pose} />
                 </group>
               </Suspense>
