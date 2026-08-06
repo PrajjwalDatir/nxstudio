@@ -163,29 +163,20 @@ html.light .hero-glow::after {
 /* Smooth theme transition — applied by JS during toggle, removed after 450ms.
  * Uses will-change to hint the compositor and transitions background, color,
  * border-color, and fill so every surface eases between dark ↔ light. */
-html.theme-transitioning,
-html.theme-transitioning *,
-html.theme-transitioning *::before,
-html.theme-transitioning *::after {
-  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, fill 0.4s ease, box-shadow 0.4s ease !important;
-}
-
-/* The dark→light reveal drives its own clip-path wipe on ::view-transition-new(root)
- * (see theme-transition.ts) — kill the browser's default crossfade so it doesn't
- * compete with the wipe and muddy the edge. */
+::view-transition-group(root),
+::view-transition-image-pair(root),
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-  display: block;
+  animation: none !important;
+  mix-blend-mode: normal !important;
 }
 
 ::view-transition-old(root) {
-  z-index: 1;
+  z-index: 1 !important;
 }
 
 ::view-transition-new(root) {
-  z-index: 9999;
+  z-index: 9999 !important;
 }
 
 /* Frosted surface for cards and panels.

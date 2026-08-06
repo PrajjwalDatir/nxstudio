@@ -37,10 +37,13 @@ export function ThemeToggle() {
       }
     };
 
+    const el = e?.currentTarget || btnRef.current;
     let origin = { x: window.innerWidth - 80, y: 30 };
-    if (btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      }
     } else if (e && typeof e.clientX === "number" && typeof e.clientY === "number" && e.clientX > 0) {
       origin = { x: e.clientX, y: e.clientY };
     }
@@ -66,6 +69,7 @@ export function ThemeToggle() {
 
 // Absolute (leading "/") so these still resolve correctly when this nav is
 const LINKS = [
+  { href: "/", label: "Home" },
   { href: "/pricing", label: "Pricing" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
