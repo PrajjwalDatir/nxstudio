@@ -70,7 +70,7 @@ function CardShell({
 }) {
   return (
     <div
-      className={`group relative flex flex-col overflow-hidden rounded-xl glass p-5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-white/12 ${className}`}
+      className={`group relative flex flex-col overflow-hidden rounded-xl glass p-5 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-border ${className}`}
     >
       <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{line}</p>
@@ -152,8 +152,8 @@ function PromptCard({ className, stack }: { className?: string; stack: CompiledS
       line="Download your .nx/ context bundle or copy the master prompt, and your agent reads disk and builds in one run."
       className={className}
     >
-      <div className="overflow-hidden rounded-xl border border-white/5 bg-background/50">
-        <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
+      <div className="overflow-hidden rounded-xl border border-border bg-background/50">
+        <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <span className="font-mono text-[11px] text-muted-foreground">build-prompt.md</span>
           <div className="flex items-center gap-2">
             <button

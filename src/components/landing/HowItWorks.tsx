@@ -67,7 +67,7 @@ const STEPS = [
     // The compiled prompt panel from the Build phase, with its real Copy control.
     artifact: (
       <div className="glass overflow-hidden rounded-xl">
-        <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
+        <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <span className="font-mono text-[11px] text-muted-foreground">build-prompt.md</span>
           <Button size="sm" variant="secondary" className="h-7 gap-1.5 px-2.5 text-xs" tabIndex={-1}>
             <CopyIcon className="h-3 w-3" />

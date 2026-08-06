@@ -73,7 +73,7 @@ export function PricingGrid({
                 plan.highlighted
                   ? "border-primary/60 bg-primary/[0.04]"
                   : plan.vip
-                    ? "border-border bg-card ring-1 ring-inset ring-white/[0.06]"
+                    ? "border-border bg-card ring-1 ring-inset ring-foreground/10"
                     : "border-border bg-card/40"
               }`}
             >

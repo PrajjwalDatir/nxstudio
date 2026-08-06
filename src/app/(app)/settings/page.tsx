@@ -7,6 +7,7 @@ import { useSubscription } from "@/lib/use-subscription";
 import { Button } from "@/components/ui/button";
 import { BillingSection } from "@/components/billing/BillingSection";
 import { ReferralPanel } from "@/components/referral/ReferralPanel";
+import { AdminPromptsPanel } from "@/components/admin/AdminPromptsPanel";
 import { GithubIcon, CheckCircleIcon, LoaderIcon, ExternalLinkIcon, SettingsIcon, ScaffoldIcon } from "@/components/icons";
 
 function Field({
@@ -198,6 +199,9 @@ export default function SettingsPage() {
 
       {/* Subscription */}
       <BillingSection />
+
+      {/* Admin Pipeline */}
+      <AdminPromptsPanel />
 
       {/* Referrals */}
       <ReferralPanel />

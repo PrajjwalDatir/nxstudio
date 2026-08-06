@@ -33,7 +33,7 @@ const selectTriggerVariants = cva(
         full: "rounded-full",
       },
       variant: {
-        default: `border-white/10 bg-zinc-950/85 shadow-lg backdrop-blur-xl text-zinc-300 hover:border-violet-500/35 hover:bg-violet-600/20 hover:text-zinc-100 data-[state=open]:border-violet-500/50 data-[state=open]:bg-violet-600/30 data-[state=open]:text-white`,
+        default: `border border-border bg-card/85 shadow-lg backdrop-blur-xl text-foreground hover:border-primary/35 hover:bg-primary/20 hover:text-foreground data-[state=open]:border-primary/50 data-[state=open]:bg-primary/30 data-[state=open]:text-foreground`,
         ghost: `border-transparent bg-transparent bg-clip-border text-[color:var(--foreground)] focus-visible:border-[color:var(--ring)] focus-visible:ring-2 focus-visible:ring-[color:color-mix(in_oklab,var(--ring)_30%,transparent)] hover:bg-[color:color-mix(in_oklab,var(--input)_10%,transparent)] hover:text-[color:var(--foreground)] active:bg-[color:color-mix(in_oklab,var(--input)_10%,transparent)] active:text-[color:var(--foreground)] aria-expanded:bg-[color:color-mix(in_oklab,var(--input)_10%,transparent)] aria-expanded:text-[color:var(--foreground)] data-open:bg-[color:color-mix(in_oklab,var(--input)_10%,transparent)] data-open:text-[color:var(--foreground)] data-popup-open:bg-[color:color-mix(in_oklab,var(--input)_10%,transparent)] data-popup-open:text-[color:var(--foreground)] data-[state=open]:bg-[color:color-mix(in_oklab,var(--input)_10%,transparent)] data-[state=open]:text-[color:var(--foreground)] ${pressedSelectedItemClassName}`,
       },
       size: {
@@ -182,7 +182,7 @@ function SelectContent({
             data-slot="select-content"
             data-align-trigger={alignItemWithTrigger}
             className={cn(
-              "floating-popup-surface relative isolate z-50 max-h-(--available-height) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-white/10 bg-zinc-950/85 p-1 shadow-[0_16px_36px_rgba(0,0,0,0.6)] backdrop-blur-2xl text-zinc-100 duration-100 data-[align-trigger=true]:w-(--anchor-width) data-[align-trigger=true]:animate-none data-[align-trigger=false]:w-max data-[align-trigger=false]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:zoom-out-95",
+              "floating-popup-surface relative isolate z-50 max-h-(--available-height) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-card/85 p-1 shadow-[0_16px_36px_rgba(0,0,0,0.6)] backdrop-blur-2xl text-foreground duration-100 data-[align-trigger=true]:w-(--anchor-width) data-[align-trigger=true]:animate-none data-[align-trigger=false]:w-max data-[align-trigger=false]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:zoom-out-95",
               className,
             )}
             {...props}
@@ -205,7 +205,7 @@ function SelectLabel({
     <SelectPrimitive.GroupLabel
       data-slot="select-label"
       className={cn(
-        "px-2 py-1.5 popup-text-xs-plus text-zinc-400 font-medium uppercase tracking-wider",
+        "px-2 py-1.5 popup-text-xs-plus text-muted-foreground font-medium uppercase tracking-wider",
         className,
       )}
       {...props}
@@ -316,7 +316,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex min-h-7 w-full cursor-pointer items-center gap-2 rounded-xl py-1 pr-8 pl-2 popup-text-xs-plus leading-normal tracking-tight font-medium outline-hidden select-none text-zinc-300 transition-colors hover:bg-violet-600/20 hover:text-zinc-100 focus:bg-violet-600/20 focus:text-zinc-100 data-[state=checked]:bg-violet-600/20 data-[state=checked]:text-zinc-100 data-[state=checked]:border-violet-500/35 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex min-h-7 w-full cursor-pointer items-center gap-2 rounded-xl py-1 pr-8 pl-2 popup-text-xs-plus leading-normal tracking-tight font-medium outline-hidden select-none text-foreground transition-colors hover:bg-primary/20 hover:text-foreground focus:bg-primary/20 focus:text-foreground data-[state=checked]:bg-primary/20 data-[state=checked]:text-foreground data-[state=checked]:border-primary/35 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className,
       )}
       {...props}

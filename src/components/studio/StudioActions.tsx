@@ -151,7 +151,7 @@ export function StudioActions({ containerRef }: { containerRef: RefObject<HTMLEl
     <div
       role="toolbar"
       aria-label="Canvas actions"
-      className="flex items-center gap-1 rounded-2xl border border-white/10 bg-zinc-950/85 p-1 shadow-[0_16px_36px_rgba(0,0,0,0.6)] backdrop-blur-2xl pointer-events-auto select-none"
+      className="flex items-center gap-1 rounded-2xl border border-border bg-card/85 p-1 shadow-[0_16px_36px_rgba(0,0,0,0.6)] backdrop-blur-2xl pointer-events-auto select-none"
       onPointerDown={stopLeak}
       onMouseDown={stopLeak}
       onTouchStart={stopLeak}
@@ -160,7 +160,7 @@ export function StudioActions({ containerRef }: { containerRef: RefObject<HTMLEl
       <button
         type="button"
         onClick={copyPng}
-        className={cn(btn, "text-zinc-300 hover:border-violet-500/35 hover:bg-violet-600/20 hover:text-zinc-100")}
+        className={cn(btn, "text-foreground hover:border-primary/35 hover:bg-primary/20 hover:text-foreground")}
         title="Copy the canvas to your clipboard as a PNG"
       >
         {copied ? <CheckIcon className="h-4 w-4 text-emerald-400" /> : <CopyIcon className="h-4 w-4" />}
@@ -172,8 +172,8 @@ export function StudioActions({ containerRef }: { containerRef: RefObject<HTMLEl
         className={cn(
           btn,
           isActive
-            ? "text-zinc-300 hover:border-violet-500/35 hover:bg-violet-600/20 hover:text-zinc-100"
-            : "text-zinc-400 hover:text-zinc-100"
+            ? "text-foreground hover:border-primary/35 hover:bg-primary/20 hover:text-foreground"
+            : "text-muted-foreground hover:text-foreground"
         )}
         title={isActive ? "Download the canvas as a PNG" : "Export is a Pro feature"}
       >

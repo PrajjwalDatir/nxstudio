@@ -274,11 +274,11 @@ export function CanvasPreview() {
   return (
     <div className="relative">
       <div
-        className="relative overflow-hidden rounded-xl border border-white/10 bg-card shadow-[0_40px_120px_-24px_rgba(0,0,0,0.85)]"
-        style={{ boxShadow: "0 40px 120px -24px rgba(0,0,0,0.85), inset 0 1px 0 0 rgba(255,255,255,0.05)" }}
+        className="relative overflow-hidden rounded-xl border border-border bg-card shadow-[0_40px_120px_-24px_rgba(0,0,0,0.85)]"
+        style={{ boxShadow: "0 40px 120px -24px rgba(0,0,0,0.85), inset 0 1px 0 0 var(--border)" }}
       >
         {/* Browser chrome */}
-        <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]/80" />
             <span className="h-3 w-3 rounded-full bg-[#febc2e]/80" />
@@ -297,7 +297,7 @@ export function CanvasPreview() {
             swaps the staged view on the right, so the frame feels like a real
             product to poke around in rather than a screenshot) + canvas */}
         <div className="flex">
-          <div className="hidden w-44 shrink-0 flex-col border-r border-white/5 py-3 sm:flex">
+          <div className="hidden w-44 shrink-0 flex-col border-r border-border py-3 sm:flex">
             <div className="mb-2 flex items-center gap-2.5 px-3.5 pb-1">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-border">
                 <NxLogo className="h-3.5 w-3.5 text-accent-foreground" />

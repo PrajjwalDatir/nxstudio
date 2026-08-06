@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
-import { CompiledPrompt } from "@/lib/prompts-server";
+import { CompiledPrompt, PromptCategory } from "@/lib/prompts-server";
 import { compileStack } from "@/lib/platform-engine";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
+import { SubmitPromptDialog } from "@/components/prompts/SubmitPromptDialog";
 import {
   BadgeCheckIcon,
   LockIcon,
@@ -20,15 +21,26 @@ import {
   ChevronRightIcon,
   LayersIcon,
   LoaderIcon,
+  PlusIcon,
 } from "@/components/icons";
 
 const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
+  apple_hig: WandIcon,
+  accessibility: UsersIcon,
   qa: BadgeCheckIcon,
   security: LockIcon,
   performance: ZapIcon,
-  accessibility: UsersIcon,
   deploy: RocketIcon,
 };
+
+const CATEGORY_TABS: { id: PromptCategory | "all"; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "visual", label: "Visual & HIG" },
+  { id: "security", label: "Security" },
+  { id: "qa", label: "QA & Testing" },
+  { id: "performance", label: "Performance" },
+  { id: "deploy", label: "Deploy & Ops" },
+];
 
 export function BuildPhase() {
   const { data, isStepDone, toggleChecklist } = useWorkspace();
@@ -38,8 +50,16 @@ export function BuildPhase() {
   const [showMaster, setShowMaster] = useState(false);
   const [openDepth, setOpenDepth] = useState<string | null>(null);
   const [payOpen, setPayOpen] = useState(false);
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<PromptCategory | "all">("all");
 
   const openPaywall = () => setPayOpen(true);
+
+  const depthPrompts: CompiledPrompt[] = useMemo(() => {
+    const list = prompts?.depth ?? [];
+    if (selectedCategory === "all") return list;
+    return list.filter((p) => p.category === selectedCategory);
+  }, [prompts, selectedCategory]);
 
   if (!stack) {
     return (
@@ -60,7 +80,6 @@ export function BuildPhase() {
   }
 
   const masterPrompt = prompts?.master.prompt ?? "";
-  const depthPrompts: CompiledPrompt[] = prompts?.depth ?? [];
 
   const buildSteps = [
     { id: "foundation", label: "Project Foundation & Setup", description: "Environment, workspace, shared utilities." },
@@ -76,6 +95,7 @@ export function BuildPhase() {
       <PhaseHeader title="Build" status={status} phaseId="build" />
 
       <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => { setPayOpen(false); refresh(); }} />
+      <SubmitPromptDialog open={submitOpen} onClose={() => setSubmitOpen(false)} />
 
       {/* Interactive Task Checklist */}
       <div className="mb-8 rounded-2xl border border-border bg-card p-6">
@@ -191,12 +211,44 @@ export function BuildPhase() {
 
       {/* Depth prompts — optional, after it exists */}
       <div className="mt-10">
-        <h2 className="text-lg font-semibold">Refine after it&apos;s built</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Optional. Paste any of these into your project once it exists — each reads your{" "}
-          <span className="font-mono text-primary">.nx/</span> context and reviews one dimension
-          in depth.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold">Refine after it&apos;s built</h2>
+              <button
+                onClick={() => setSubmitOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                <PlusIcon className="h-3.5 w-3.5" /> Submit Prompt
+              </button>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Optional. Paste any of these into your project once it exists — each reads your{" "}
+              <span className="font-mono text-primary">.nx/</span> context and reviews one dimension
+              in depth.
+            </p>
+          </div>
+
+          {/* Category Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
+            {CATEGORY_TABS.map((tab) => {
+              const active = selectedCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedCategory(tab.id)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                    active
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="mt-4 space-y-3">
           {depthPrompts.map((p) => {
@@ -210,8 +262,15 @@ export function BuildPhase() {
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="font-medium">{p.title}</div>
-                      <div className="text-sm text-muted-foreground">{p.description}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{p.title}</span>
+                        {p.category && (
+                          <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary uppercase">
+                            {p.category}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 text-sm text-muted-foreground">{p.description}</div>
                     </div>
                   </div>
                   {locked ? (
@@ -240,6 +299,13 @@ export function BuildPhase() {
               </div>
             );
           })}
+
+          {depthPrompts.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              No prompts found in this category.
+            </div>
+          )}
+
           {loading && !prompts && (
             <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
               <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
