@@ -12,7 +12,7 @@
  */
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { ContactShadows, Environment, Float, Sparkles } from "@react-three/drei";
 import CameraControls from "camera-controls";
 import * as THREE from "three";
@@ -147,6 +147,17 @@ function VolumetricLightCone({
  * Gently sways on initial page load and when the user scrolls down the page,
  * casting an authentic warm yellow studio spotlight onto the machine shell.
  */
+const BULB_REST_COLOR = new THREE.Color("#FFB700");
+const BULB_SPARK_COLOR = new THREE.Color("#FF3B1A");
+// Total arc of the post-snap flourish: a hot ignition spike, then a settle back to the resting glow.
+const SPARK_IGNITE_S = 0.1;
+const SPARK_SETTLE_S = 0.65;
+
+// Hard ceiling on the swing angle toward the machine, derived from the arm
+// length (3.4) and pivot height (3.8): the shade only enters the machine's
+// keepout radius once the angle passes ~0.8 rad, so this leaves real margin.
+const MAX_SWING_TOWARD_MACHINE = 0.55;
+
 function SwingingLamp({ heroX }: { heroX: number }) {
   const isLight = useIsLightMode();
   const lampRef = useRef<THREE.Group>(null);
@@ -154,6 +165,57 @@ function SwingingLamp({ heroX }: { heroX: number }) {
   const swingAngle = useRef(0);
   const swingVelocity = useRef(0);
   const initialLoadTime = useRef<number | null>(null);
+
+  const bulbMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const sparkRef = useRef<THREE.Mesh>(null);
+  const sparkElapsed = useRef<number | null>(null);
+
+  // Grab-and-throw: while held, pointer movement drives swingAngle directly
+  // (the spring in useFrame stands down) and the drag's last velocity sample
+  // becomes the release throw — the pendulum then swings on exactly the same
+  // spring/damping it already uses for scroll impulses.
+  const isDragging = useRef(false);
+  const dragLastClientX = useRef(0);
+  const dragLastTime = useRef(0);
+  const dragAngularVelocity = useRef(0);
+
+  useEffect(() => {
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      const now = performance.now();
+      const dxPixels = e.clientX - dragLastClientX.current;
+      const dt = Math.max(1, now - dragLastTime.current) / 1000;
+      // A full-width swipe traces a wide but still natural-feeling arc.
+      const angleDelta = (dxPixels / window.innerWidth) * 2.6;
+      swingAngle.current = THREE.MathUtils.clamp(swingAngle.current + angleDelta, -1.1, 1.1);
+      dragAngularVelocity.current = angleDelta / dt;
+      dragLastClientX.current = e.clientX;
+      dragLastTime.current = now;
+    };
+    const onPointerUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      // Hand off to the spring with the last drag velocity as the throw.
+      swingVelocity.current = THREE.MathUtils.clamp(dragAngularVelocity.current * 0.16, -0.6, 0.6);
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, []);
+
+  const handleLampPointerDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    isDragging.current = true;
+    swingVelocity.current = 0;
+    dragLastClientX.current = e.nativeEvent.clientX;
+    dragLastTime.current = performance.now();
+    dragAngularVelocity.current = 0;
+    document.body.style.cursor = "grabbing";
+  };
 
   useEffect(() => {
     lastScrollY.current = window.scrollY;
@@ -172,31 +234,105 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useFrame((state) => {
+  // The bulb sparks and settles right after the theme snaps to dark —
+  // the payoff that makes the flash-cut feel finished, not abrupt.
+  useEffect(() => {
+    const onDarkSnap = () => {
+      sparkElapsed.current = 0;
+    };
+    window.addEventListener("nx:theme-dark-snap", onDarkSnap);
+    return () => window.removeEventListener("nx:theme-dark-snap", onDarkSnap);
+  }, []);
+
+  useFrame((state, delta) => {
     if (initialLoadTime.current === null) {
       initialLoadTime.current = state.clock.getElapsedTime();
     }
     const elapsed = state.clock.getElapsedTime() - initialLoadTime.current;
 
     let loadImpulse = 0;
-    if (elapsed < 5.5) {
+    if (elapsed < 5.5 && !isDragging.current) {
       // Wider, slower initial swing on page load
       loadImpulse = Math.sin(elapsed * 1.8) * Math.exp(-elapsed * 0.5) * 0.3;
     }
 
-    swingAngle.current += swingVelocity.current;
-    // Much lower damping — swings carry for many more frames before settling
-    swingVelocity.current *= 0.975;
-    // Softer spring constant — longer, lazier oscillation period (wider arcs)
-    swingVelocity.current -= swingAngle.current * 0.018;
+    // While the lamp is being dragged, the pointer-move handler drives
+    // swingAngle directly — the spring stands down so it doesn't fight the
+    // hand holding it. It resumes on release, picking up wherever the drag
+    // left off (plus the throw velocity set on pointerup).
+    if (!isDragging.current) {
+      swingAngle.current += swingVelocity.current;
+      // Much lower damping — swings carry for many more frames before settling
+      swingVelocity.current *= 0.975;
+      // Softer spring constant — longer, lazier oscillation period (wider arcs)
+      swingVelocity.current -= swingAngle.current * 0.018;
+    }
 
-    const totalZ = swingAngle.current + loadImpulse;
+    let totalZ = swingAngle.current + loadImpulse;
+
+    // Hard ceiling on how far the shade can swing toward the machine. Forward
+    // kinematics (arm length 3.4, pivot at y=3.8) put the shade within the
+    // machine's keepout radius only once the angle passes ~0.8 rad, so 0.55
+    // is a solid margin — a real clamp, not a distance-based nudge that has
+    // to out-fight the rotation lerp and the spring in the same frame.
+    // Desktop-only: on mobile the pivot and machine share the same x, and the
+    // check would false-positive at rest.
+    const pivotX = heroX > 0 ? 0.9 : 0;
+    if (heroX - pivotX > 1 && totalZ > MAX_SWING_TOWARD_MACHINE) {
+      totalZ = MAX_SWING_TOWARD_MACHINE;
+      swingAngle.current = Math.min(swingAngle.current, MAX_SWING_TOWARD_MACHINE);
+      if (swingVelocity.current > 0) swingVelocity.current *= -0.4;
+    }
+
     const totalX = Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
 
     if (lampRef.current) {
       // Slow lerp for buttery-smooth visual interpolation (no jitter)
       lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, 0.045);
       lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, 0.045);
+    }
+
+    // Post-snap flourish: a hot spark near the bulb, then its glow settles red → yellow.
+    if (sparkElapsed.current !== null) {
+      sparkElapsed.current += delta;
+      const t = sparkElapsed.current;
+      const restIntensity = isLight ? 6.0 : 18.0;
+
+      if (bulbMaterialRef.current) {
+        if (t < SPARK_IGNITE_S) {
+          bulbMaterialRef.current.emissive.copy(BULB_SPARK_COLOR);
+          bulbMaterialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+            restIntensity,
+            restIntensity * 2.6,
+            t / SPARK_IGNITE_S
+          );
+        } else {
+          const settleT = Math.min(1, (t - SPARK_IGNITE_S) / SPARK_SETTLE_S);
+          bulbMaterialRef.current.emissive.lerpColors(BULB_SPARK_COLOR, BULB_REST_COLOR, settleT);
+          bulbMaterialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+            restIntensity * 2.6,
+            restIntensity,
+            settleT
+          );
+        }
+      }
+
+      if (sparkRef.current) {
+        const popT = Math.min(1, t / 0.16);
+        const scale = t < 0.16 ? THREE.MathUtils.lerp(0.001, 1, popT) : Math.max(0.001, 1 - (t - 0.16) / 0.3);
+        sparkRef.current.scale.setScalar(scale);
+        const mat = sparkRef.current.material as THREE.MeshBasicMaterial;
+        mat.opacity = Math.max(0, scale);
+      }
+
+      if (t > SPARK_IGNITE_S + SPARK_SETTLE_S) {
+        sparkElapsed.current = null;
+        if (bulbMaterialRef.current) {
+          bulbMaterialRef.current.emissive.copy(BULB_REST_COLOR);
+          bulbMaterialRef.current.emissiveIntensity = restIntensity;
+        }
+        if (sparkRef.current) sparkRef.current.scale.setScalar(0.001);
+      }
     }
   });
 
@@ -210,16 +346,26 @@ function SwingingLamp({ heroX }: { heroX: number }) {
         <meshStandardMaterial color={isLight ? "#CBD5E1" : "#3B384E"} metalness={0.85} roughness={0.2} />
       </mesh>
 
-      {/* Swinging Pendulum Group */}
-      <group ref={lampRef}>
-        {/* Braided steel suspension cable */}
-        <mesh position={[0, -1.0, 0]}>
-          <cylinderGeometry args={[0.009, 0.009, 2.0, 10]} />
+      {/* Swinging Pendulum Group — grab it and throw it */}
+      <group
+        ref={lampRef}
+        onPointerDown={handleLampPointerDown}
+        onPointerOver={() => {
+          if (!isDragging.current) document.body.style.cursor = "grab";
+        }}
+        onPointerOut={() => {
+          if (!isDragging.current) document.body.style.cursor = "";
+        }}
+      >
+        {/* Braided steel suspension cable — longer arm means the same swing
+         * angle sweeps a wider radius at the shade. */}
+        <mesh position={[0, -1.7, 0]}>
+          <cylinderGeometry args={[0.009, 0.009, 3.4, 10]} />
           <meshStandardMaterial color={isLight ? "#94A3B8" : "#38354A"} metalness={0.9} roughness={0.3} />
         </mesh>
 
         {/* Industrial Bell Lamp Shade — Bright Metallic Fixture */}
-        <group position={[0, -2.0, 0]} rotation={[0.15, -0.3, 0.45]}>
+        <group position={[0, -3.4, 0]} rotation={[0.15, -0.3, 0.45]}>
           <mesh>
             <cylinderGeometry args={[0.18, 0.48, 0.42, 28, 1, true]} />
             <meshStandardMaterial
@@ -249,9 +395,23 @@ function SwingingLamp({ heroX }: { heroX: number }) {
           <mesh position={[0, -0.05, 0]}>
             <sphereGeometry args={[0.16, 24, 20]} />
             <meshStandardMaterial
+              ref={bulbMaterialRef}
               color="#FFE066"
               emissive="#FFB700"
               emissiveIntensity={isLight ? 6.0 : 18.0}
+              toneMapped={false}
+            />
+          </mesh>
+
+          {/* One-shot ignition spark — pops and fades right after a dark-mode snap */}
+          <mesh ref={sparkRef} position={[0.1, 0.02, 0.09]} scale={0.001}>
+            <sphereGeometry args={[0.055, 12, 10]} />
+            <meshBasicMaterial
+              color="#FFF3D0"
+              transparent
+              opacity={0}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
               toneMapped={false}
             />
           </mesh>

@@ -28,11 +28,11 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
 
     tl.current = gsap.timeline();
     tl.current
-      .to(el, { opacity: 0, duration: 0.18, ease: "power1.out" })
+      .to(el, { opacity: 0, duration: 0.28, ease: "power1.out" })
       .add(() => {
         el.textContent = line;
       })
-      .to(el, { opacity: 1, duration: 0.3, ease: "power1.in" });
+      .to(el, { opacity: 1, duration: 0.5, ease: "power1.in" });
 
     return () => {
       tl.current?.kill();
@@ -60,7 +60,7 @@ export function MachineReadout({ line, tail = false }: { line: string; tail?: bo
         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
       </span>
       <div className="min-w-0">
-        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary/60">
+        <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-accent-foreground/60">
           Unit
         </span>
         <p

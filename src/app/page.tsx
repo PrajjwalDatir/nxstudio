@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { Hero } from "@/components/landing/Hero";
@@ -11,7 +10,7 @@ import { SectionKicker } from "@/components/landing/SectionKicker";
 import { ClosingScene } from "@/components/landing/ClosingScene";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
-import { ArrowRightIcon, CheckIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 
 const AGENTS = [
   { name: "Claude Code", Icon: ClaudeMark, hoverColor: "group-hover:text-[#D97757]", hoverBg: "hover:border-[#D97757]/30 hover:bg-[#D97757]/10" },
@@ -50,7 +49,7 @@ export default function LandingPage() {
                 {AGENTS.map(({ name, Icon, hoverColor, hoverBg }) => (
                   <span
                     key={name}
-                    className={`group flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3.5 py-2 text-sm text-foreground/80 transition-all hover:-translate-y-0.5 ${hoverBg} hover:text-white`}
+                    className={`group flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3.5 py-2 text-sm text-foreground/80 transition-all hover:-translate-y-0.5 ${hoverBg} hover:text-foreground`}
                   >
                     <Icon className={`h-4 w-4 text-foreground/60 transition-colors ${hoverColor}`} />
                     {name}
@@ -100,9 +99,9 @@ export default function LandingPage() {
               </p>
               <AuthButton
                 source="closing"
-                className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_16px_40px_-16px_rgba(139,92,246,0.8)] transition-transform hover:-translate-y-0.5"
+                className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(196,181,253,0.4),0_16px_40px_-16px_rgba(196,181,253,0.8)] transition-transform hover:-translate-y-0.5"
               >
-                Start building — free
+                Start building for free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
             </div>
