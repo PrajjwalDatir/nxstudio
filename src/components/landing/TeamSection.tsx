@@ -20,7 +20,7 @@ const MEMBERS: Member[] = [
     role: "Product & Engineering",
     location: "India",
     blurb:
-      "Software engineer who's shipped consumer apps, hardware tools, and internal platforms for startups across Europe, the US, and beyond. Builds and maintains everything under the hood.",
+      "Architects nxstudio's core compiler, .nx/ bundle engine, and WebGL canvas. Engineers the technical pipeline that translates founder specs into agent-ready context.",
     photo: null, // Uses the branded generated avatar. Drop /public/team/prajj.jpg to override.
   },
   {
@@ -28,7 +28,7 @@ const MEMBERS: Member[] = [
     role: "Distribution & Content",
     location: "Zambia",
     blurb:
-      "Business-and-tech builder who's shipped 14+ products and grown an audience of founders learning to build with AI. Runs go-to-market, content, and community.",
+      "Leads go-to-market, founder growth, and community distribution. Puts nxstudio in front of founders and engineers building with AI IDEs.",
     photo: null, // Uses the branded generated avatar. Drop /public/team/kema.jpg to override.
   },
 ];

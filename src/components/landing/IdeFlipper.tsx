@@ -8,7 +8,7 @@ const IDES = [
   {
     name: "Cursor",
     mark: CursorMark,
-    iconColor: "text-white",
+    iconColor: "text-foreground",
   },
   {
     name: "Claude Code",
@@ -21,9 +21,9 @@ const IDES = [
     iconColor: "text-[#00D2FF]",
   },
   {
-    name: "v0",
+    name: "v0 by Vercel",
     mark: V0Mark,
-    iconColor: "text-white",
+    iconColor: "text-foreground",
   },
 ];
 
@@ -42,7 +42,7 @@ export function IdeFlipper() {
   const Icon = current.mark;
 
   return (
-    <span className="relative inline-block align-baseline [perspective:1000px] px-1">
+    <span className="relative inline-flex align-baseline [perspective:1000px] mx-1 sm:mx-2">
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={current.name}
@@ -55,10 +55,10 @@ export function IdeFlipper() {
             damping: 26,
             mass: 0.7,
           }}
-          className="inline-flex items-center gap-2 sm:gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-2xl font-extrabold tracking-tight text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.12)] backdrop-blur-xl sm:px-3 sm:text-3xl md:text-4xl lg:text-[3.25rem] [transform-style:preserve-3d] align-baseline"
+          className="inline-flex items-center gap-2.5 rounded-2xl border border-border/80 bg-card/80 px-3.5 py-1 text-foreground shadow-sm backdrop-blur-md transition-colors align-baseline"
         >
-          <Icon className={`h-5 w-5 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-9 lg:w-9 shrink-0 ${current.iconColor}`} />
-          <span className="text-white">{current.name}</span>
+          <Icon className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 shrink-0 ${current.iconColor}`} />
+          <span className="font-extrabold text-foreground">{current.name}</span>
         </motion.span>
       </AnimatePresence>
     </span>
