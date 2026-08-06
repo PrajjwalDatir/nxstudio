@@ -154,10 +154,8 @@ const BULB_SPARK_COLOR = new THREE.Color("#FF3B1A");
 const SPARK_IGNITE_S = 0.1;
 const SPARK_SETTLE_S = 0.65;
 
-// Hard ceiling on the swing angle toward the machine, derived from the arm
-// length (3.4) and pivot height (3.8): the shade only enters the machine's
-// keepout radius once the angle passes ~0.8 rad, so this leaves real margin.
-const MAX_SWING_TOWARD_MACHINE = 0.55;
+// Ceiling on the swing angle toward the machine for safety margin
+const MAX_SWING_TOWARD_MACHINE = 0.75;
 
 function SwingingLamp({ heroX }: { heroX: number }) {
   const isLight = useIsLightMode();
@@ -250,11 +248,16 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     lastScrollY.current = window.scrollY;
     const handleScroll = () => {
       const currentY = window.scrollY;
-      const delta = Math.abs(currentY - lastScrollY.current);
-      if (delta > 1) {
-        const direction = currentY > lastScrollY.current ? 1 : -1;
-        // Bigger impulse multiplier (3×) with a higher cap for wider arcs
-        swingVelocity.current += Math.min(delta * 0.0012, 0.06) * direction;
+      const delta = currentY - lastScrollY.current;
+      if (Math.abs(delta) > 1) {
+        // Natural pendulum reaction to scroll velocity: impulse is capped so
+        // scroll never overpowers gravity or pins the lamp to the ceiling limit.
+        const impulse = Math.min(Math.abs(delta) * 0.0004, 0.018) * Math.sign(delta);
+        swingVelocity.current = THREE.MathUtils.clamp(
+          swingVelocity.current + impulse,
+          -0.25,
+          0.25
+        );
       }
       lastScrollY.current = currentY;
     };
@@ -280,56 +283,43 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     const elapsed = state.clock.getElapsedTime() - initialLoadTime.current;
 
     let loadImpulse = 0;
-    if (elapsed < 5.5 && !isDragging.current) {
-      // Wider, slower initial swing on page load
-      loadImpulse = Math.sin(elapsed * 1.8) * Math.exp(-elapsed * 0.5) * 0.3;
+    if (elapsed < 4.0 && !isDragging.current) {
+      // Gentle initial swing on page load
+      loadImpulse = Math.sin(elapsed * 2.0) * Math.exp(-elapsed * 0.8) * 0.2;
     }
 
-    // While the lamp is being dragged, the pointer-move handler drives
-    // swingAngle directly — the spring stands down so it doesn't fight the
-    // hand holding it. It resumes on release, picking up wherever the drag
-    // left off (plus the throw velocity set on pointerup).
+    // Pendulum physics loop: gravity restoring force pulls toward 0 (hanging straight down).
     if (!isDragging.current) {
       swingAngle.current += swingVelocity.current;
-      // Much lower damping — swings carry for many more frames before settling
-      swingVelocity.current *= 0.975;
-      // Softer spring constant — longer, lazier oscillation period (wider arcs)
-      swingVelocity.current -= swingAngle.current * 0.018;
+      // Smooth physical damping
+      swingVelocity.current *= 0.96;
+      // Strong gravity restoring force ensures lamp always swings cleanly back down
+      swingVelocity.current -= swingAngle.current * 0.055;
     }
 
     let totalZ = swingAngle.current + loadImpulse;
 
-    // Hard ceiling on how far the shade can swing toward the machine. Forward
-    // kinematics (arm length 3.4, pivot at y=3.8) put the shade within the
-    // machine's keepout radius only once the angle passes ~0.8 rad, so 0.55
-    // is a solid margin — a real clamp, not a distance-based nudge that has
-    // to out-fight the rotation lerp and the spring in the same frame.
-    // Desktop-only: on mobile the pivot and machine share the same x, and the
-    // check would false-positive at rest.
+    // Elastic boundary pushback near max swing to prevent hard locking or jamming
     const pivotX = heroX > 0 ? 0.9 : 0;
     if (heroX - pivotX > 1 && totalZ > MAX_SWING_TOWARD_MACHINE) {
-      totalZ = MAX_SWING_TOWARD_MACHINE;
-      swingAngle.current = Math.min(swingAngle.current, MAX_SWING_TOWARD_MACHINE);
-      if (swingVelocity.current > 0) swingVelocity.current *= -0.4;
+      const excess = totalZ - MAX_SWING_TOWARD_MACHINE;
+      swingVelocity.current -= excess * 0.2;
+      totalZ = MAX_SWING_TOWARD_MACHINE + excess * 0.2;
     }
 
     // Held: no synthetic sway on top of the hand — the shade goes exactly
-    // where the cursor takes it. Free-swinging: the usual idle wobble.
+    // where the cursor takes it. Free-swinging: subtle natural sway.
     const totalX = isDragging.current
       ? 0
-      : Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
+      : Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.15;
 
     if (lampRef.current) {
-      // While held, snap straight to the cursor-driven angle — any lerp here
-      // reads as the shade lagging behind the hand. The slow spring lerp is
-      // for the free-swinging settle after release, not for the grab itself.
-      const followRate = isDragging.current ? 1 : 0.045;
+      // Responsive follow rate ensures visual mesh stays in sync with physics state
+      const followRate = isDragging.current ? 1 : 0.12;
       lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, followRate);
       lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, followRate);
 
-      // Project the shade's screen position every few frames so the theme
-      // toggle can expand its reveal from the lamp instead of the button —
-      // no DOM element to read a rect from, so this is the handoff.
+      // Project the shade's screen position every few frames for theme toggle
       originFrameCount.current += 1;
       if (originFrameCount.current % 4 === 0) {
         const worldPos = lampRef.current.localToWorld(new THREE.Vector3(0, -3.4, 0));
@@ -412,8 +402,8 @@ function SwingingLamp({ heroX }: { heroX: number }) {
           <meshStandardMaterial color={isLight ? "#94A3B8" : "#38354A"} metalness={0.9} roughness={0.3} />
         </mesh>
 
-        {/* Industrial Bell Lamp Shade — Bright Metallic Fixture */}
-        <group position={[0, -3.4, 0]} rotation={[0.15, -0.3, 0.45]}>
+        {/* Industrial Bell Lamp Shade — Bright Metallic Fixture (Hangs straight down along cable) */}
+        <group position={[0, -3.4, 0]} rotation={[0, 0, 0]}>
           <mesh>
             <cylinderGeometry args={[0.18, 0.48, 0.42, 28, 1, true]} />
             <meshStandardMaterial
