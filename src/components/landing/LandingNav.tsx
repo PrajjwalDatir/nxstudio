@@ -6,7 +6,7 @@ import { track } from "@vercel/analytics";
 import { NxLogo, MenuIcon, XIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
-import { runLightOnTransition, runDarkSnapTransition } from "./theme-transition";
+import { runRadialThemeTransition } from "./theme-transition";
 import { lampOrigin } from "./lamp-origin";
 
 // True once hydrated on the client, false during SSR — no effect-driven
@@ -23,7 +23,7 @@ export function ThemeToggle() {
   );
   const btnRef = useRef<HTMLButtonElement>(null);
 
-  const toggleTheme = () => {
+  const toggleTheme = (e?: React.MouseEvent<HTMLButtonElement>) => {
     const next = theme === "dark" ? "light" : "dark";
     const root = document.documentElement;
 
@@ -37,22 +37,15 @@ export function ThemeToggle() {
       }
     };
 
-    if (next === "light") {
-      // Eased crossfade as a fallback under the wave glow for browsers
-      // without the View Transitions API.
-      root.classList.add("theme-transitioning");
-      setTimeout(() => root.classList.remove("theme-transitioning"), 900);
-
-      // Start the light transition directly from the navbar light icon button
-      const rect = btnRef.current?.getBoundingClientRect();
-      const origin = rect
-        ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
-        : { x: window.innerWidth - 40, y: 40 };
-      runLightOnTransition(origin, applyThemeClass);
-    } else {
-      // No crossfade — the swap should read as an instant cut inside the flash.
-      runDarkSnapTransition(applyThemeClass);
+    let origin = { x: window.innerWidth - 40, y: 40 };
+    if (e && e.clientX && e.clientY) {
+      origin = { x: e.clientX, y: e.clientY };
+    } else if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     }
+
+    runRadialThemeTransition(origin, applyThemeClass);
   };
 
   if (!mounted) {
