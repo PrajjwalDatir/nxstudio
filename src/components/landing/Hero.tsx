@@ -119,7 +119,7 @@ export function Hero() {
                 href="https://www.indiehackers.com/nxstudio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-foreground backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.08] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.5)]"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
               >
                 <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
                 <span>Featured on Indie Hackers</span>
@@ -128,7 +128,7 @@ export function Hero() {
                 href="https://www.producthunt.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-[#DA552F]/30 bg-[#DA552F]/10 px-3.5 py-1.5 text-xs font-semibold text-orange-200 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-[#DA552F]/50 hover:bg-[#DA552F]/20 shadow-[0_2px_12px_-2px_rgba(218,85,47,0.3)]"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-medium text-foreground backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.6)]"
               >
                 <ProductHuntMark className="h-4 w-4 fill-current text-[#DA552F] shrink-0" />
                 <span>Product Hunt</span>
@@ -153,9 +153,9 @@ export function Hero() {
                 href="https://www.npmjs.com/package/nxhuman"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-200 transition-all hover:border-red-500/40 hover:bg-red-500/20 align-middle shadow-[0_2px_8px_-2px_rgba(239,68,68,0.3)]"
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs font-medium text-foreground transition-all hover:border-white/20 hover:bg-white/[0.08] align-middle"
               >
-                <NpmMark className="h-3.5 w-3.5 fill-current text-red-400 shrink-0" />
+                <NpmMark className="h-3.5 w-3.5 fill-current text-[#CB3837] shrink-0" />
                 nxhuman
               </a>.
             </p>
