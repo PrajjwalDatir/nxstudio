@@ -104,7 +104,9 @@
 }
 
 /* Light Theme overrides */
-html.light {
+html.light,
+html.light [data-toolcraft-theme],
+html.light [data-toolcraft-theme='dark'] {
   --background: #FFFFFF;
   --foreground: #09090B;
 
