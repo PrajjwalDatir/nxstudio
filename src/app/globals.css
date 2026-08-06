@@ -95,12 +95,12 @@
 
   --sidebar: #0B0B0D;
   --sidebar-foreground: #E4E4E7;
-  --sidebar-primary: #8B5CF6;
-  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-primary: #C4B5FD;
+  --sidebar-primary-foreground: #1B1030;
   --sidebar-accent: #1A1A1E;
   --sidebar-accent-foreground: #C4B5FD;
   --sidebar-border: #1F1F23;
-  --sidebar-ring: #8B5CF6;
+  --sidebar-ring: #C4B5FD;
 }
 
 /* Light Theme overrides */
@@ -127,20 +127,20 @@ html.light [data-toolcraft-theme='dark'] {
   --muted-foreground: #646470;
 
   --accent: #F4F4F6;
-  --accent-foreground: #6D28D9;
+  --accent-foreground: #1B1030;
 
   --border: #E4E4E7;
   --input: #E4E4E7;
-  --ring: #7C3AED;
+  --ring: #C4B5FD;
 
   --sidebar: #F4F4F6;
   --sidebar-foreground: #18181B;
-  --sidebar-primary: #7C3AED;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #E4E4E8;
-  --sidebar-accent-foreground: #6D28D9;
+  --sidebar-primary: #C4B5FD;
+  --sidebar-primary-foreground: #1B1030;
+  --sidebar-accent: rgba(196, 181, 253, 0.25);
+  --sidebar-accent-foreground: #1B1030;
   --sidebar-border: #E4E4E7;
-  --sidebar-ring: #7C3AED;
+  --sidebar-ring: #C4B5FD;
 }
 
 html.light .hero-glow::before {
