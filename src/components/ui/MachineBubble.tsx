@@ -11,7 +11,7 @@ export const MachineBubble = forwardRef<HTMLDivElement, MachineBubbleProps>(
       <div
         ref={ref}
         className={cn(
-          "relative rounded-2xl border border-primary/25 bg-[#0E0C18]/85 p-3.5 shadow-[0_8px_32px_-8px_rgba(139,92,246,0.3)] backdrop-blur-xl",
+          "relative rounded-2xl border border-border bg-popover/95 text-popover-foreground p-3.5 shadow-xl backdrop-blur-xl transition-colors duration-200",
           className
         )}
         {...props}
@@ -20,25 +20,25 @@ export const MachineBubble = forwardRef<HTMLDivElement, MachineBubbleProps>(
         {tail === "right" && (
           <span
             aria-hidden
-            className="absolute -right-[6px] top-4 h-3 w-3 rotate-45 border-r border-t border-primary/25 bg-[#0E0C18]"
+            className="absolute -right-[6px] top-4 h-3 w-3 rotate-45 border-r border-t border-border bg-popover"
           />
         )}
         {tail === "left" && (
           <span
             aria-hidden
-            className="absolute -left-[6px] top-4 h-3 w-3 rotate-45 border-b border-l border-primary/25 bg-[#0E0C18]"
+            className="absolute -left-[6px] top-4 h-3 w-3 rotate-45 border-b border-l border-border bg-popover"
           />
         )}
         {tail === "bottom" && (
           <span
             aria-hidden
-            className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-b border-r border-primary/25 bg-[#0E0C18]"
+            className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-b border-r border-border bg-popover"
           />
         )}
         {tail === "top" && (
           <span
             aria-hidden
-            className="absolute -top-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-l border-t border-primary/25 bg-[#0E0C18]"
+            className="absolute -top-[6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-l border-t border-border bg-popover"
           />
         )}
       </div>

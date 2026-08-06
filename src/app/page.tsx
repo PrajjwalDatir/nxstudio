@@ -14,10 +14,10 @@ import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
 
 const AGENTS = [
-  { name: "Claude Code", Icon: ClaudeMark },
-  { name: "Cursor", Icon: CursorMark },
-  { name: "v0", Icon: V0Mark },
-  { name: "Windsurf", Icon: WindsurfMark },
+  { name: "Claude Code", Icon: ClaudeMark, hoverColor: "group-hover:text-[#D97757]", hoverBg: "hover:border-[#D97757]/30 hover:bg-[#D97757]/10" },
+  { name: "Cursor", Icon: CursorMark, hoverColor: "group-hover:text-white", hoverBg: "hover:border-white/20 hover:bg-white/10" },
+  { name: "v0 by Vercel", Icon: V0Mark, hoverColor: "group-hover:text-white", hoverBg: "hover:border-white/20 hover:bg-white/10" },
+  { name: "Windsurf", Icon: WindsurfMark, hoverColor: "group-hover:text-[#00D2FF]", hoverBg: "hover:border-[#00D2FF]/30 hover:bg-[#00D2FF]/10" },
 ];
 
 export const metadata: Metadata = {
@@ -46,13 +46,13 @@ export default function LandingPage() {
                 </span>
                 Speaks your agent&apos;s language
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {AGENTS.map(({ name, Icon }) => (
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
+                {AGENTS.map(({ name, Icon, hoverColor, hoverBg }) => (
                   <span
                     key={name}
-                    className="group flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-foreground/75 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/[0.07] hover:text-foreground"
+                    className={`group flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3.5 py-2 text-sm text-foreground/80 transition-all hover:-translate-y-0.5 ${hoverBg} hover:text-white`}
                   >
-                    <Icon className="h-4 w-4 text-foreground/60 transition-colors group-hover:text-primary" />
+                    <Icon className={`h-4 w-4 text-foreground/60 transition-colors ${hoverColor}`} />
                     {name}
                   </span>
                 ))}

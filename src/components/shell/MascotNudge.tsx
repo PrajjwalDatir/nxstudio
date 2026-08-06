@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Canvas } from "@react-three/fiber";
 import { useWorkspace } from "@/lib/workspace-store";
 import { PHASES, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
-import { usePrefersReducedMotion } from "@/components/landing/MachineModel";
+import { Machine, usePrefersReducedMotion } from "@/components/landing/MachineModel";
 import { ArrowRightIcon, XIcon } from "@/components/icons";
 
 const NEXT_STEP_COPY: Record<string, string> = {
@@ -765,16 +766,26 @@ export function MascotNudge() {
         <button
           onClick={toggle}
           aria-label="nx — what's next"
-          className="relative z-10 flex h-full w-full items-center justify-center drop-shadow-xl transition-transform hover:scale-105"
+          className="relative z-10 flex h-full w-full items-center justify-center drop-shadow-xl transition-transform hover:scale-105 overflow-hidden"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            ref={spriteRef}
-            src={isWalking ? `/mascot/walk/${pose}-${walkFrame}.png` : `/mascot/${pose}.png`}
-            alt="nx"
-            className="h-full w-full object-contain"
-            style={{ transformOrigin: "50% 100%" }}
-          />
+          <div className="h-full w-full pointer-events-none">
+            <Canvas
+              dpr={[1, 1.5]}
+              camera={{ position: [0, 0.1, 4.8], fov: 38 }}
+              gl={{ alpha: true, antialias: true }}
+              style={{ background: "transparent" }}
+            >
+              <ambientLight intensity={1.4} />
+              <directionalLight position={[-2, 4, 4]} intensity={3.2} color="#F1F5F9" />
+              <pointLight position={[0.4, 1.2, 2.5]} intensity={14} color="#C4B5FD" />
+              <pointLight position={[0, 1.5, -2.5]} intensity={22} color="#8B5CF6" />
+              <Suspense fallback={null}>
+                <group position={[0, -0.42, 0]} scale={[1.2, 1.2, 1.2]}>
+                  <Machine reduce={reduce} pose={pose} />
+                </group>
+              </Suspense>
+            </Canvas>
+          </div>
         </button>
 
         {/* Unprompted companion nudge — appears on its own when progress moves. */}
