@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
-
 import { useMemo, useState } from "react";
-import { PHASES, customStageToPhase, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
+import Link from "next/link";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
-import { diffNx, NX_ROOT } from "@/lib/nx-compiler";
+import { PHASES, customStageToPhase, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
+import { diffNx, NX_ROOT, NxDriftStatus, compileNxFiles } from "@/lib/nx-compiler";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { PhaseCard } from "@/components/canvas/PhaseCard";
+import { DriftDiffModal } from "@/components/canvas/DriftDiffModal";
 import {
   NxLogo,
   ArrowUpIcon,
@@ -30,8 +30,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-
-
 type StatusFilter = "all" | "not-started" | "in-progress" | "complete";
 const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All stages" },
@@ -45,6 +43,13 @@ export default function CanvasPage() {
   const { status, result } = useSync();
   const { open } = useCommand();
   const healthy = status === "ok";
+
+  const [activeDiff, setActiveDiff] = useState<{
+    path: string;
+    status: NxDriftStatus;
+    original: string;
+    current: string;
+  } | null>(null);
 
   // Read side of the loop: compare the .nx/ committed in the repo against what
   // the studio would emit now, so agent-made changes surface here.
@@ -70,8 +75,32 @@ export default function CanvasPage() {
   });
   const customIds = new Set(customStages.map((s) => s.id));
 
+  const handleOpenDiff = (path: string, status: NxDriftStatus) => {
+    const emittedFiles = compileNxFiles(data);
+    const original = emittedFiles.find((f) => f.path === path)?.content ?? "";
+    const current = docs ? (docs[path] ?? "") : "";
+
+    setActiveDiff({
+      path,
+      status,
+      original,
+      current,
+    });
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
+      {/* Interactive Line-by-Line Temporal Diff Modal */}
+      {activeDiff && (
+        <DriftDiffModal
+          path={activeDiff.path}
+          status={activeDiff.status}
+          originalContent={activeDiff.original}
+          currentContent={activeDiff.current}
+          onClose={() => setActiveDiff(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -130,16 +159,19 @@ export default function CanvasPage() {
       {/* Drift dashboard — the loop's read side, one box per changed context file */}
       {healthy && changed.length > 0 && (
         <section className="mt-6">
-          <div className="mb-3 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
-              <GitBranchIcon className="h-4 w-4" />
-            </span>
-            <h2 className="text-sm font-semibold tracking-tight">
-              Context drift
-              <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
-                {changed.length} file{changed.length === 1 ? "" : "s"} changed since the last brief
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
+                <GitBranchIcon className="h-4 w-4" />
               </span>
-            </h2>
+              <h2 className="text-sm font-semibold tracking-tight">
+                Context drift
+                <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
+                  {changed.length} file{changed.length === 1 ? "" : "s"} changed since the last brief
+                </span>
+              </h2>
+            </div>
+            <span className="text-xs text-muted-foreground">Tap any file card to view line-by-line Diff</span>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -148,21 +180,27 @@ export default function CanvasPage() {
               return (
                 <div
                   key={d.path}
-                  className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40"
+                  onClick={() => handleOpenDiff(d.path, d.status)}
+                  className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-md"
                 >
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/40 text-muted-foreground">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/40 text-muted-foreground group-hover:border-primary/30 group-hover:text-primary transition-colors">
                     <FileTextIcon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-mono text-sm text-foreground" title={shortPath(d.path)}>
-                      {shortPath(d.path)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="truncate font-mono text-sm text-foreground font-medium group-hover:text-primary transition-colors" title={shortPath(d.path)}>
+                        {shortPath(d.path)}
+                      </p>
+                      <span className="text-xs text-muted-foreground group-hover:text-foreground">
+                        View Diff →
+                      </span>
+                    </div>
                     <span
                       className={cn(
                         "mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
                         isNew
-                          ? "border-primary/30 bg-primary/10 text-primary"
-                          : "border-border bg-secondary/50 text-muted-foreground"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                          : "border-primary/30 bg-primary/10 text-primary"
                       )}
                     >
                       {isNew ? <PlusIcon className="h-2.5 w-2.5" /> : <PencilLineIcon className="h-2.5 w-2.5" />}
@@ -176,7 +214,7 @@ export default function CanvasPage() {
 
           <div className="mt-3 flex items-center justify-between text-xs leading-snug text-muted-foreground">
             <p>
-              The repo has moved past the studio&apos;s last compile. Update your Brief to reconcile, or re-copy the build prompt to fold these back in.
+              The repo has moved past the studio&apos;s last compile. Tap any file card to view temporal diffs.
             </p>
             <Link href="/tasks" className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary transition-colors">
               Review Sprint Tasks <ArrowRightIcon className="h-3.5 w-3.5" />
