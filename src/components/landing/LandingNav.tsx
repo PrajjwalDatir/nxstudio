@@ -1,40 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { track } from "@vercel/analytics";
 import { NxLogo, MenuIcon, XIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
+import { runLightOnTransition, runDarkSnapTransition } from "./theme-transition";
+
+// True once hydrated on the client, false during SSR — no effect-driven
+// setState needed, so no cascading render on mount.
+const noop = () => () => {};
+function useMounted() {
+  return useSyncExternalStore(noop, () => true, () => false);
+}
 
 function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
-
-  useEffect(() => {
-    setMounted(true);
-    const isLight = document.documentElement.classList.contains("light");
-    setTheme(isLight ? "light" : "dark");
-  }, []);
+  const mounted = useMounted();
+  const [theme, setTheme] = useState<"dark" | "light">(
+    () => (typeof document !== "undefined" && document.documentElement.classList.contains("light") ? "light" : "dark")
+  );
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     const root = document.documentElement;
 
-    // Apply smooth transition to all elements during the swap
-    root.classList.add("theme-transitioning");
+    const applyThemeClass = () => {
+      setTheme(next);
+      localStorage.setItem("theme", next);
+      if (next === "light") {
+        root.classList.add("light");
+      } else {
+        root.classList.remove("light");
+      }
+    };
 
-    setTheme(next);
-    localStorage.setItem("theme", next);
     if (next === "light") {
-      root.classList.add("light");
-    } else {
-      root.classList.remove("light");
-    }
+      // Eased crossfade as a fallback under the wave glow for browsers
+      // without the View Transitions API.
+      root.classList.add("theme-transitioning");
+      setTimeout(() => root.classList.remove("theme-transitioning"), 900);
 
-    // Clean up the transition class after animation completes
-    setTimeout(() => {
-      root.classList.remove("theme-transitioning");
-    }, 450);
+      const rect = btnRef.current?.getBoundingClientRect();
+      const origin = rect
+        ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+        : { x: window.innerWidth - 40, y: 40 };
+      runLightOnTransition(origin, applyThemeClass);
+    } else {
+      // No crossfade — the swap should read as an instant cut inside the flash.
+      runDarkSnapTransition(applyThemeClass);
+    }
   };
 
   if (!mounted) {
@@ -43,6 +59,7 @@ function ThemeToggle() {
 
   return (
     <button
+      ref={btnRef}
       onClick={toggleTheme}
       aria-label="Toggle theme"
       className="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card/60 text-foreground transition-all hover:bg-card hover:scale-105"
@@ -109,7 +126,10 @@ export function LandingNav() {
         <div className="hidden items-center gap-2.5 md:flex">
           <ThemeToggle />
           <button
-            onClick={() => openAuth()}
+            onClick={() => {
+              track("cta_click", { source: "nav", redirectTo: "/canvas" });
+              openAuth();
+            }}
             className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 hover:opacity-90"
           >
             Start building
@@ -145,6 +165,7 @@ export function LandingNav() {
             <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
               <button
                 onClick={() => {
+                  track("cta_click", { source: "nav_mobile", redirectTo: "/canvas" });
                   setOpen(false);
                   openAuth();
                 }}

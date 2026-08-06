@@ -147,7 +147,12 @@ export const POSE: Record<
 };
 
 export function useIsLightMode() {
-  const [isLight, setIsLight] = useState(false);
+  // Lazy-read the class the layout's inline head script already set, so the
+  // very first client render (hydration) is correct instead of always
+  // starting dark and flashing to the right theme a beat later.
+  const [isLight, setIsLight] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("light")
+  );
   useEffect(() => {
     const update = () => setIsLight(document.documentElement.classList.contains("light"));
     update();
