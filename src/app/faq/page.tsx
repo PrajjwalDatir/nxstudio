@@ -17,11 +17,11 @@ const FAQ = [
   },
   {
     q: "Which AI coding agents does it actually work with?",
-    a: "Any of them. The context bundle is plain, portable Markdown — drop it into Claude Code, Cursor, v0, Windsurf, Aider, or whatever agent tool you use.",
+    a: "Any of them. The context bundle is plain, portable Markdown: drop it into Claude Code, Cursor, v0, Windsurf, Aider, or whatever agent tool you use.",
   },
   {
     q: "Is nxstudio going to write the code for me?",
-    a: "No — it handles the architecture, system design, and prompt engineering. Your AI agent (and you) writes the code. nxstudio removes the planning bottleneck so your agent builds software, not slop.",
+    a: "No, it handles the architecture, system design, and prompt engineering. Your AI agent (and you) writes the code. nxstudio removes the planning bottleneck so your agent builds software, not slop.",
   },
   {
     q: "Is my idea kept private?",
@@ -33,7 +33,7 @@ const FAQ = [
   },
   {
     q: "Do I need to be a senior engineer to know which tech stack to pick?",
-    a: "Nope. That's nxstudio's job — it analyzes your project goals and suggests an opinionated, battle-tested stack so you don't have to decide in a vacuum.",
+    a: "Nope. That's nxstudio's job: it analyzes your project goals and suggests an opinionated, battle-tested stack so you don't have to decide in a vacuum.",
   },
 ];
 

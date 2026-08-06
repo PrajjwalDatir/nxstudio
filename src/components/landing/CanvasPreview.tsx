@@ -47,7 +47,7 @@ export function CanvasPreview() {
           <div className="hidden w-44 shrink-0 flex-col border-r border-white/5 py-3 sm:flex">
             <div className="mb-2 flex items-center gap-2.5 px-3.5 pb-1">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-border">
-                <NxLogo className="h-3.5 w-3.5 text-primary" />
+                <NxLogo className="h-3.5 w-3.5 text-accent-foreground" />
               </span>
               <span className="text-sm font-semibold tracking-tight">nxstudio</span>
             </div>
@@ -78,7 +78,7 @@ export function CanvasPreview() {
               <div>
                 <h3 className="text-base font-semibold tracking-tight">Project Canvas</h3>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Tracking phases for <span className="text-primary">nxstudio</span>
+                  Tracking phases for <span className="text-accent-foreground">nxstudio</span>
                 </p>
               </div>
               <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
@@ -89,7 +89,7 @@ export function CanvasPreview() {
 
             {/* Command bar */}
             <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3.5 py-2.5">
-              <SearchIcon className="h-4 w-4 text-primary" />
+              <SearchIcon className="h-4 w-4 text-accent-foreground" />
               <span className="flex-1 text-xs text-muted-foreground">
                 Command nx for actions and search…
               </span>

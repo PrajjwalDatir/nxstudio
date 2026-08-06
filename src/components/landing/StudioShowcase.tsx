@@ -44,17 +44,17 @@ const HIGHLIGHTS = [
   {
     Icon: GemIcon,
     title: "Brand DNA",
-    line: "Primary colour, vibe, corner radius and type — the tokens your agent builds against.",
+    line: "Primary colour, vibe, corner radius and type: the tokens your agent builds against.",
   },
   {
     Icon: AtomIcon,
     title: "Generative canvas",
-    line: "Flow fields, particles, neon rings — living backdrops tuned in real time, over a 3D object and its motion.",
+    line: "Flow fields, particles, neon rings: living backdrops tuned in real time, over a 3D object and its motion.",
   },
   {
     Icon: WorkflowIcon,
     title: "Attach to build",
-    line: "Push the whole look into your build prompts in one click — no re-describing it in words.",
+    line: "Push the whole look into your build prompts in one click, no re-describing it in words.",
   },
 ];
 
@@ -132,7 +132,7 @@ export function StudioShowcase() {
             </h2>
             <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">
               A prompt can carry the plan, but not the feel. The Studio is one
-              canvas for colour, motion and mood — set the brand, tune the
+              canvas for colour, motion and mood: set the brand, tune the
               backdrop, sketch a note, and attach it straight to your build
               context.
             </p>
@@ -140,7 +140,7 @@ export function StudioShowcase() {
             <ul className="mt-8 space-y-5">
               {HIGHLIGHTS.map(({ Icon, title, line }) => (
                 <li key={title} className="flex gap-3.5">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-accent-foreground">
                     <Icon className="h-4 w-4" />
                   </span>
                   <div>
@@ -192,7 +192,7 @@ export function StudioShowcase() {
                       title={label}
                       className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
                         on
-                          ? "border-primary/40 bg-primary/15 text-primary"
+                          ? "border-primary/40 bg-primary/15 text-accent-foreground"
                           : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
                       }`}
                     >
@@ -305,7 +305,7 @@ export function StudioShowcase() {
                   >
                     <DiscIcon className="h-3.5 w-3.5" />
                   </button>
-                  <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 py-2 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/20">
+                  <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 py-2 text-[11px] font-semibold text-accent-foreground transition-colors hover:bg-primary/20">
                     <WorkflowIcon className="h-3 w-3" />
                     Attach to build
                   </button>
@@ -320,7 +320,7 @@ export function StudioShowcase() {
               <span>{engine}</span>
               <span className="text-muted-foreground/40">/</span>
               <span>density {density}</span>
-              <span className="ml-auto hidden sm:inline">attaches to <span className="text-primary">.nx/brand</span></span>
+              <span className="ml-auto hidden sm:inline">attaches to <span className="text-accent-foreground">.nx/brand</span></span>
             </div>
           </div>
         </div>

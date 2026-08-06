@@ -63,7 +63,7 @@ const STEPS = [
   {
     kicker: "The Handoff",
     title: "It knows exactly what you meant.",
-    body: "Your context, schemas, and build constraints compile into a single context bundle. You aren't just generating a prompt — you're wiring your agent's brain.",
+    body: "Your context, schemas, and build constraints compile into a single context bundle. You aren't just generating a prompt, you're wiring your agent's brain.",
     // The compiled prompt panel from the Build phase, with its real Copy control.
     artifact: (
       <div className="glass overflow-hidden rounded-xl">
@@ -75,7 +75,7 @@ const STEPS = [
           </Button>
         </div>
         <pre className="px-4 py-3 font-mono text-[11px] leading-relaxed text-foreground/80">
-          <span className="text-primary"># Build: nxstudio</span>
+          <span className="text-accent-foreground"># Build: nxstudio</span>
           {"\n"}Stack: Next.js · TypeScript · Supabase
           {"\n"}Visual canvas · derived stack · one build prompt
         </pre>
@@ -198,7 +198,7 @@ export function HowItWorks() {
                   aria-hidden
                   className={`absolute left-0 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[11px] transition-colors duration-500 ${
                     i === active
-                      ? "border-primary/60 bg-primary/15 text-primary"
+                      ? "border-primary/60 bg-primary/15 text-accent-foreground"
                       : "border-border bg-background text-muted-foreground"
                   }`}
                 >
@@ -212,7 +212,7 @@ export function HowItWorks() {
                   <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
                     <span
                       className={`transition-colors duration-500 ${
-                        i === active ? "text-primary" : "text-muted-foreground"
+                        i === active ? "text-accent-foreground" : "text-muted-foreground"
                       }`}
                     >
                       Stage {String(i + 1).padStart(2, "0")}

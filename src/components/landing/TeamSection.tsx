@@ -17,7 +17,7 @@ interface Member {
 const MEMBERS: Member[] = [
   {
     name: "Prajjwal",
-    role: "Product & Engineering",
+    role: "Product & GTM",
     location: "India",
     blurb:
       "Architects nxstudio's core compiler, .nx/ bundle engine, and WebGL canvas. Engineers the technical pipeline that translates founder specs into agent-ready context.",
@@ -25,10 +25,10 @@ const MEMBERS: Member[] = [
   },
   {
     name: "Kema Sambondu",
-    role: "Distribution & Content",
+    role: "Content & Distribution",
     location: "Zambia",
     blurb:
-      "Leads go-to-market, founder growth, and community distribution. Puts nxstudio in front of founders and engineers building with AI IDEs.",
+      "Runs content and community distribution, keeping nxstudio in front of the vibe coders building with AI IDEs.",
     photo: null, // Uses the branded generated avatar. Drop /public/team/kema.jpg to override.
   },
 ];
@@ -100,7 +100,7 @@ export function TeamSection({ index = "06" }: { index?: string }) {
                 )}
                 <div className="min-w-0">
                   <h3 className="truncate text-lg font-semibold tracking-tight">{m.name}</h3>
-                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent-foreground">
                     {m.role}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{m.location}</p>

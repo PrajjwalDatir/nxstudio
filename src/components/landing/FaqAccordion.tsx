@@ -44,18 +44,18 @@ export function FaqAccordion({ items }: { items: { q: string; a: string }[] }) {
                 <span
                   aria-hidden
                   className={`font-mono text-xs tabular-nums transition-colors ${
-                    isOpen ? "text-primary" : "text-muted-foreground/60"
+                    isOpen ? "text-accent-foreground" : "text-muted-foreground/60"
                   }`}
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="flex-1 text-sm font-medium text-foreground transition-colors group-hover:text-primary sm:text-base">
+                <span className="flex-1 text-sm font-medium text-foreground transition-colors group-hover:text-accent-foreground sm:text-base">
                   {item.q}
                 </span>
                 <span
                   aria-hidden
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-muted-foreground transition-all duration-300 ${
-                    isOpen ? "rotate-45 border-primary/40 text-primary" : "border-border group-hover:border-primary/30"
+                    isOpen ? "rotate-45 border-primary/40 text-accent-foreground" : "border-border group-hover:border-primary/30"
                   }`}
                 >
                   +

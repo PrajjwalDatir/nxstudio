@@ -42,7 +42,7 @@ export function SiteFooter() {
             <span className="text-[15px] font-semibold tracking-tight">nxstudio</span>
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            {siteConfig.tagline} Your staff-level tech cofounder. Describe your vision, get a production-ready build prompt.
+            {siteConfig.tagline} Describe your vision, get a production-ready build prompt.
           </p>
           <div className="mt-5 flex items-center gap-2">
             <a
