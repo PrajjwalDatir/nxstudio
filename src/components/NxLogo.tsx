@@ -37,8 +37,8 @@ export function NxLogo({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id={gradId} x1="4" y1="1" x2="28" y2="31" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#A78BFA" />
-          <stop offset="1" stopColor="#7C3AED" />
+          <stop stopColor="#DDD6FE" />
+          <stop offset="1" stopColor="#C4B5FD" />
         </linearGradient>
       </defs>
       <path d={HEX_PATH} fill={`url(#${gradId})`} />

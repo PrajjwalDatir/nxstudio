@@ -56,10 +56,12 @@
   --background: #08080A;
   --foreground: #FAFAFA;
 
-  /* Violet primary */
-  --lilac: #8B5CF6;
-  --primary: #8B5CF6;
-  --primary-foreground: #FFFFFF;
+  /* Soft lilac primary — a pastel glow against the near-black canvas reads
+   * more refined than a fully-saturated violet; dark ink keeps the button
+   * text legible against something this light. */
+  --lilac: #C4B5FD;
+  --primary: #C4B5FD;
+  --primary-foreground: #1B1030;
 
   /* Cards & surfaces — slightly lifted from the canvas */
   --card: #121214;
@@ -106,9 +108,10 @@ html.light {
   --background: #FFFFFF;
   --foreground: #09090B;
 
-  --lilac: #7C3AED;
-  --primary: #7C3AED;
-  --primary-foreground: #FFFFFF;
+  /* Same lilac as dark mode — one brand accent, not a per-theme swap. */
+  --lilac: #C4B5FD;
+  --primary: #C4B5FD;
+  --primary-foreground: #1B1030;
 
   --card: #F4F4F6;
   --card-foreground: #09090B;
@@ -158,6 +161,15 @@ html.theme-transitioning *,
 html.theme-transitioning *::before,
 html.theme-transitioning *::after {
   transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, fill 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* The dark→light reveal drives its own clip-path wipe on ::view-transition-new(root)
+ * (see theme-transition.ts) — kill the browser's default crossfade so it doesn't
+ * compete with the wipe and muddy the edge. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 /* Frosted surface for cards and panels.
@@ -311,7 +323,7 @@ html.light .text-gradient {
   border-radius: 9999px;
   filter: blur(150px);
   opacity: 0.22;
-  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.38), rgba(99, 102, 241, 0.12), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(196, 181, 253, 0.38), rgba(167, 139, 250, 0.12), transparent 70%);
 }
 .hero-glow::after {
   content: "";
