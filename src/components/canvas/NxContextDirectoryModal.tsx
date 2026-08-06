@@ -64,9 +64,6 @@ export function NxContextDirectoryModal({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-bold tracking-tight">.nx/ Context Directory</h3>
-                  <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase text-primary">
-                    {counts.all} Files Tracked
-                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Complete context bundle directory emitted by Nx Studio and maintained by your AI agents.
