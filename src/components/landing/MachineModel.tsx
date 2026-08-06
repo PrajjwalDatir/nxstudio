@@ -69,53 +69,56 @@ function grungeTexture(): THREE.CanvasTexture | null {
   if (_grunge) return _grunge;
   if (typeof document === "undefined") return null;
 
-  const size = 256;
+  const size = 512;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
-  // Base: near-white so the shell keeps most of its colour where it's clean.
-  ctx.fillStyle = "#dcdcdc";
+  // Base: clean high-specular titanium grey
+  ctx.fillStyle = "#e5e5ed";
   ctx.fillRect(0, 0, size, size);
 
-  // Fine metal grain.
+  // Directional brushed-metal micro-streaks (horizontal hairline grain)
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = "#ffffff";
+  for (let i = 0; i < 400; i++) {
+    const y = Math.random() * size;
+    const h = 1 + Math.random() * 1.5;
+    const w = 40 + Math.random() * 200;
+    const x = Math.random() * size;
+    ctx.fillRect(x, y, w, h);
+  }
+
+  // Fine tactile metal noise
+  ctx.globalAlpha = 1;
   const grain = ctx.getImageData(0, 0, size, size);
   for (let i = 0; i < grain.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 46;
+    const n = (Math.random() - 0.5) * 32;
     grain.data[i] += n;
     grain.data[i + 1] += n;
     grain.data[i + 2] += n;
   }
   ctx.putImageData(grain, 0, 0);
 
-  // Worn-smooth patches — darker, so the metal shines a little where it's rubbed.
+  // Soft satin specular highlights
   for (let k = 0; k < 30; k++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const r = 5 + Math.random() * 20;
+    const r = 12 + Math.random() * 40;
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, "rgba(90,90,90,0.45)");
-    g.addColorStop(1, "rgba(90,90,90,0)");
+    g.addColorStop(0, "rgba(255,255,255,0.22)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Grime pooling + vertical drip streaks.
-  ctx.globalAlpha = 0.5;
-  for (let k = 0; k < 16; k++) {
-    const x = Math.random() * size;
-    ctx.fillStyle = "rgba(70,68,74,1)";
-    ctx.fillRect(x, Math.random() * size * 0.5, 1 + Math.random() * 2, 20 + Math.random() * 70);
-  }
-  ctx.globalAlpha = 1;
-
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(2, 2);
-  tex.anisotropy = 4;
+  tex.anisotropy = 16;
   _grunge = tex;
   return tex;
 }
@@ -131,7 +134,7 @@ function grungeTexture(): THREE.CanvasTexture | null {
  */
 export type MachinePose = "dormant" | "briefed" | "ready" | "curious" | "excited" | "proud";
 
-const POSE: Record<
+export const POSE: Record<
   MachinePose,
   { headX: number; headZ: number; lean: number; eye: number; armL: number; armR: number }
 > = {
@@ -142,6 +145,18 @@ const POSE: Record<
   excited: { headX: -0.22, headZ: 0.06, lean: -0.1, eye: 1.4, armL: 0.48, armR: 0.46 },
   proud: { headX: -0.02, headZ: 0.0, lean: -0.02, eye: 1.0, armL: 0.18, armR: 0.18 },
 };
+
+export function useIsLightMode() {
+  const [isLight, setIsLight] = useState(false);
+  useEffect(() => {
+    const update = () => setIsLight(document.documentElement.classList.contains("light"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return isLight;
+}
 
 export function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -155,176 +170,188 @@ export function usePrefersReducedMotion() {
   return reduce;
 }
 
-// Mid-greys, not near-blacks. On a #08080A page a dark shell just silhouettes
-// into the background and loses all the plate detail.
-// Bright silver alloy for high contrast against dark background
-const SHELL = "#A1A1B2";
-const SHELL_DARK = "#52525E";
-
-/** Outer plate metal — rough weathered cast with metallic shine. */
-function Shell({ color = SHELL }: { color?: string }) {
+/** Outer plate shell — dielectric ceramic/plastic with clearcoat gloss. */
+function Shell({ color }: { color?: string }) {
   const g = grungeTexture();
+  const isLight = useIsLightMode();
+  const baseColor =
+    color === "dark"
+      ? isLight
+        ? "#8E8BA6"
+        : "#242430"
+      : color || (isLight ? "#D8D6E6" : "#545068");
   return (
-    <meshStandardMaterial
-      color={color}
+    <meshPhysicalMaterial
+      color={baseColor}
       map={g}
       roughnessMap={g}
-      metalness={0.65}
-      roughness={0.45}
-      flatShading
+      metalness={isLight ? 0.05 : 0.75}
+      roughness={isLight ? 0.38 : 0.4}
+      clearcoat={isLight ? 0.6 : 0.15}
+      clearcoatRoughness={isLight ? 0.15 : 0.4}
+      envMapIntensity={isLight ? 1.2 : 0.8}
     />
   );
 }
 
-/** Joints and bolted collars: dark gunmetal contrast. */
+/** Joints and bolted collars: chrome-like accent with higher metalness for contrast against the dielectric shell. */
 function Joint() {
   const g = grungeTexture();
+  const isLight = useIsLightMode();
   return (
-    <meshStandardMaterial
-      color={SHELL_DARK}
+    <meshPhysicalMaterial
+      color={isLight ? "#9894B0" : "#1A1A22"}
       map={g}
       roughnessMap={g}
-      metalness={0.5}
-      roughness={0.7}
-      flatShading
+      metalness={isLight ? 0.7 : 0.9}
+      roughness={isLight ? 0.18 : 0.18}
+      clearcoat={isLight ? 0.4 : 0.1}
+      clearcoatRoughness={0.2}
+      envMapIntensity={isLight ? 1.5 : 0.8}
     />
   );
 }
 
-/** Sockets and vents — near-black, fully matte. */
+/** Sockets and vents — deep recessed wells with high roughness for natural AO-like darkening. */
 function Recess() {
-  return <meshStandardMaterial color="#0E0D14" metalness={0.2} roughness={0.9} flatShading />;
+  const isLight = useIsLightMode();
+  return <meshPhysicalMaterial color={isLight ? "#7A7694" : "#0E0E14"} roughness={0.7} metalness={0.05} envMapIntensity={0.3} />;
+}
+
+let _nxBadgeTexDark: THREE.CanvasTexture | null = null;
+let _nxBadgeTexLight: THREE.CanvasTexture | null = null;
+
+function nxBadgeTexture(isLight: boolean): THREE.CanvasTexture | null {
+  if (isLight && _nxBadgeTexLight) return _nxBadgeTexLight;
+  if (!isLight && _nxBadgeTexDark) return _nxBadgeTexDark;
+  if (typeof document === "undefined") return null;
+
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // Badge plate background
+  ctx.fillStyle = isLight ? "#F0F0F6" : "#0D0B18";
+  ctx.fillRect(0, 0, size, size);
+
+  // Outer glowing violet accent border
+  ctx.strokeStyle = isLight ? "rgba(124, 58, 237, 0.5)" : "rgba(139, 92, 246, 0.4)";
+  ctx.lineWidth = 14;
+  ctx.strokeRect(20, 20, size - 40, size - 40);
+
+  // Render official Hexagon Monolith with Path2D
+  ctx.save();
+  ctx.translate(size / 2 - 160, size / 2 - 160);
+  ctx.scale(10, 10);
+
+  // Hexagon Gradient Fill
+  const grad = ctx.createLinearGradient(4, 1, 28, 31);
+  if (isLight) {
+    grad.addColorStop(0, "#8B5CF6");
+    grad.addColorStop(0.5, "#7C3AED");
+    grad.addColorStop(1, "#6D28D9");
+  } else {
+    grad.addColorStop(0, "#DDD6FE");
+    grad.addColorStop(0.5, "#A78BFA");
+    grad.addColorStop(1, "#7C3AED");
+  }
+
+  const hexPath = new Path2D("M16 1 28 8.5 V23.5 L16 31 4 23.5 V8.5 Z");
+  ctx.fillStyle = grad;
+  ctx.fill(hexPath);
+
+  // N Monogram Cutout
+  const nPath = new Path2D("M11.4 22 V11.6 h2.55 v1.5 q.7-.9 1.5-1.3 .8-.42 1.8-.42 1.65 0 2.55 1 .9 1 .9 2.85 V22 h-2.7 v-6.15 q0-.95-.4-1.4-.4-.46-1.15-.46-.85 0-1.35.56-.5.55-.5 1.6V22 Z");
+  ctx.fillStyle = isLight ? "#FFFFFF" : "#0B0710";
+  ctx.fill(nPath);
+
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 16;
+  if (isLight) _nxBadgeTexLight = tex;
+  else _nxBadgeTexDark = tex;
+  return tex;
 }
 
 /**
- * NX Tattoo / Stencil Emblem mounted on the main machine's front chest.
- * Positioned proudly on chest with glowing neon stencil lettering.
+ * NX Emblem mounted on the main machine's front chest.
+ * Displays the authentic official nxstudio hexagonal brand monolith emblem.
  */
 function NxChestTattoo() {
+  const isLight = useIsLightMode();
+  const badgeTex = nxBadgeTexture(isLight);
   return (
-    <group position={[0, 0.44, 0.59]} rotation={[0.08, 0, 0]}>
-      {/* Outer neon purple border rim */}
+    <group position={[0, 0.44, 0.58]} rotation={[0.08, 0, 0]}>
+      {/* Outer bezel frame */}
       <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.54, 0.36, 0.02]} />
-        <meshStandardMaterial color="#8B5CF6" emissive="#7C3AED" emissiveIntensity={1.8} toneMapped={false} />
+        <boxGeometry args={[0.44, 0.32, 0.02]} />
+        <meshStandardMaterial color={isLight ? "#A8A4C0" : "#262238"} metalness={isLight ? 0.8 : 0.88} roughness={0.15} />
       </mesh>
 
-      {/* Base chest badge plate backing */}
-      <mesh position={[0, 0, 0.01]}>
-        <boxGeometry args={[0.5, 0.32, 0.025]} />
-        <meshStandardMaterial color="#12101D" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Corner mounting rivets */}
-      {[
-        [-0.21, 0.12],
-        [0.21, 0.12],
-        [-0.21, -0.12],
-        [0.21, -0.12],
-      ].map(([rx, ry], idx) => (
-        <mesh key={idx} position={[rx, ry, 0.024]}>
-          <cylinderGeometry args={[0.018, 0.018, 0.02, 8]} />
-          <meshStandardMaterial color="#DDD6FE" emissive="#A78BFA" emissiveIntensity={1.2} />
-        </mesh>
-      ))}
-
-      {/* Backlit electric violet core panel */}
-      <mesh position={[0, 0, 0.02]}>
-        <planeGeometry args={[0.42, 0.24]} />
+      {/* Official nxstudio Brand Logo Faceplate */}
+      <mesh position={[0, 0, 0.012]}>
+        <planeGeometry args={[0.4, 0.28]} />
         <meshStandardMaterial
-          color="#6D28D9"
-          emissive="#A78BFA"
-          emissiveIntensity={2.5}
-          toneMapped={false}
+          map={badgeTex}
+          emissiveMap={badgeTex}
+          emissive="#FFFFFF"
+          emissiveIntensity={1.4}
+          roughness={0.2}
+          metalness={0.8}
         />
       </mesh>
 
-      {/* Glowing Neon 3D Stencil Letter "N" */}
-      <group position={[-0.09, 0, 0.035]}>
-        {/* Left vertical bar */}
-        <mesh position={[-0.055, 0, 0]}>
-          <boxGeometry args={[0.026, 0.16, 0.02]} />
-          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
+      {/* 4 Corner Precision Bolts */}
+      {[
+        [-0.17, 0.11],
+        [0.17, 0.11],
+        [-0.17, -0.11],
+        [0.17, -0.11],
+      ].map(([rx, ry], idx) => (
+        <mesh key={idx} position={[rx, ry, 0.018]}>
+          <cylinderGeometry args={[0.012, 0.012, 0.016, 6]} />
+          <meshStandardMaterial color="#DDD6FE" emissive="#A78BFA" emissiveIntensity={1.2} />
         </mesh>
-        {/* Diagonal stroke */}
-        <mesh position={[0, 0, 0]} rotation={[0, 0, -0.68]}>
-          <boxGeometry args={[0.024, 0.175, 0.02]} />
-          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
-        </mesh>
-        {/* Right vertical bar */}
-        <mesh position={[0.055, 0, 0]}>
-          <boxGeometry args={[0.026, 0.16, 0.02]} />
-          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
-        </mesh>
-      </group>
-
-      {/* Glowing Neon 3D Stencil Letter "X" */}
-      <group position={[0.09, 0, 0.035]}>
-        {/* Diagonal 1 */}
-        <mesh position={[0, 0, 0]} rotation={[0, 0, 0.65]}>
-          <boxGeometry args={[0.026, 0.175, 0.02]} />
-          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
-        </mesh>
-        {/* Diagonal 2 */}
-        <mesh position={[0, 0, 0]} rotation={[0, 0, -0.65]}>
-          <boxGeometry args={[0.026, 0.175, 0.02]} />
-          <meshStandardMaterial color="#FFFFFF" emissive="#E9D5FF" emissiveIntensity={2.2} toneMapped={false} />
-        </mesh>
-      </group>
-
-      {/* Micro serial stamp */}
-      <mesh position={[0, -0.11, 0.018]}>
-        <boxGeometry args={[0.26, 0.015, 0.01]} />
-        <meshStandardMaterial color="#8B5CF6" emissive="#7C3AED" emissiveIntensity={0.8} />
-      </mesh>
+      ))}
     </group>
   );
 }
 
-/**
- * A three-fingered pincer, curled inward as if cradling. `side` mirrors it;
- * `curl` lets the two hands sit at slightly different closures, because a pair
- * of identical hands is the fastest way to make a rig look dead.
- */
-function Hand({ side, curl = 1 }: { side: number; curl?: number }) {
+/** Simple 3-finger robotic hand with articulated fingers */
+function Hand({ side, curl = 0.5 }: { side: number; curl?: number }) {
+  const flex = curl * 0.6;
   return (
     <group>
-      {/* Wrist collar */}
-      <mesh>
-        <cylinderGeometry args={[0.085, 0.1, 0.09, 10]} />
+      {/* Palm block */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.13, 0.07, 0.12]} />
         <Joint />
       </mesh>
-      {/* Palm block */}
-      <mesh position={[0, -0.11, 0.02]} rotation={[0.25, 0, 0]}>
-        <boxGeometry args={[0.17, 0.16, 0.11]} />
-        <Shell />
-      </mesh>
-      {/* Three fingers, splayed across the palm and curling in */}
-      {[-0.055, 0.002, 0.059].map((x, i) => (
-        <group
-          key={x}
-          position={[x, -0.19, 0.06]}
-          rotation={[0.55 * curl + i * 0.06, 0, -x * 2.2]}
-        >
-          <mesh>
-            <cylinderGeometry args={[0.026, 0.03, 0.11, 6]} />
-            <Shell />
-          </mesh>
-          <mesh position={[0, -0.075, 0.03]} rotation={[0.7 * curl, 0, 0]}>
-            <cylinderGeometry args={[0.021, 0.026, 0.09, 6]} />
-            <Joint />
-          </mesh>
-        </group>
-      ))}
-      {/* Opposed thumb */}
-      <group position={[side * 0.085, -0.13, 0.06]} rotation={[0.5, 0, side * 0.9]}>
-        <mesh>
-          <cylinderGeometry args={[0.028, 0.032, 0.1, 6]} />
-          <Shell />
+
+      {/* Thumb */}
+      <group position={[side * -0.06, -0.02, 0.04]} rotation={[0.4, side * -0.6, flex]}>
+        <mesh position={[0, -0.05, 0]}>
+          <cylinderGeometry args={[0.018, 0.015, 0.1, 8]} />
+          <Shell color="dark" />
         </mesh>
-        <mesh position={[0, -0.07, 0.02]} rotation={[0.6, 0, 0]}>
-          <cylinderGeometry args={[0.023, 0.028, 0.08, 6]} />
-          <Joint />
+      </group>
+
+      {/* Index Finger */}
+      <group position={[side * 0.03, -0.04, 0.04]} rotation={[flex, 0, 0]}>
+        <mesh position={[0, -0.06, 0]}>
+          <cylinderGeometry args={[0.016, 0.014, 0.12, 8]} />
+          <Shell color="dark" />
+        </mesh>
+      </group>
+
+      {/* Main Finger */}
+      <group position={[side * 0.03, -0.04, -0.03]} rotation={[flex * 0.8, 0, 0]}>
+        <mesh position={[0, -0.06, 0]}>
+          <cylinderGeometry args={[0.016, 0.014, 0.12, 8]} />
+          <Shell color="dark" />
         </mesh>
       </group>
     </group>
@@ -357,11 +384,11 @@ function MouthDialogue({ line }: { line: string }) {
     };
   }, [line]);
 
-  if (!line || !line.trim()) return null;
+  if (!line || !line.trim() || line.trim().length === 0) return null;
 
   return (
     <Html
-      position={[0, 1.1, 0.2]}
+      position={[0, 1.25, 0.2]}
       center
       distanceFactor={7.0}
       zIndexRange={[100, 0]}
@@ -369,7 +396,7 @@ function MouthDialogue({ line }: { line: string }) {
     >
       <div className="flex w-max max-w-[280px] sm:max-w-[384px] justify-center">
         <MachineBubble tail="bottom">
-          <p className="text-sm text-foreground whitespace-pre-wrap text-center">
+          <p className="text-sm font-medium text-popover-foreground whitespace-pre-line text-center">
             <span ref={textRef}>{line}</span>
           </p>
         </MachineBubble>
@@ -404,6 +431,7 @@ export function Machine({
   /** Collision tracker passed from the scene to trigger flinch reactions */
   hitRef?: MutableRefObject<MachineHitState | null>;
 }) {
+  const isLight = useIsLightMode();
   const group = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
   const torso = useRef<THREE.Group>(null);
@@ -428,7 +456,6 @@ export function Machine({
     // Ease toward the current pose rather than snapping between beats.
     const target = POSE[pose];
     const a = 1 - Math.exp(-delta * 2.8);
-    const drift = reduce ? 0 : 1;
 
     // Live values (Theatre.js) when the stage supplies them, else the static
     // props. Ease `dance` in so the unit doesn't snap into the beat.
@@ -455,24 +482,12 @@ export function Machine({
       );
     }
     if (head.current) {
-      // Idle drift + startle tilt, both offset from the posed values rather
-      // than overwriting them, so the head keeps its counter-rotation.
-      const idleZ = Math.sin(t * 0.45) * 0.05 * drift;
-      const idleX = Math.sin(t * 0.35) * 0.04 * drift;
-      head.current.rotation.z = THREE.MathUtils.lerp(
-        head.current.rotation.z,
-        target.headZ + idleZ - jolt * 0.22,
-        a
-      );
-      head.current.rotation.x = THREE.MathUtils.lerp(
-        head.current.rotation.x,
-        target.headX + idleX + jolt * 0.16,
-        a
-      );
+      head.current.rotation.x = THREE.MathUtils.lerp(head.current.rotation.x, target.headX, a);
+      head.current.rotation.z = THREE.MathUtils.lerp(head.current.rotation.z, target.headZ, a);
     }
     // Eyes brighten as the unit comes up — the clearest read on its state.
     // The stage drives them directly (dyn.eye); on the beat they pulse.
-    const eyeTarget = (dyn ? dyn.eye : target.eye) + bob * 0.55 * dance;
+    const eyeTarget = dyn ? dyn.eye : target.eye;
     eyes.current.forEach((m) => {
       if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, eyeTarget, a);
     });
@@ -530,160 +545,195 @@ export function Machine({
   return (
     // Whole unit turned a few degrees off-axis and tipped at the shoulders, so
     // the silhouette is asymmetric before anything else is even read.
-    <group ref={group} onPointerDown={poke} rotation={[0, 0.22, -0.035]}>
+    <group ref={group} onPointerDown={poke} rotation={[0, 0.44, 0]}>
       {/* Everything above the hips leans as one, pivoting at the waist. */}
       <group ref={torso}>
-      {/* Head — counter-rotated against the torso twist, and tilted. A head
-          squared to the chest is the difference between a figure and a prop. */}
-      <group ref={head} position={[0.03, 1.42, 0.02]} rotation={[0.05, -0.34, 0.08]}>
+      {/* Head — centered and aligned with CAD-grade precision symmetry. */}
+      <group ref={head} position={[0, 1.42, 0]} rotation={[0, 0, 0]}>
+        {/* Main helmet sphere */}
         <mesh castShadow>
-          <sphereGeometry args={[0.62, 20, 16]} />
+          <sphereGeometry args={[0.62, 24, 20]} />
           <Shell />
         </mesh>
 
-        {/* Antenna — a bent stalk, the one asymmetric detail on the whole unit */}
-        <mesh position={[0.2, 0.58, -0.08]} rotation={[0.12, 0, -0.28]}>
-          <cylinderGeometry args={[0.022, 0.03, 0.5, 6]} />
-          <Shell color={SHELL_DARK} />
+        {/* Forehead power visor crest */}
+        <mesh position={[0, 0.45, 0.35]} rotation={[-0.2, 0, 0]}>
+          <boxGeometry args={[0.34, 0.05, 0.14]} />
+          <Joint />
         </mesh>
-        <mesh position={[0.29, 0.82, -0.09]}>
-          <sphereGeometry args={[0.055, 10, 8]} />
+
+        {/* Dialogue speech line anchored directly near his mouth in 3D */}
+        {line && line.trim().length > 0 && <MouthDialogue line={line} />}
+
+        {/* Antenna — centered on top of head with glowing radiant lilac orb */}
+        <mesh position={[0, 0.62, 0]} rotation={[0.08, 0, 0]}>
+          <cylinderGeometry args={[0.022, 0.03, 0.44, 10]} />
+          <Shell color="dark" />
+        </mesh>
+        <mesh position={[0, 0.86, 0]}>
+          <sphereGeometry args={[0.065, 12, 10]} />
           <meshStandardMaterial
-            color="#6D28D9"
-            emissive="#7C3AED"
-            emissiveIntensity={0.9}
+            color="#A78BFA"
+            emissive="#C084FC"
+            emissiveIntensity={3.4}
             toneMapped={false}
           />
         </mesh>
 
-        {/* Jaw seam, tucked just under the sphere's surface */}
-        <mesh position={[0, -0.22, 0.5]} rotation={[0.34, 0, 0]}>
-          <boxGeometry args={[0.4, 0.045, 0.05]} />
-          <Joint />
-        </mesh>
-        {/* Temple bolts */}
-        {[-0.45, 0.45].map((x) => (
-          <mesh key={x} position={[x, 0.04, 0.2]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.055, 0.055, 0.07, 8]} />
-            <Joint />
-          </mesh>
-        ))}
-
-        {/* Eyes: recessed lamp housings seated on the sphere's surface.
-            Sphere r=0.62, so the face at these offsets sits at z≈0.57 — the
-            housing is sunk a little behind that, and the lens sits inside it.
-            The depth is what stops them reading as stickers. */}
-        {[-0.23, 0.23].map((x) => (
-          <group key={x} position={[x, 0.06, 0.5]} rotation={[0.04, x * 0.42, 0]}>
-            {/* Bezel ring proud of the plate */}
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.155, 0.145, 0.09, 16]} />
+        {/* Temple ear-sensor nodules — perfectly mirrored */}
+        {[-0.52, 0.52].map((x) => (
+          <group key={x} position={[x, 0.08, 0.1]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh>
+              <cylinderGeometry args={[0.085, 0.085, 0.1, 12]} />
               <Joint />
             </mesh>
-            {/* Dark socket bored into it */}
-            <mesh position={[0, 0, 0.028]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.118, 0.118, 0.075, 16]} />
+            <mesh position={[0, 0.055 * Math.sign(x), 0]}>
+              <sphereGeometry args={[0.05, 10, 8]} />
+              <meshStandardMaterial color="#A78BFA" emissive="#C084FC" emissiveIntensity={2.8} toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* Jaw seam tuck */}
+        <mesh position={[0, -0.22, 0.5]} rotation={[0.34, 0, 0]}>
+          <boxGeometry args={[0.42, 0.05, 0.06]} />
+          <Joint />
+        </mesh>
+
+        {/* Smoked-glass helmet visor band — adapts cleanly to light and dark themes */}
+        <mesh position={[0, 0.06, 0.38]} rotation={[0.08, 0, 0]}>
+          <boxGeometry args={[0.72, 0.22, 0.3]} />
+          <meshStandardMaterial color={isLight ? "#9490B0" : "#06050C"} roughness={0.1} metalness={isLight ? 0.78 : 0.95} />
+        </mesh>
+
+        {/* Eyes: precision multi-layer optical lens assemblies with catchlight reflections */}
+        {[-0.2, 0.2].map((x) => (
+          <group key={x} position={[x, 0.06, 0.46]} rotation={[0.04, x * 0.28, 0]}>
+            {/* Outer chamfered chrome lens bezel */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.125, 0.12, 0.06, 24]} />
+              <Joint />
+            </mesh>
+            {/* Inner dark optical well */}
+            <mesh position={[0, 0, 0.012]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.1, 0.095, 0.05, 24]} />
               <Recess />
             </mesh>
-            {/* Lens, sunk below the bezel lip */}
-            <mesh position={[0, 0, 0.026]}>
-              <sphereGeometry args={[0.098, 16, 14]} />
-              {/* Deep violet, modest intensity — pushed any hotter it clips to
-                  white and stops reading as the brand hue. Intensity is driven
-                  by the pose, so the gaze reports the unit's state. */}
+            {/* Core radiant lilac emissive lens */}
+            <mesh position={[0, 0, 0.024]}>
+              <sphereGeometry args={[0.082, 24, 20]} />
               <meshStandardMaterial
                 ref={(m) => {
                   if (m) eyes.current[x < 0 ? 0 : 1] = m;
                 }}
-                color="#6D28D9"
-                emissive="#7C3AED"
-                emissiveIntensity={1.35}
+                color="#7C3AED"
+                emissive="#DDD6FE"
+                emissiveIntensity={3.6}
+                toneMapped={false}
+              />
+            </mesh>
+            {/* Concentric aperture glow ring */}
+            <mesh position={[0, 0, 0.042]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.05, 0.012, 16, 32]} />
+              <meshStandardMaterial
+                color="#FFFFFF"
+                emissive="#FAF5FF"
+                emissiveIntensity={4.2}
+                toneMapped={false}
+              />
+            </mesh>
+            {/* Glossy glass catchlight reflection dot */}
+            <mesh position={[0.028, 0.028, 0.065]}>
+              <sphereGeometry args={[0.018, 12, 10]} />
+              <meshStandardMaterial
+                color="#FFFFFF"
+                emissive="#FFFFFF"
+                emissiveIntensity={2.5}
                 toneMapped={false}
               />
             </mesh>
           </group>
         ))}
-        {/* Rivet band around the crown */}
+
+        {/* Rivet crown band */}
         <mesh position={[0, 0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.42, 0.045, 8, 24]} />
-          <Shell color={SHELL_DARK} />
+          <torusGeometry args={[0.43, 0.045, 10, 28]} />
+          <Shell color="dark" />
         </mesh>
       </group>
 
-      {/* Neck */}
+      {/* Neck armor sleeve */}
       <mesh position={[0, 0.98, 0]}>
-        <cylinderGeometry args={[0.14, 0.14, 0.3, 10]} />
-        <Shell color={SHELL_DARK} />
+        <cylinderGeometry args={[0.15, 0.16, 0.3, 12]} />
+        <Shell color="dark" />
       </mesh>
-      {/* Neck power ring */}
+      {/* Neck power conduit ring */}
       <mesh position={[0, 0.9, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.16, 0.025, 8, 16]} />
-        <meshStandardMaterial color="#8B5CF6" emissive="#7C3AED" emissiveIntensity={0.6} />
+        <torusGeometry args={[0.17, 0.03, 10, 20]} />
+        <meshStandardMaterial color="#8B5CF6" emissive="#C084FC" emissiveIntensity={2.8} toneMapped={false} />
       </mesh>
 
-      {/* Barrel torso */}
+      {/* Segmented Barrel Torso */}
       <mesh position={[0, 0.35, 0]} castShadow>
-        <cylinderGeometry args={[0.5, 0.62, 1.05, 14]} />
+        <cylinderGeometry args={[0.52, 0.64, 1.05, 16]} />
         <Shell />
       </mesh>
-      {/* Waist band + a second seam, so the body reads as bolted sections */}
+      {/* Waist armor collar & ribbing seams */}
       <mesh position={[0, 0.35, 0]}>
-        <cylinderGeometry args={[0.53, 0.53, 0.16, 14]} />
-        <Shell color={SHELL_DARK} />
+        <cylinderGeometry args={[0.55, 0.55, 0.16, 16]} />
+        <Shell color="dark" />
       </mesh>
       <mesh position={[0, 0.74, 0]}>
-        <cylinderGeometry args={[0.505, 0.505, 0.07, 14]} />
-        <Shell color={SHELL_DARK} />
+        <cylinderGeometry args={[0.52, 0.52, 0.07, 16]} />
+        <Shell color="dark" />
       </mesh>
 
-      {/* NX Chest Tattoo — bold, stencil-milled industrial logo with backlit violet core */}
+      {/* NX Chest Emblem */}
       <NxChestTattoo />
 
-      {/* Chest status indicator LEDs flanking the tattoo */}
-      {[-0.22, 0.22].map((x) => (
-        <mesh key={x} position={[x, 0.65, 0.48]}>
-          <sphereGeometry args={[0.025, 8, 8]} />
+      {/* Status Indicator LEDs — perfectly mirrored */}
+      {[-0.23, 0.23].map((x) => (
+        <mesh key={x} position={[x, 0.65, 0.49]}>
+          <sphereGeometry args={[0.028, 10, 10]} />
           <meshStandardMaterial
             color="#8B5CF6"
             emissive="#A78BFA"
-            emissiveIntensity={1.2}
+            emissiveIntensity={1.6}
             toneMapped={false}
           />
         </mesh>
       ))}
 
-      {/* Power conduits connecting chest to shoulder joints */}
-      {[-0.32, 0.32].map((x, i) => (
+      {/* Power conduit hydraulics connecting chest to shoulders — perfectly mirrored */}
+      {[-0.33, 0.33].map((x, i) => (
         <mesh
           key={i}
           position={[x, 0.76, 0.26]}
           rotation={[0.3, 0, i === 0 ? -0.4 : 0.4]}
         >
-          <cylinderGeometry args={[0.022, 0.022, 0.35, 8]} />
+          <cylinderGeometry args={[0.025, 0.025, 0.36, 10]} />
           <Joint />
         </mesh>
       ))}
 
-      {/* Chest vent slats */}
+      {/* Chest cooling vent slats */}
       {[0.24, 0.16].map((y) => (
-        <mesh key={y} position={[0, y, 0.54]} rotation={[0.08, 0, 0]}>
-          <boxGeometry args={[0.26, 0.025, 0.04]} />
-          <Shell color={SHELL_DARK} />
+        <mesh key={y} position={[0, y, 0.55]} rotation={[0.08, 0, 0]}>
+          <boxGeometry args={[0.28, 0.028, 0.045]} />
+          <Shell color="dark" />
         </mesh>
       ))}
 
       {/* Hip collar */}
       <mesh position={[0, -0.12, 0]}>
-        <cylinderGeometry args={[0.46, 0.4, 0.2, 12]} />
-        <Shell color={SHELL_DARK} />
+        <cylinderGeometry args={[0.48, 0.42, 0.2, 14]} />
+        <Shell color="dark" />
       </mesh>
 
-      {/* Arms. Cradling the payload, and deliberately unmatched: the right sits
-          higher and closed tighter, the left hangs lower and looser. Mirrored
-          limbs are what make a rig look like a toy. */}
+      {/* Articulated Arm Assemblies — 100% Symmetrical Shoulder Pivot Heights */}
       {([
-        { s: -1, shoulderY: 0.7, curl: 0.5 },
-        { s: 1, shoulderY: 0.78, curl: 0.6 },
+        { s: -1, shoulderY: 0.75, curl: 0.5 },
+        { s: 1, shoulderY: 0.75, curl: 0.5 },
       ] as const).map(({ s, shoulderY, curl }, i) => (
         <group
           key={s}
@@ -691,37 +741,38 @@ export function Machine({
             arms.current[i] = el;
           }}
         >
-          {/* Natural arm hanging down by the side */}
-          <group position={[s * 0.6, shoulderY, 0]}>
-            {/* Pauldron cap over the joint */}
+          <group position={[s * 0.62, shoulderY, 0]}>
+            {/* Pauldron shoulder cap */}
             <mesh position={[0, 0.06, 0]} rotation={[0, 0, s * 0.2]}>
-              <sphereGeometry args={[0.26, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
+              <sphereGeometry args={[0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
               <Shell />
             </mesh>
             <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[0.22, 14, 12]} />
+              <sphereGeometry args={[0.23, 16, 14]} />
               <Joint />
             </mesh>
-            {/* Upper arm hanging straight down */}
+            {/* Upper arm column */}
             <mesh position={[s * 0.05, -0.35, 0]} rotation={[0.08, 0, s * 0.05]}>
-              <cylinderGeometry args={[0.105, 0.115, 0.6, 10]} />
+              <cylinderGeometry args={[0.11, 0.12, 0.6, 12]} />
               <Shell />
             </mesh>
-            {/* Elbow joint */}
+            {/* Chrome elbow pivot joint */}
             <mesh position={[s * 0.05, -0.68, 0]}>
-              <sphereGeometry args={[0.13, 12, 10]} />
+              <sphereGeometry args={[0.14, 14, 12]} />
               <Joint />
             </mesh>
-            {/* Forearm */}
+            {/* Forearm with piston rod */}
             <mesh position={[s * 0.05, -1.0, 0.04]} rotation={[0.12, 0, 0]}>
-              <cylinderGeometry args={[0.095, 0.105, 0.5, 10]} />
+              <cylinderGeometry args={[0.1, 0.11, 0.5, 12]} />
               <Shell />
             </mesh>
-            {/* Hand hanging at wrist */}
-            <group
-              position={[s * 0.05, -1.3, 0.06]}
-              rotation={[0.1, 0, 0]}
-            >
+            {/* Wrist joint ring */}
+            <mesh position={[s * 0.05, -1.24, 0.05]}>
+              <cylinderGeometry args={[0.09, 0.09, 0.06, 12]} />
+              <Joint />
+            </mesh>
+            {/* Articulated hand */}
+            <group position={[s * 0.05, -1.32, 0.06]} rotation={[0.1, 0, 0]}>
               <Hand side={s} curl={curl} />
             </group>
           </group>
@@ -730,9 +781,7 @@ export function Machine({
 
       </group>
 
-      {/* Legs in contrapposto: weight on the left, right leg eased forward and
-          turned out. Even a few degrees of asymmetry reads as standing rather
-          than being propped up. */}
+      {/* Articulated Leg Assemblies */}
       {([
         { x: -0.27, z: -0.04, tilt: 0.0, splay: -0.05, len: 0.74 },
         { x: 0.28, z: 0.12, tilt: 0.16, splay: 0.14, len: 0.68 },
@@ -745,28 +794,29 @@ export function Machine({
           position={[x, 0, z]}
           rotation={[0, splay, 0]}
         >
-          {/* Hip ball */}
+          {/* Hip ball joint */}
           <mesh position={[0, -0.3, 0]}>
-            <sphereGeometry args={[0.16, 12, 10]} />
+            <sphereGeometry args={[0.17, 14, 12]} />
             <Joint />
           </mesh>
-          {/* Thigh + shin as one tapered strut, angled by `tilt` */}
+          {/* Thigh strut */}
           <mesh position={[0, -0.62, 0]} rotation={[tilt, 0, 0]}>
-            <cylinderGeometry args={[0.13, 0.15, len, 10]} />
+            <cylinderGeometry args={[0.135, 0.155, len, 12]} />
             <Shell />
           </mesh>
-          {/* Knee collar */}
+          {/* Bevelled knee cap armor guard */}
           <mesh position={[0, -0.66, tilt * 0.22]}>
-            <cylinderGeometry args={[0.145, 0.145, 0.08, 10]} />
+            <cylinderGeometry args={[0.155, 0.155, 0.09, 12]} />
             <Joint />
           </mesh>
-          {/* Ankle + splayed foot pad */}
+          {/* Ankle joint */}
           <mesh position={[0, -1.0, tilt * 0.34]}>
-            <sphereGeometry args={[0.13, 12, 10]} />
+            <sphereGeometry args={[0.14, 14, 12]} />
             <Joint />
           </mesh>
+          {/* Industrial treaded foot pad */}
           <mesh position={[0, -1.13, tilt * 0.34 + 0.06]}>
-            <cylinderGeometry args={[0.14, 0.22, 0.16, 10]} />
+            <cylinderGeometry args={[0.15, 0.23, 0.18, 12]} />
             <Shell />
           </mesh>
         </group>

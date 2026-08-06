@@ -13,10 +13,458 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, Sparkles } from "@react-three/drei";
+import { ContactShadows, Environment, Float, Sparkles } from "@react-three/drei";
 import CameraControls from "camera-controls";
 import * as THREE from "three";
-import { Machine, usePrefersReducedMotion, type MachineHitState } from "./MachineModel";
+import { Machine, usePrefersReducedMotion, useIsLightMode, type MachineHitState } from "./MachineModel";
+
+function SceneLighting({ heroX }: { heroX: number }) {
+  const isLight = useIsLightMode();
+  return (
+    <>
+      <fog attach="fog" args={[isLight ? "#FFFFFF" : "#08070D", 14, 38]} />
+      {/* High-Visibility Studio Ambient Fill */}
+      <ambientLight intensity={isLight ? 1.4 : 1.1} />
+      {/* Soft Environmental Studio Hemisphere Light */}
+      <hemisphereLight
+        args={[
+          isLight ? "#F1F5F9" : "#3B0764",
+          isLight ? "#E2E8F0" : "#090811",
+          isLight ? 1.2 : 0.95,
+        ]}
+      />
+      {/* Front Center Key Light — illuminates full hero stage, lamps, and machine */}
+      <directionalLight position={[heroX - 1.0, 4.2, 5.0]} intensity={isLight ? 4.8 : 3.6} color="#FFFFFF" />
+      <pointLight position={[heroX + 0.4, 2.2, 3.2]} intensity={isLight ? 32 : 45} distance={14} color="#C084FC" />
+      <directionalLight position={[-5, 2.0, 2]} intensity={isLight ? 1.6 : 2.2} color={isLight ? "#94A3B8" : "#A78BFA"} />
+      <pointLight position={[heroX + 0.6, 2, -3]} intensity={isLight ? 35 : 48} distance={15} color="#8B5CF6" />
+    </>
+  );
+}
+
+/**
+ * Photorealistic Volumetric Light Cone with dual-axis opacity falloff:
+ *   1. Vertical: fades from full brightness at the source to 0% at the far end
+ *   2. Radial:   fades from full brightness along the centre axis to 0% at the outer rim
+ * Renders 3 nested cones at slightly different scales for soft volumetric depth,
+ * mimicking real atmospheric light scattering with no hard geometric edges.
+ */
+function VolumetricLightCone({
+  topRadius = 0.22,
+  bottomRadius = 1.4,
+  height = 3.8,
+  position = [0, -1.9, 0] as [number, number, number],
+  rotation = [0, 0, 0] as [number, number, number],
+  color = "#FDE047",
+  peakOpacity,
+}: {
+  topRadius?: number;
+  bottomRadius?: number;
+  height?: number;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  color?: string;
+  peakOpacity?: number;
+}) {
+  const isLight = useIsLightMode();
+  const peak = peakOpacity ?? (isLight ? 0.06 : 0.18);
+
+  // Build vertex colours with dual-axis falloff for a single cone layer
+  const applyGradient = (geo: THREE.CylinderGeometry, scale: number, opacityMul: number) => {
+    const pos = geo.attributes.position;
+    const count = pos.count;
+    const arr = new Float32Array(count * 4);
+    const c = new THREE.Color(color);
+    const halfH = height / 2;
+
+    for (let i = 0; i < count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const z = pos.getZ(i);
+
+      // Vertical ratio: 1 at source end, 0 at far end
+      const vRatio = Math.max(0, Math.min(1, (y + halfH) / height));
+
+      // Radial ratio: how far this vertex is from the centre axis (0 = centre, 1 = rim)
+      const radialDist = Math.sqrt(x * x + z * z);
+      // Interpolated max-radius at this y-slice
+      const sliceRadius = THREE.MathUtils.lerp(bottomRadius * scale, topRadius * scale, vRatio);
+      const rRatio = sliceRadius > 0.001 ? Math.min(1, radialDist / sliceRadius) : 0;
+
+      // Combine: smooth power curves on both axes, multiplied together
+      const vAlpha = Math.pow(vRatio, 2.2);          // vertical: cubic-ish
+      const rAlpha = Math.pow(1 - rRatio, 2.5);      // radial: fades toward rim
+      const alpha = vAlpha * rAlpha * peak * opacityMul;
+
+      arr[i * 4]     = c.r;
+      arr[i * 4 + 1] = c.g;
+      arr[i * 4 + 2] = c.b;
+      arr[i * 4 + 3] = alpha;
+    }
+
+    geo.setAttribute("color", new THREE.BufferAttribute(arr, 4));
+  };
+
+  // Three nested layers at different scales for soft volumetric depth
+  const layers = [
+    { scale: 1.0,  opacity: 1.0  },   // outer: full-size, softest
+    { scale: 0.6,  opacity: 1.4  },   // mid:   slightly brighter core
+    { scale: 0.25, opacity: 1.8  },   // inner: bright centre beam
+  ];
+
+  return (
+    <group position={position} rotation={rotation}>
+      {layers.map((layer, idx) => (
+        <mesh key={idx}>
+          <cylinderGeometry
+            ref={(geo: THREE.CylinderGeometry | null) => {
+              if (geo) applyGradient(geo, layer.scale, layer.opacity);
+            }}
+            args={[
+              topRadius * layer.scale,
+              bottomRadius * layer.scale,
+              height,
+              32,
+              20,
+              true,
+            ]}
+          />
+          <meshBasicMaterial
+            vertexColors
+            transparent
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * 3D Industrial Wall Lamp suspended from a cable above the machine.
+ * Gently sways on initial page load and when the user scrolls down the page,
+ * casting an authentic warm yellow studio spotlight onto the machine shell.
+ */
+function SwingingLamp({ heroX }: { heroX: number }) {
+  const isLight = useIsLightMode();
+  const lampRef = useRef<THREE.Group>(null);
+  const lastScrollY = useRef(0);
+  const swingAngle = useRef(0);
+  const swingVelocity = useRef(0);
+  const initialLoadTime = useRef<number | null>(null);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const delta = Math.abs(currentY - lastScrollY.current);
+      if (delta > 1) {
+        const direction = currentY > lastScrollY.current ? 1 : -1;
+        // Bigger impulse multiplier (3×) with a higher cap for wider arcs
+        swingVelocity.current += Math.min(delta * 0.0012, 0.06) * direction;
+      }
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useFrame((state) => {
+    if (initialLoadTime.current === null) {
+      initialLoadTime.current = state.clock.getElapsedTime();
+    }
+    const elapsed = state.clock.getElapsedTime() - initialLoadTime.current;
+
+    let loadImpulse = 0;
+    if (elapsed < 5.5) {
+      // Wider, slower initial swing on page load
+      loadImpulse = Math.sin(elapsed * 1.8) * Math.exp(-elapsed * 0.5) * 0.3;
+    }
+
+    swingAngle.current += swingVelocity.current;
+    // Much lower damping — swings carry for many more frames before settling
+    swingVelocity.current *= 0.975;
+    // Softer spring constant — longer, lazier oscillation period (wider arcs)
+    swingVelocity.current -= swingAngle.current * 0.018;
+
+    const totalZ = swingAngle.current + loadImpulse;
+    const totalX = Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
+
+    if (lampRef.current) {
+      // Slow lerp for buttery-smooth visual interpolation (no jitter)
+      lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, 0.045);
+      lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, 0.045);
+    }
+  });
+
+  const wallPivot: [number, number, number] = [heroX > 0 ? 0.9 : 0, 3.8, -0.6];
+
+  return (
+    <group position={wallPivot}>
+      {/* Wall anchor bracket */}
+      <mesh position={[0, 0, -0.2]}>
+        <boxGeometry args={[0.24, 0.24, 0.1]} />
+        <meshStandardMaterial color={isLight ? "#CBD5E1" : "#3B384E"} metalness={0.85} roughness={0.2} />
+      </mesh>
+
+      {/* Swinging Pendulum Group */}
+      <group ref={lampRef}>
+        {/* Braided steel suspension cable */}
+        <mesh position={[0, -1.0, 0]}>
+          <cylinderGeometry args={[0.009, 0.009, 2.0, 10]} />
+          <meshStandardMaterial color={isLight ? "#94A3B8" : "#38354A"} metalness={0.9} roughness={0.3} />
+        </mesh>
+
+        {/* Industrial Bell Lamp Shade — Bright Metallic Fixture */}
+        <group position={[0, -2.0, 0]} rotation={[0.15, -0.3, 0.45]}>
+          <mesh>
+            <cylinderGeometry args={[0.18, 0.48, 0.42, 28, 1, true]} />
+            <meshStandardMaterial
+              color={isLight ? "#D0D0E2" : "#1A1828"}
+              metalness={isLight ? 0.85 : 0.92}
+              roughness={0.15}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          <mesh position={[0, -0.02, 0]}>
+            <cylinderGeometry args={[0.17, 0.46, 0.38, 28, 1, true]} />
+            <meshStandardMaterial
+              color="#F59E0B"
+              metalness={0.95}
+              roughness={0.1}
+              side={THREE.BackSide}
+            />
+          </mesh>
+
+          <mesh position={[0, 0.24, 0]}>
+            <cylinderGeometry args={[0.08, 0.12, 0.1, 16]} />
+            <meshStandardMaterial color="#EAB308" metalness={0.92} roughness={0.15} />
+          </mesh>
+
+          {/* Glowing Tungsten Yellow Light Bulb Core */}
+          <mesh position={[0, -0.05, 0]}>
+            <sphereGeometry args={[0.16, 24, 20]} />
+            <meshStandardMaterial
+              color="#FFE066"
+              emissive="#FFB700"
+              emissiveIntensity={isLight ? 6.0 : 18.0}
+              toneMapped={false}
+            />
+          </mesh>
+
+          {/* Photorealistic Volumetric Light Cone — 100% smooth bottom opacity falloff */}
+          <VolumetricLightCone
+            position={[0, -1.9, 0]}
+            height={3.8}
+            topRadius={0.22}
+            bottomRadius={1.5}
+            color="#FDE047"
+          />
+
+          {/* Radiant Studio Point Light */}
+          <pointLight
+            position={[0, -0.15, 0]}
+            intensity={isLight ? 120 : 550}
+            distance={32}
+            color="#FFD000"
+          />
+
+          {/* High-Intensity Downward Studio Spotlight */}
+          <spotLight
+            position={[0, 0, 0]}
+            target-position={[heroX > 0 ? 1.7 : 0, -1.2, 0.6]}
+            angle={0.88}
+            penumbra={0.35}
+            intensity={isLight ? 180 : 650}
+            distance={28}
+            color="#FFD000"
+          />
+        </group>
+      </group>
+    </group>
+  );
+}
+
+/**
+ * 3D Industrial Ground Uplight Spotlight (built directly from user's reference photo).
+ * Mounted at the bottom of the hero stage at the leftish center position,
+ * angled upward and rightward pointing directly at the machine's chest, head, and pauldrons.
+ * Micro-swivels reactively on initial load and page scroll.
+ */
+function FloorSpotlight({ heroX }: { heroX: number }) {
+  const isLight = useIsLightMode();
+  const lightHousingRef = useRef<THREE.Group>(null);
+  const lastScrollY = useRef(0);
+  const swivelAngle = useRef(0);
+  const swivelVelocity = useRef(0);
+  const initialLoadTime = useRef<number | null>(null);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const delta = Math.abs(currentY - lastScrollY.current);
+      if (delta > 1) {
+        const direction = currentY > lastScrollY.current ? 1 : -1;
+        swivelVelocity.current += Math.min(delta * 0.0003, 0.025) * direction;
+      }
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useFrame((state) => {
+    if (initialLoadTime.current === null) {
+      initialLoadTime.current = state.clock.getElapsedTime();
+    }
+    const elapsed = state.clock.getElapsedTime() - initialLoadTime.current;
+
+    let loadImpulse = 0;
+    if (elapsed < 4.0) {
+      loadImpulse = Math.sin(elapsed * 2.5) * Math.exp(-elapsed * 0.9) * 0.14;
+    }
+
+    swivelAngle.current += swivelVelocity.current;
+    swivelVelocity.current *= 0.92;
+    swivelVelocity.current -= swivelAngle.current * 0.05;
+
+    const totalTilt = swivelAngle.current + loadImpulse;
+
+    if (lightHousingRef.current) {
+      lightHousingRef.current.rotation.x = THREE.MathUtils.lerp(
+        lightHousingRef.current.rotation.x,
+        -0.45 + totalTilt * 0.3,
+        0.1
+      );
+      lightHousingRef.current.rotation.y = THREE.MathUtils.lerp(
+        lightHousingRef.current.rotation.y,
+        0.55 + totalTilt * 0.4,
+        0.1
+      );
+    }
+  });
+
+  const floorPos: [number, number, number] = [-0.6, -2.4, 0.6];
+
+  return (
+    <group position={floorPos}>
+      <mesh position={[0, -0.04, 0]}>
+        <cylinderGeometry args={[0.26, 0.28, 0.07, 24]} />
+        <meshStandardMaterial
+          color={isLight ? "#9090A2" : "#14131C"}
+          metalness={isLight ? 0.8 : 0.92}
+          roughness={0.25}
+        />
+      </mesh>
+
+      <mesh position={[0, 0.01, 0]}>
+        <cylinderGeometry args={[0.045, 0.045, 0.06, 12]} />
+        <meshStandardMaterial color={isLight ? "#7C3AED" : "#A78BFA"} metalness={0.9} roughness={0.2} />
+      </mesh>
+
+      {[-0.18, 0.18].map((x) => (
+        <mesh key={x} position={[x, 0.14, 0]}>
+          <boxGeometry args={[0.032, 0.26, 0.07]} />
+          <meshStandardMaterial
+            color={isLight ? "#78788A" : "#1A1926"}
+            metalness={0.88}
+            roughness={0.3}
+          />
+        </mesh>
+      ))}
+
+      <group ref={lightHousingRef} position={[0, 0.18, 0]} rotation={[-0.45, 0.55, -0.2]}>
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.22, 0.2, 0.45, 24]} />
+          <meshStandardMaterial
+            color={isLight ? "#A0A0B2" : "#161522"}
+            metalness={isLight ? 0.8 : 0.92}
+            roughness={0.2}
+          />
+        </mesh>
+
+        <mesh position={[0, 0.23, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.21, 0.025, 12, 24]} />
+          <meshStandardMaterial
+            color={isLight ? "#606072" : "#0E0D16"}
+            metalness={0.92}
+            roughness={0.15}
+          />
+        </mesh>
+
+        {[0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((angle, i) => (
+          <mesh
+            key={i}
+            position={[
+              Math.cos(angle) * 0.2,
+              0.23,
+              Math.sin(angle) * 0.2,
+            ]}
+          >
+            <cylinderGeometry args={[0.015, 0.015, 0.03, 8]} />
+            <meshStandardMaterial color={isLight ? "#7C3AED" : "#A78BFA"} metalness={0.95} roughness={0.1} />
+          </mesh>
+        ))}
+
+        <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.18, 0.18, 0.03, 20]} />
+          <meshStandardMaterial
+            color={isLight ? "#E2E8F0" : "#1E1B4B"}
+            roughness={0.1}
+            metalness={0.5}
+            transparent
+            opacity={0.75}
+          />
+        </mesh>
+
+        {/* Glowing Tungsten Yellow Light Bulb Core */}
+        <mesh position={[0, 0.12, 0]}>
+          <sphereGeometry args={[0.13, 20, 16]} />
+          <meshStandardMaterial
+            color="#FFE066"
+            emissive="#FFB700"
+            emissiveIntensity={isLight ? 6.0 : 18.0}
+            toneMapped={false}
+          />
+        </mesh>
+
+        {/* Photorealistic Upward Volumetric Light Cone — smooth opacity falloff */}
+        <VolumetricLightCone
+          position={[0, 1.8, 0]}
+          height={3.5}
+          topRadius={1.2}
+          bottomRadius={0.2}
+          color="#FDE047"
+        />
+
+        {/* Radiant Studio Point Light */}
+        <pointLight
+          position={[0, 0.22, 0]}
+          intensity={isLight ? 120 : 550}
+          distance={32}
+          color="#FFD000"
+        />
+
+        {/* Upward High-Intensity Warm Yellow Studio Spotlight */}
+        <spotLight
+          position={[0, 0.22, 0]}
+          target-position={[heroX > 0 ? 3.3 : 0, 1.2, 0]}
+          angle={0.85}
+          penumbra={0.4}
+          intensity={isLight ? 180 : 650}
+          distance={30}
+          color="#FFD000"
+        />
+      </group>
+    </group>
+  );
+}
 
 // camera-controls only needs the handful of THREE members it actually uses.
 CameraControls.install({ THREE });
@@ -71,52 +519,41 @@ export default function MachineScene({
   paused?: boolean;
   line?: string;
 }) {
+  const isLight = useIsLightMode();
   const reduce = usePrefersReducedMotion();
   const isDesktop = useIsDesktop();
   const hitRef = useRef<MachineHitState | null>(null);
-  
-  // Hero unit stands right-of-centre on desktop (copy owns the left), centred on
-  // mobile. The camera looks only *partway* toward it, so the unit lands on the
-  // right of the frame rather than dead-centre (offsetting the target as much as
-  // the unit would just re-centre it).
-  // Straight camera; the unit is shifted to the right on desktop by translating
-  // it in world x (copy owns the left), and centred on mobile.
   const heroX = isDesktop ? 3.3 : 0;
 
   return (
     <Canvas
       dpr={[1, 1.8]}
-      // Pause the render loop entirely when scrolled out of view.
       frameloop={paused ? "never" : "always"}
-      // Low and close: the unit looks down slightly at the viewer, which reads
-      // as presence rather than turntable.
-      // Well back: the canvas is full-bleed, so a near camera crops the unit to
-      // a head. This frames the whole body with air around it.
       camera={{ position: [0, 0.5, 9.2], fov: 40 }}
       gl={{ alpha: true, antialias: true }}
       style={{ background: "transparent" }}
     >
-      {/* Soft atmospheric haze pushed back so all units stay crisp and visible */}
-      <fog attach="fog" args={["#0B0B10", 14, 38]} />
-
-      <ambientLight intensity={0.85} />
-      {/* Front key light — crisp silver highlights on hero unit */}
-      <directionalLight position={[-3.5, 5, 5]} intensity={3.6} color="#F1F5F9" />
-      {/* Dedicated hero key light pointing directly at hero chest & logo */}
-      <pointLight position={[heroX + 0.6, 1.8, 3.8]} intensity={18} distance={12} color="#C4B5FD" />
-      {/* Dedicated back-line fill light — eliminates dark shadows on marching machines */}
-      <directionalLight position={[0, 4, 3]} intensity={2.2} color="#CBD5E1" />
-      {/* Cool fill from right */}
-      <directionalLight position={[5, 1.5, 2]} intensity={1.0} color="#94A3B8" />
-      {/* Intense violet rim from behind hero unit */}
-      <pointLight position={[heroX + 0.5, 2, -3]} intensity={35} distance={15} color="#8B5CF6" />
-      {/* Dedicated back-line rim wash */}
-      <pointLight position={[-1, 5, -6]} intensity={45} distance={30} color="#C4B5FD" />
+      {/* Dynamic Theme Studio Lighting & Fog */}
+      <SceneLighting heroX={heroX} />
 
       <GuidedCamera />
 
       <Suspense fallback={null}>
+        {/* Radiant Ambient Wall Reflection Light Pool */}
+        <pointLight
+          position={[heroX > 0 ? 0.9 : 0, 1.8, -1.2]}
+          intensity={isLight ? 140 : 420}
+          distance={18}
+          color={isLight ? "#7C3AED" : "#C084FC"}
+        />
 
+        {/* Top-suspended swinging industrial bell lamp */}
+        <SwingingLamp heroX={heroX} />
+
+        {/* Industrial ground uplight spotlight facing machine from bottom leftish center */}
+        <FloorSpotlight heroX={heroX} />
+
+        {/* Hero Machine */}
         <group position={[heroX, -0.15, 0]}>
           {reduce ? (
             <Machine reduce onPoke={onPoke} pose="ready" line={line} hitRef={hitRef} />
@@ -126,15 +563,27 @@ export default function MachineScene({
             </Float>
           )}
         </group>
-        {/* Drifting particulate — sized to the frustum, never to the canvas edge */}
+
+        {/* Ambient Studio Atmospheric Dust Motes reflecting light in 3D air */}
         <Sparkles
-          count={34}
-          scale={[9, 6, 4]}
-          position={[heroX, 0, 0]}
-          size={1.8}
-          speed={0.16}
-          color="#C4B5FD"
-          opacity={0.35}
+          count={120}
+          scale={[12, 8, 6]}
+          position={[0, 0, 0]}
+          size={2.6}
+          speed={0.22}
+          color={isLight ? "#8B5CF6" : "#DDD6FE"}
+          opacity={isLight ? 0.45 : 0.65}
+        />
+
+        {/* Dense Volumetric Dust Particles focused in the Spotlight Beams (Tyndall Effect) */}
+        <Sparkles
+          count={80}
+          scale={[5, 6, 3.5]}
+          position={[heroX * 0.6, 0.2, 0.3]}
+          size={3.6}
+          speed={0.42}
+          color={isLight ? "#A78BFA" : "#EDE9FE"}
+          opacity={isLight ? 0.6 : 0.85}
         />
       </Suspense>
     </Canvas>
