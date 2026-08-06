@@ -37,12 +37,12 @@ export function ThemeToggle() {
       }
     };
 
-    let origin = { x: window.innerWidth - 40, y: 40 };
-    if (e && e.clientX && e.clientY) {
-      origin = { x: e.clientX, y: e.clientY };
-    } else if (btnRef.current) {
+    let origin = { x: window.innerWidth - 80, y: 30 };
+    if (btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
       origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    } else if (e && typeof e.clientX === "number" && typeof e.clientY === "number" && e.clientX > 0) {
+      origin = { x: e.clientX, y: e.clientY };
     }
 
     runRadialThemeTransition(origin, applyThemeClass);
