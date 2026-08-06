@@ -95,3 +95,12 @@ export function NpmMark({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Product Hunt — official 'P' circle logo. */
+export function ProductHuntMark({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M13.6001 13.4H10.0001V8.60001H13.6001C14.9256 8.60001 16.0001 9.67452 16.0001 11C16.0001 12.3255 14.9256 13.4 13.6001 13.4ZM12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0ZM13.6001 15.8H10.0001V19.2H7.6001V6.20001H13.6001C16.2511 6.20001 18.4001 8.34904 18.4001 11C18.4001 13.651 16.2511 15.8 13.6001 15.8Z" />
+    </svg>
+  );
+}
