@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useIsMobile } from "./use-is-mobile";
 import { CanvasPreview } from "./CanvasPreview";
 import { ArrowRightIcon, GithubIcon } from "@/components/icons";
-import { IndieHackersMark, NpmMark, ProductHuntMark } from "./brand-icons";
+import { IndieHackersMark } from "./brand-icons";
 import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
 import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
@@ -35,12 +35,29 @@ export function Hero() {
   const [line, setLine] = useState<string>(FIRST_LINE);
   const lastLine = useRef(line);
   const idleTimer = useRef<number | undefined>(undefined);
+  const lastSpokenAt = useRef(0);
+  const pendingSay = useRef<number | undefined>(undefined);
+
+  // Floor on how often the bubble is allowed to change — without it, a fast
+  // scroll through several sections fires triggers back to back and the
+  // dialogue flickers instead of reading as a beat.
+  const MIN_LINE_GAP_MS = 3200;
 
   const say = useCallback(
     (trigger: DialogueTrigger) => {
-      const next = pickLine(trigger, lastLine.current);
-      lastLine.current = next;
-      setLine(next);
+      const speak = () => {
+        const next = pickLine(trigger, lastLine.current);
+        lastLine.current = next;
+        setLine(next);
+        lastSpokenAt.current = Date.now();
+      };
+      const elapsed = Date.now() - lastSpokenAt.current;
+      window.clearTimeout(pendingSay.current);
+      if (elapsed >= MIN_LINE_GAP_MS) {
+        speak();
+      } else {
+        pendingSay.current = window.setTimeout(speak, MIN_LINE_GAP_MS - elapsed);
+      }
     },
     []
   );
@@ -52,7 +69,8 @@ export function Hero() {
       const next = pickLine("idle", lastLine.current);
       lastLine.current = next;
       setLine(next);
-    }, 9000);
+      lastSpokenAt.current = Date.now();
+    }, 11000);
     return () => window.clearTimeout(idleTimer.current);
   }, [line]);
 
@@ -106,10 +124,14 @@ export function Hero() {
       {/* Filmic grain — a faint tactile texture over the whole stage */}
       <div className="grain-overlay pointer-events-none absolute inset-0 z-30" aria-hidden />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-6 sm:pt-10 md:pb-16">
-        <div className="grid items-center gap-6 md:grid-cols-2 md:gap-8 lg:gap-12">
+      {/* Both wrapper layers go pointer-events-none so the empty grid boxes
+          don't shadow the interactive canvas underneath (the machine and
+          lamp live in a separate absolutely-positioned layer below); the
+          copy column opts back in since it has real buttons and links. */}
+      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-6 sm:pt-10 md:pb-16 pointer-events-none">
+        <div className="grid items-center gap-6 md:grid-cols-2 md:gap-8 lg:gap-12 pointer-events-none">
           {/* Copy — left rail */}
-          <div className="relative z-10 text-center md:text-left max-w-2xl lg:max-w-3xl">
+          <div className="relative z-10 text-center md:text-left max-w-2xl lg:max-w-3xl pointer-events-auto">
             {/* Top Proof Badges — Indie Hackers + Product Hunt */}
             <div
               style={{ animationDelay: "0.12s" }}
@@ -119,19 +141,24 @@ export function Hero() {
                 href="https://www.indiehackers.com/prajj"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/40 px-3.5 py-1 text-xs font-medium text-foreground transition-all hover:-translate-y-0.5 hover:bg-card/70"
+                className="group inline-flex items-center gap-2 rounded-full bg-[#C4B5FD] px-4 py-2 text-sm font-bold text-[#1B1030] shadow-sm transition-all hover:-translate-y-0.5 hover:brightness-105"
               >
-                <IndieHackersMark className="h-3.5 w-3.5 rounded shrink-0" />
+                <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
                 <span>Featured on Indie Hackers</span>
               </a>
               <a
-                href="https://www.producthunt.com"
+                href="https://www.producthunt.com/products/nxstudio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-nxstudio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/40 px-3.5 py-1 text-xs font-medium text-foreground transition-all hover:-translate-y-0.5 hover:bg-card/70"
+                className="inline-flex shrink-0 items-center transition-transform hover:-translate-y-0.5"
               >
-                <ProductHuntMark className="h-3.5 w-3.5 fill-current text-[#DA552F] shrink-0" />
-                <span>Product Hunt</span>
+                <img
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1216560&theme=light"
+                  alt="nxstudio - Product context for AI IDE | Product Hunt"
+                  width={250}
+                  height={54}
+                  className="h-[34px] w-auto sm:h-9"
+                />
               </a>
             </div>
 
@@ -160,7 +187,7 @@ export function Hero() {
                 onMouseEnter={() => say("cta-hover")}
                 className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:opacity-90 sm:w-auto"
               >
-                Start building — free
+                Start building for free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
               <a
@@ -181,8 +208,10 @@ export function Hero() {
 
           </div>
 
-          {/* Right column is a spacer on desktop */}
-          <div className="hidden md:block md:h-[520px]" aria-hidden />
+          {/* Right column is a spacer on desktop — pointer-events-none so it
+              doesn't shadow the interactive canvas underneath it (the machine
+              and lamp live in a separate absolutely-positioned layer below). */}
+          <div className="hidden md:block md:h-[520px] pointer-events-none" aria-hidden />
         </div>
 
       </div>
