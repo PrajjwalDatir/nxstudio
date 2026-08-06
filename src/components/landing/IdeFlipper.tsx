@@ -61,8 +61,8 @@ export function IdeFlipper() {
           }}
           className="inline-flex items-center gap-2.5 rounded-2xl border border-border/80 bg-card/80 px-3.5 py-1 text-foreground shadow-sm backdrop-blur-md transition-colors align-baseline"
         >
-          <Icon className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 shrink-0 ${current.iconColor}`} />
-          <span className="font-extrabold text-foreground">{current.label}</span>
+          <Icon className={`h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 shrink-0 ${current.iconColor}`} />
+          <span className="text-[0.82em] font-extrabold text-foreground">{current.label}</span>
         </motion.span>
       </AnimatePresence>
     </span>
