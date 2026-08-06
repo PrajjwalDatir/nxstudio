@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
 import { CompiledPrompt, PromptCategory } from "@/lib/prompts-server";
@@ -34,12 +35,12 @@ const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
 };
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
-  visual: "from-purple-500/15 via-indigo-500/10 to-background/40",
-  security: "from-amber-500/15 via-orange-500/10 to-background/40",
-  qa: "from-emerald-500/15 via-teal-500/10 to-background/40",
-  performance: "from-cyan-500/15 via-blue-500/10 to-background/40",
-  deploy: "from-fuchsia-500/15 via-pink-500/10 to-background/40",
-  general: "from-secondary/60 via-background to-background/40",
+  visual: "from-purple-500/20 via-indigo-500/10 to-background/50",
+  security: "from-amber-500/20 via-orange-500/10 to-background/50",
+  qa: "from-emerald-500/20 via-teal-500/10 to-background/50",
+  performance: "from-cyan-500/20 via-blue-500/10 to-background/50",
+  deploy: "from-fuchsia-500/20 via-pink-500/10 to-background/50",
+  general: "from-secondary/80 via-background to-background/50",
 };
 
 const CATEGORY_TABS: { id: PromptCategory | "all"; label: string }[] = [
@@ -61,14 +62,27 @@ export function BuildPhase() {
   const [payOpen, setPayOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<PromptCategory | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const openPaywall = () => setPayOpen(true);
 
   const depthPrompts: CompiledPrompt[] = useMemo(() => {
     const list = prompts?.depth ?? [];
-    if (selectedCategory === "all") return list;
-    return list.filter((p) => p.category === selectedCategory);
-  }, [prompts, selectedCategory]);
+    let filtered = list;
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [prompts, selectedCategory, searchQuery]);
 
   if (!stack) {
     return (
@@ -220,7 +234,7 @@ export function BuildPhase() {
 
       {/* ── Refine after it's built (HIG Gallery Grid) ────────────────────────── */}
       <div className="mt-12">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold tracking-tight">Refine after it&apos;s built</h2>
@@ -236,23 +250,47 @@ export function BuildPhase() {
               <span className="font-mono text-primary">.nx/</span> context and reviews one dimension in depth.
             </p>
           </div>
+
+          {/* Quick Keyword Search Filter */}
+          <div className="relative shrink-0 w-full lg:w-64">
+            <input
+              type="text"
+              placeholder="Search prompts…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Apple HIG Segmented Pill Controls (Centered / Full-Width Pill Row) */}
+        {/* Apple HIG Segmented Pill Controls (Fluid Animated Layout) */}
         <div className="mt-6 flex overflow-x-auto pb-1 scrollbar-none">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card p-1.5 shadow-sm">
+          <div className="relative inline-flex items-center gap-1 rounded-full border border-border bg-card p-1.5 shadow-sm">
             {CATEGORY_TABS.map((tab) => {
               const active = selectedCategory === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setSelectedCategory(tab.id)}
-                  className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
-                    active
-                      ? "bg-foreground text-background shadow-md font-semibold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  className={`relative z-10 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+                    active ? "text-background font-semibold" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+                  {active && (
+                    <motion.div
+                      layoutId="gallery-category-pill"
+                      className="absolute inset-0 z-[-1] rounded-full bg-foreground shadow-sm"
+                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                    />
+                  )}
                   {tab.label}
                 </button>
               );
@@ -265,15 +303,22 @@ export function BuildPhase() {
           {depthPrompts.map((p) => {
             const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
             const gradient = CATEGORY_GRADIENTS[p.category] ?? CATEGORY_GRADIENTS.general;
+            const wordCount = p.prompt ? p.prompt.split(/\s+/).length : 0;
+
             return (
-              <div
+              <motion.div
                 key={p.id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
                 className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-xl"
               >
                 {/* Visual Header / Gallery Card Window Cover Frame */}
                 <div
                   onClick={() => setPreviewPrompt(p)}
-                  className={`relative flex h-36 w-full cursor-pointer flex-col justify-between border-b border-border bg-gradient-to-br ${gradient} p-3.5 transition-colors group-hover:brightness-105`}
+                  className={`relative flex h-36 w-full cursor-pointer flex-col justify-between border-b border-border bg-gradient-to-br ${gradient} p-3.5 transition-all group-hover:brightness-105`}
                 >
                   {/* Window Chrome macOS Dots */}
                   <div className="flex items-center justify-between">
@@ -294,10 +339,10 @@ export function BuildPhase() {
                     <Icon className="h-6 w-6" />
                   </div>
 
-                  {/* Simulated Code Lines */}
-                  <div className="space-y-1 opacity-40">
-                    <div className="h-1.5 w-24 rounded-full bg-foreground/30" />
-                    <div className="h-1.5 w-16 rounded-full bg-foreground/20" />
+                  {/* Simulated Architecture Snippet */}
+                  <div className="flex items-center justify-between font-mono text-[9px] text-muted-foreground/60 opacity-60">
+                    <span>.nx/context.md</span>
+                    <span>~{wordCount} words</span>
                   </div>
                 </div>
 
@@ -330,14 +375,14 @@ export function BuildPhase() {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {depthPrompts.length === 0 && (
           <div className="mt-6 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            No refinement prompts found in this category.
+            No refinement prompts found matching your search filter.
           </div>
         )}
 
@@ -349,57 +394,65 @@ export function BuildPhase() {
       </div>
 
       {/* HIG Prompt Preview Modal */}
-      {previewPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-md">
-          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-2xl flex flex-col">
-            <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  {(() => {
-                    const Icon = DEPTH_ICONS[previewPrompt.id] ?? BadgeCheckIcon;
-                    return <Icon className="h-5 w-5" />;
-                  })()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold tracking-tight">{previewPrompt.title}</h3>
-                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase text-primary">
-                      {previewPrompt.category}
-                    </span>
+      <AnimatePresence>
+        {previewPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-2xl flex flex-col"
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                    {(() => {
+                      const Icon = DEPTH_ICONS[previewPrompt.id] ?? BadgeCheckIcon;
+                      return <Icon className="h-5 w-5" />;
+                    })()}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">{previewPrompt.description}</p>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold tracking-tight">{previewPrompt.title}</h3>
+                      <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase text-primary">
+                        {previewPrompt.category}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{previewPrompt.description}</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setPreviewPrompt(null)}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => setPreviewPrompt(null)}
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="flex-1 overflow-y-auto py-4">
-              <pre className="overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                {previewPrompt.prompt}
-              </pre>
-            </div>
+              <div className="flex-1 overflow-y-auto py-4">
+                <pre className="overflow-x-auto rounded-xl border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                  {previewPrompt.prompt}
+                </pre>
+              </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
-              <button
-                onClick={() => setPreviewPrompt(null)}
-                className="rounded-lg px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                Close
-              </button>
-              {locked ? (
-                <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
-              ) : (
-                <CopyButton value={previewPrompt.prompt} label="Copy Prompt" variant="solid" />
-              )}
-            </div>
+              <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+                <button
+                  onClick={() => setPreviewPrompt(null)}
+                  className="rounded-lg px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
+                  Close
+                </button>
+                {locked ? (
+                  <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
+                ) : (
+                  <CopyButton value={previewPrompt.prompt} label="Copy Prompt" variant="solid" />
+                )}
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }
