@@ -36,10 +36,14 @@ function runRadialThemeTransitionInner(origin: Origin, applyTheme: () => void) {
     return;
   }
 
-  // Calculate distance to the furthest corner of the viewport
+  // Ensure origin coordinates are valid numbers and fallback to top-right nav position if invalid
+  const x = typeof origin.x === "number" && !isNaN(origin.x) ? origin.x : window.innerWidth - 80;
+  const y = typeof origin.y === "number" && !isNaN(origin.y) ? origin.y : 30;
+
+  // Calculate distance to the furthest corner of the viewport from the button
   const maxRadius = Math.hypot(
-    Math.max(origin.x, window.innerWidth - origin.x),
-    Math.max(origin.y, window.innerHeight - origin.y)
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y)
   );
 
   const transition = doc.startViewTransition(() => {
@@ -51,8 +55,8 @@ function runRadialThemeTransitionInner(origin: Origin, applyTheme: () => void) {
       document.documentElement.animate(
         {
           clipPath: [
-            `circle(0px at ${origin.x}px ${origin.y}px)`,
-            `circle(${maxRadius}px at ${origin.x}px ${origin.y}px)`,
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${maxRadius}px at ${x}px ${y}px)`,
           ],
         },
         {
@@ -70,7 +74,7 @@ export function runLightOnTransition(origin: Origin, applyTheme: () => void) {
   runRadialThemeTransition(origin, applyTheme);
 }
 
-export function runDarkSnapTransition(applyTheme: () => void) {
-  const origin = { x: window.innerWidth / 2, y: 40 };
-  runRadialThemeTransition(origin, applyTheme);
+export function runDarkSnapTransition(applyTheme: () => void, origin?: Origin) {
+  const fallbackOrigin = origin || { x: window.innerWidth - 80, y: 30 };
+  runRadialThemeTransition(fallbackOrigin, applyTheme);
 }
