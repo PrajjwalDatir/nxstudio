@@ -16,7 +16,7 @@ function useMounted() {
   return useSyncExternalStore(noop, () => true, () => false);
 }
 
-function ThemeToggle() {
+export function ThemeToggle() {
   const mounted = useMounted();
   const [theme, setTheme] = useState<"dark" | "light">(
     () => (typeof document !== "undefined" && document.documentElement.classList.contains("light") ? "light" : "dark")
