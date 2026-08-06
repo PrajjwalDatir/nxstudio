@@ -10,11 +10,18 @@ import { siteConfig } from "@/lib/site";
  */
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/canvas/"],
-    },
+    rules: [
+      {
+        userAgent: ["GPTBot", "Claude-Web", "anthropic-ai", "CCBot", "PerplexityBot", "Google-Extended"],
+        allow: "/",
+        disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/canvas/"],
+      },
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/canvas/"],
+      }
+    ],
     sitemap: `${siteConfig.url}/sitemap.xml`,
     host: siteConfig.url,
   };

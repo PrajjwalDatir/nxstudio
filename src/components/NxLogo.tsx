@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+
 
 /**
  * The nxstudio mark: a hexagonal "monolith" carrying an N monogram. Same path
@@ -29,13 +29,11 @@ const GRADIENT_ID = "nx-logo-gradient";
 export function NxLogo({ className }: { className?: string }) {
   const gradId = GRADIENT_ID;
   return (
-    <motion.svg
+    <svg
       viewBox="0 0 32 32"
       fill="none"
       className={className}
       aria-hidden
-      whileHover={{ rotate: 10, scale: 1.08 }}
-      transition={{ type: "spring", stiffness: 320, damping: 18 }}
     >
       <defs>
         <linearGradient id={gradId} x1="4" y1="1" x2="28" y2="31" gradientUnits="userSpaceOnUse">
@@ -45,6 +43,6 @@ export function NxLogo({ className }: { className?: string }) {
       </defs>
       <path d={HEX_PATH} fill={`url(#${gradId})`} />
       <path d={N_PATH} fill="#0B0710" />
-    </motion.svg>
+    </svg>
   );
 }

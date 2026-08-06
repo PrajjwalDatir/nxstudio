@@ -17,7 +17,7 @@ function fmt(date: string | null): string {
 }
 
 export function BillingSection() {
-  const { subscription, state, tier, tierName, projectLimit, loading, refresh } = useSubscription();
+  const { subscription, state, tier, tierName, projectLimit, refresh } = useSubscription();
   const { count } = useProductLimit();
   const [showPlans, setShowPlans] = useState(false);
   
@@ -60,106 +60,102 @@ export function BillingSection() {
         </span>
       </div>
 
-      {loading ? (
-        <p className="mt-4 text-sm text-muted-foreground">Loading subscription details…</p>
-      ) : (
-        <div className="mt-5 space-y-4">
-          <div className="rounded-xl border border-border/80 bg-background/60 p-4 space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Active Workspaces:</span>
-              <span className="font-mono font-medium">
-                {count} / {isFinite(projectLimit) ? projectLimit : "Unlimited"}
-              </span>
-            </div>
-            {isFinite(projectLimit) && (
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${Math.min((count / projectLimit) * 100, 100)}%` }}
-                />
-              </div>
-            )}
+      <div className="mt-5 space-y-4">
+        <div className="rounded-xl border border-border/80 bg-background/60 p-4 space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Active Workspaces:</span>
+            <span className="font-mono font-medium">
+              {count} / {isFinite(projectLimit) ? projectLimit : "Unlimited"}
+            </span>
           </div>
-
-          {state === "active" ? (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-              <CheckCircleIcon className="h-4 w-4 shrink-0" />
-              <span>
-                {tierName} active{periodEnd ? ` · Renews ${fmt(periodEnd)}` : ""}
-              </span>
+          {isFinite(projectLimit) && (
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.min((count / projectLimit) * 100, 100)}%` }}
+              />
             </div>
-          ) : state === "grace" ? (
-            <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-              <LockIcon className="h-4 w-4 shrink-0" />
-              <span>Payment overdue — renew within 48 hours to preserve multi-project access.</span>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              You are currently on the <strong className="text-foreground">Free</strong> plan (1 project ALL ACCESS). Upgrade to Pro for unlimited workspaces and no gates.
-            </p>
           )}
+        </div>
 
-          <div className="pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowPlans(!showPlans)}
-              className="font-mono text-xs uppercase tracking-wider"
-            >
-              {showPlans ? "Hide Tier Matrix" : "View Tiers & Upgrade"}
-            </Button>
+        {state === "active" ? (
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+            <CheckCircleIcon className="h-4 w-4 shrink-0" />
+            <span>
+              {tierName} active{periodEnd ? ` · Renews ${fmt(periodEnd)}` : ""}
+            </span>
           </div>
+        ) : state === "grace" ? (
+          <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+            <LockIcon className="h-4 w-4 shrink-0" />
+            <span>Payment overdue — renew within 48 hours to preserve multi-project access.</span>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            You are currently on the <strong className="text-foreground">Free</strong> plan (1 project ALL ACCESS). Upgrade to Pro for unlimited workspaces and no gates.
+          </p>
+        )}
 
-          {showPlans ? (
-            <div className="mt-6">
-              <PricingGrid currentTier={tier} />
-              <div className="mt-6 rounded-xl border border-border bg-background p-4 space-y-4">
-                <RazorpayCheckout onActivated={() => { refresh(); setShowPlans(false); }} />
-                <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                  <div className="h-px flex-1 bg-border" />
-                  or
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <CryptoCheckout onActivated={() => { refresh(); setShowPlans(false); }} />
-              </div>
-            </div>
-          ) : state !== "active" && (
-            <div className="mt-4 rounded-xl border border-border bg-background p-4 space-y-4">
-              <RazorpayCheckout onActivated={refresh} />
+        <div className="pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowPlans(!showPlans)}
+            className="font-mono text-xs uppercase tracking-wider"
+          >
+            {showPlans ? "Hide Tier Matrix" : "View Tiers & Upgrade"}
+          </Button>
+        </div>
+
+        {showPlans ? (
+          <div className="mt-6">
+            <PricingGrid currentTier={tier} />
+            <div className="mt-6 rounded-xl border border-border bg-background p-4 space-y-4">
+              <RazorpayCheckout onActivated={() => { refresh(); setShowPlans(false); }} />
               <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 <div className="h-px flex-1 bg-border" />
                 or
                 <div className="h-px flex-1 bg-border" />
               </div>
-              <CryptoCheckout onActivated={refresh} />
+              <CryptoCheckout onActivated={() => { refresh(); setShowPlans(false); }} />
             </div>
-          )}
-
-          <div className="mt-6 border-t border-border pt-6">
-            <h3 className="text-sm font-medium mb-3">Have a promo code?</h3>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter promo code"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                className="max-w-xs"
-                disabled={promoStatus === "loading"}
-              />
-              <Button 
-                variant="secondary" 
-                onClick={applyPromo}
-                disabled={promoStatus === "loading" || !promoCode.trim()}
-              >
-                {promoStatus === "loading" ? <LoaderIcon className="h-4 w-4 animate-spin" /> : "Apply"}
-              </Button>
-            </div>
-            {promoMessage && (
-              <p className={`mt-2 text-sm ${promoStatus === "success" ? "text-emerald-400" : "text-amber-500"}`}>
-                {promoMessage}
-              </p>
-            )}
           </div>
+        ) : state !== "active" && (
+          <div className="mt-4 rounded-xl border border-border bg-background p-4 space-y-4">
+            <RazorpayCheckout onActivated={refresh} />
+            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              or
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <CryptoCheckout onActivated={refresh} />
+          </div>
+        )}
+
+        <div className="mt-6 border-t border-border pt-6">
+          <h3 className="text-sm font-medium mb-3">Have a promo code?</h3>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter promo code"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              className="max-w-xs"
+              disabled={promoStatus === "loading"}
+            />
+            <Button 
+              variant="secondary" 
+              onClick={applyPromo}
+              disabled={promoStatus === "loading" || !promoCode.trim()}
+            >
+              {promoStatus === "loading" ? <LoaderIcon className="h-4 w-4 animate-spin" /> : "Apply"}
+            </Button>
+          </div>
+          {promoMessage && (
+            <p className={`mt-2 text-sm ${promoStatus === "success" ? "text-emerald-400" : "text-amber-500"}`}>
+              {promoMessage}
+            </p>
+          )}
         </div>
-      )}
+      </div>
 
       <p className="mt-5 text-xs text-muted-foreground">
         Billing support or custom enterprise workflows?{" "}

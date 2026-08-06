@@ -1,0 +1,55 @@
+name: Update OG image
+
+# Regenerates the Open Graph / Twitter preview image from a real screenshot
+# of the homepage whenever it might have changed, so the social-share card
+# never drifts from what the site actually looks like.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "public/opengraph-image.png"
+      - "public/twitter-image.png"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-og-image:
+    if: "!contains(github.event.head_commit.message, '[skip og]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      - name: Start production server
+        run: |
+          npm run start -- --port 3000 &
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Capture screenshot
+        env:
+          OG_IMAGE_URL: http://localhost:3000
+        run: npm run generate:og-image
+
+      - name: Commit updated image if changed
+        run: |
+          if git diff --quiet -- public/opengraph-image.png public/twitter-image.png; then
+            echo "No visual change, skipping commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/opengraph-image.png public/twitter-image.png
+          git commit -m "chore: update OG preview image [skip og]"
+          git push

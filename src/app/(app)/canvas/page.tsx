@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useMemo, useState } from "react";
 import { PHASES, customStageToPhase, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
@@ -15,6 +17,8 @@ import {
   FileTextIcon,
   PlusIcon,
   PencilLineIcon,
+  PaletteIcon,
+  ArrowRightIcon,
 } from "@/components/icons";
 import {
   DropdownMenu,
@@ -26,24 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-function relTime(iso: string | null): string {
-  if (!iso) return "never";
-  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 10) return "just now";
-  if (s < 60) return `${s}s ago`;
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
-}
 
-const SYNC_LABEL: Record<string, string> = {
-  checking: "Checking GitHub…",
-  disconnected: "GitHub not connected",
-  "no-repo": "No repository linked",
-  syncing: "Syncing…",
-  ok: "Synced",
-  error: "Sync error",
-};
 
 type StatusFilter = "all" | "not-started" | "in-progress" | "complete";
 const FILTERS: { value: StatusFilter; label: string }[] = [
@@ -55,7 +42,7 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
 
 export default function CanvasPage() {
   const { data, customStages } = useWorkspace();
-  const { status, lastSyncedAt, result } = useSync();
+  const { status, result } = useSync();
   const { open } = useCommand();
   const healthy = status === "ok";
 
@@ -117,6 +104,13 @@ export default function CanvasPage() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <Link
+          href="/studio"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-transform hover:-translate-y-0.5"
+        >
+          <PaletteIcon className="h-4 w-4" />
+          Open Studio
+        </Link>
       </div>
 
       {/* Command bar */}
@@ -180,9 +174,14 @@ export default function CanvasPage() {
             })}
           </div>
 
-          <p className="mt-3 text-xs leading-snug text-muted-foreground">
-            The repo has moved past the studio&apos;s last compile. Update your Brief to reconcile, or re-copy the build prompt to fold these back in.
-          </p>
+          <div className="mt-3 flex items-center justify-between text-xs leading-snug text-muted-foreground">
+            <p>
+              The repo has moved past the studio&apos;s last compile. Update your Brief to reconcile, or re-copy the build prompt to fold these back in.
+            </p>
+            <Link href="/tasks" className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary transition-colors">
+              Review Sprint Tasks <ArrowRightIcon className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </section>
       )}
 
@@ -202,18 +201,8 @@ export default function CanvasPage() {
         )}
       </div>
 
-      {/* Footer status */}
-      <div className="mt-10 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
-        <span>nxstudio v2.4.0</span>
-        <span className="flex items-center gap-2">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              healthy ? "bg-emerald-500" : status === "error" ? "bg-red-500" : "bg-muted-foreground"
-            }`}
-          />
-          {SYNC_LABEL[status]}
-          {status === "ok" && ` · ${relTime(lastSyncedAt)}`}
-        </span>
+      {/* Footer space */}
+      <div className="mt-10 border-t border-border pt-4">
       </div>
     </div>
   );

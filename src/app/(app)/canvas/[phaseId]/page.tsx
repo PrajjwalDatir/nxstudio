@@ -7,7 +7,6 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { IdeaPhase } from "@/components/phases/IdeaPhase";
 import { TechStackPhase } from "@/components/phases/TechStackPhase";
 import { BuildPhase } from "@/components/phases/BuildPhase";
-import { ChecklistPhase } from "@/components/phases/ChecklistPhase";
 import { CustomStagePhase } from "@/components/phases/CustomStagePhase";
 
 export default function PhasePage() {
@@ -32,7 +31,6 @@ export default function PhasePage() {
       {params.phaseId === "idea" && <IdeaPhase />}
       {params.phaseId === "tech-stack" && <TechStackPhase />}
       {params.phaseId === "build" && <BuildPhase />}
-      {params.phaseId === "checklist" && <ChecklistPhase />}
       {custom && <CustomStagePhase stageId={custom.id} />}
     </div>
   );

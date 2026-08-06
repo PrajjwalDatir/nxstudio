@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/phases/CopyButton";
@@ -107,8 +108,7 @@ export function CryptoCheckout({
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-background p-4 sm:flex-row sm:items-start">
         {qr ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={qr} alt="Solana Pay QR" width={160} height={160} className="rounded-lg" />
+          <Image src={qr} alt="Solana Pay QR" width={160} height={160} className="rounded-lg" unoptimized />
         ) : (
           <div className="flex h-40 w-40 items-center justify-center rounded-lg bg-secondary">
             <LoaderIcon className="h-5 w-5 animate-spin text-muted-foreground" />

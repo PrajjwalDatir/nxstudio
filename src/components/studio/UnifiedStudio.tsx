@@ -20,12 +20,12 @@ import type { BrandDNA } from "@/lib/types";
 import { studioSchema, studioSchemaFree, ATTACH_ACTION, GEN_RANDOMIZE, GEN_TARGETS } from "@/lib/studio/schema";
 import { brandPatchFromStudioValues } from "@/lib/studio/studio-context";
 import { StudioCanvas } from "./StudioCanvas";
-import { LogoLoader } from "@/components/ui/LogoLoader";
+
 import { readAnnotationNotes } from "./tools/AnnotationLayer";
 
 export function UnifiedStudio() {
   const { updateBrand, updateDesignNotes } = useWorkspace();
-  const { isActive, loading } = useSubscription();
+  const { isActive } = useSubscription();
   const annotationApiRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
   const onPanelAction = useCallback(
@@ -69,9 +69,7 @@ export function UnifiedStudio() {
     [handleAnnotationApi]
   );
 
-  if (loading) {
-    return <LogoLoader label="Loading Studio" />;
-  }
+
 
   return (
     <>

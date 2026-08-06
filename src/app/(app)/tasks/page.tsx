@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { PHASES, getPhaseProgress } from "@/lib/phases";
-import { CheckIcon, GithubIcon, ExternalLinkIcon } from "@/components/icons";
+import { CheckIcon, GithubIcon, ExternalLinkIcon, ScaffoldIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export default function TasksPage() {
@@ -13,10 +13,21 @@ export default function TasksPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
-      <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-      <p className="mt-1 text-muted-foreground">
-        Every step across {data.productName}, plus open GitHub issues.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
+          <p className="mt-1 text-muted-foreground">
+            Every step across {data.productName}, plus open GitHub issues.
+          </p>
+        </div>
+        <Link
+          href="/canvas"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/40 transition-colors"
+        >
+          <ScaffoldIcon className="h-4 w-4" />
+          Back to Canvas
+        </Link>
+      </div>
 
       {/* Workflow tasks */}
       <div className="mt-8 space-y-6">

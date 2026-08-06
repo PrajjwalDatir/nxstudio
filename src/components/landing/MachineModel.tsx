@@ -22,6 +22,7 @@ import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import gsap from "gsap";
 import * as THREE from "three";
+import { MachineBubble } from "@/components/ui/MachineBubble";
 
 /**
  * Per-frame animation values the "how it works" stage feeds the unit. These are
@@ -37,6 +38,15 @@ export interface MachineDynamics {
   eye: number;
   /** 0 = still, 1 = full dance. */
   dance: number;
+}
+
+/**
+ * Tracks a collision with a small machine.
+ * leg: 0 is left, 1 is right. time is state.clock.elapsedTime of hit.
+ */
+export interface MachineHitState {
+  leg: 0 | 1;
+  time: number;
 }
 
 export const ACCENT = "#8B5CF6";
@@ -331,7 +341,7 @@ function MouthDialogue({ line }: { line: string }) {
 
   useEffect(() => {
     const el = textRef.current;
-    if (!el) return;
+    if (!el || !line || !line.trim()) return;
     tl.current?.kill();
 
     tl.current = gsap.timeline();
@@ -347,33 +357,22 @@ function MouthDialogue({ line }: { line: string }) {
     };
   }, [line]);
 
-  // On mobile, the machine is centered and large, so a side dialogue box gets clipped.
-  // We move it up and center it, changing the tail to point down.
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+  if (!line || !line.trim()) return null;
 
   return (
     <Html
-      position={isMobile ? [0, 0.7, 0.5] : [-0.75, -0.15, 0.45]}
+      position={[0, 1.1, 0.2]}
       center
       distanceFactor={7.0}
       zIndexRange={[100, 0]}
       style={{ pointerEvents: "none", userSelect: "none" }}
     >
-      <div className="flex items-center gap-2 max-w-[280px] sm:max-w-[460px] md:max-w-[560px] pointer-events-none select-none">
-        <div className="relative rounded-2xl border border-white/15 bg-background/95 px-4 py-2.5 sm:px-4.5 sm:py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_32px_-8px_rgba(0,0,0,0.9)] backdrop-blur-xl text-left">
-          {/* Small speech tail pointing directly right to his jaw */}
-          <span
-            aria-hidden
-            className="hidden sm:block absolute -right-1.5 top-4 h-3 w-3 rotate-45 border-r border-t border-white/15 bg-background/95"
-          />
-          <span
-            aria-hidden
-            className="sm:hidden absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-b border-r border-white/15 bg-background/95"
-          />
-          <p className="font-mono text-[10px] leading-[1.6] text-foreground/95 sm:text-xs md:text-sm md:leading-relaxed">
-            <span ref={textRef} />
+      <div className="flex w-max max-w-[280px] sm:max-w-[384px] justify-center">
+        <MachineBubble tail="bottom">
+          <p className="text-sm text-foreground whitespace-pre-wrap text-center">
+            <span ref={textRef}>{line}</span>
           </p>
-        </div>
+        </MachineBubble>
       </div>
     </Html>
   );
@@ -387,6 +386,7 @@ export function Machine({
   build = 1,
   dynamicsRef,
   line,
+  hitRef,
 }: {
   reduce: boolean;
   onPoke?: () => void;
@@ -401,6 +401,8 @@ export function Machine({
   dynamicsRef?: MutableRefObject<MachineDynamics>;
   /** Optional machine speech line anchored to his mouth in 3D */
   line?: string;
+  /** Collision tracker passed from the scene to trigger flinch reactions */
+  hitRef?: MutableRefObject<MachineHitState | null>;
 }) {
   const group = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
@@ -496,8 +498,32 @@ export function Machine({
       // Dance: the arms lift and wave in opposition, in time with the bounce.
       g.rotation.z = Math.sin(beat + (i === 0 ? 0 : Math.PI)) * 0.5 * dance;
     });
-    legs.current.forEach((g) => {
-      if (g) g.position.y = apart * (-0.36 - wob);
+    
+    // Leg positioning + Hurt Instinct Flinch
+    legs.current.forEach((g, i) => {
+      if (!g) return;
+      // Default scatter position
+      const targetY = apart * (-0.36 - wob);
+      let targetRotX = 0;
+      
+      // If hit recently, flinch upward
+      if (hitRef?.current?.leg === i) {
+        const timeSinceHit = t - hitRef.current.time;
+        if (timeSinceHit < 1.2) {
+          // Quick lift, slow drop (envelope from 0 to 1 back to 0)
+          const lift = Math.max(0, Math.sin(timeSinceHit * Math.PI / 1.2));
+          // Move the whole hip up and rotate backward
+          g.position.y = targetY + lift * 0.45;
+          targetRotX = -lift * 0.6;
+        } else {
+          g.position.y = targetY;
+        }
+      } else {
+        g.position.y = targetY;
+      }
+      
+      // Lerp rotation for smooth flinch entry/exit
+      g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, targetRotX, 0.15);
     });
   });
 
@@ -516,7 +542,7 @@ export function Machine({
         </mesh>
 
         {/* Dialogue speech line anchored directly near his mouth in 3D */}
-        {line && <MouthDialogue line={line} />}
+        {line && line.trim().length > 0 && <MouthDialogue line={line} />}
 
         {/* Antenna — a bent stalk, the one asymmetric detail on the whole unit */}
         <mesh position={[0.2, 0.58, -0.08]} rotation={[0.12, 0, -0.28]}>
@@ -659,45 +685,48 @@ export function Machine({
           higher and closed tighter, the left hangs lower and looser. Mirrored
           limbs are what make a rig look like a toy. */}
       {([
-        { s: -1, shoulderY: 0.7, upper: 0.24, fore: 0.58, curl: 0.85 },
-        { s: 1, shoulderY: 0.78, upper: 0.36, fore: 0.72, curl: 1.15 },
-      ] as const).map(({ s, shoulderY, upper, fore, curl }, i) => (
+        { s: -1, shoulderY: 0.7, curl: 0.5 },
+        { s: 1, shoulderY: 0.78, curl: 0.6 },
+      ] as const).map(({ s, shoulderY, curl }, i) => (
         <group
           key={s}
           ref={(el) => {
             arms.current[i] = el;
           }}
         >
-          {/* Pauldron cap over the joint */}
-          <mesh position={[s * 0.6, shoulderY + 0.06, 0]} rotation={[0, 0, s * 0.2]}>
-            <sphereGeometry args={[0.26, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
-            <Shell />
-          </mesh>
-          <mesh position={[s * 0.6, shoulderY, 0]}>
-            <sphereGeometry args={[0.22, 14, 12]} />
-            <Joint />
-          </mesh>
-          {/* Upper arm */}
-          <mesh position={[s * 0.72, shoulderY - 0.42, 0.08]} rotation={[upper, 0, s * 0.12]}>
-            <cylinderGeometry args={[0.105, 0.115, 0.62, 10]} />
-            <Shell />
-          </mesh>
-          {/* Elbow */}
-          <mesh position={[s * 0.68, shoulderY - 0.72, 0.22]}>
-            <sphereGeometry args={[0.13, 12, 10]} />
-            <Joint />
-          </mesh>
-          {/* Forearm, angled in toward the held monolith */}
-          <mesh position={[s * 0.6, shoulderY - 0.95, 0.44]} rotation={[fore, 0, s * 0.2]}>
-            <cylinderGeometry args={[0.095, 0.105, 0.5, 10]} />
-            <Shell />
-          </mesh>
-          {/* Hand, rolled inward under the payload */}
-          <group
-            position={[s * 0.5, shoulderY - 1.14, 0.66]}
-            rotation={[0.5, s * 0.3, -s * 0.45]}
-          >
-            <Hand side={s} curl={curl} />
+          {/* Natural arm hanging down by the side */}
+          <group position={[s * 0.6, shoulderY, 0]}>
+            {/* Pauldron cap over the joint */}
+            <mesh position={[0, 0.06, 0]} rotation={[0, 0, s * 0.2]}>
+              <sphereGeometry args={[0.26, 14, 10, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
+              <Shell />
+            </mesh>
+            <mesh position={[0, 0, 0]}>
+              <sphereGeometry args={[0.22, 14, 12]} />
+              <Joint />
+            </mesh>
+            {/* Upper arm hanging straight down */}
+            <mesh position={[s * 0.05, -0.35, 0]} rotation={[0.08, 0, s * 0.05]}>
+              <cylinderGeometry args={[0.105, 0.115, 0.6, 10]} />
+              <Shell />
+            </mesh>
+            {/* Elbow joint */}
+            <mesh position={[s * 0.05, -0.68, 0]}>
+              <sphereGeometry args={[0.13, 12, 10]} />
+              <Joint />
+            </mesh>
+            {/* Forearm */}
+            <mesh position={[s * 0.05, -1.0, 0.04]} rotation={[0.12, 0, 0]}>
+              <cylinderGeometry args={[0.095, 0.105, 0.5, 10]} />
+              <Shell />
+            </mesh>
+            {/* Hand hanging at wrist */}
+            <group
+              position={[s * 0.05, -1.3, 0.06]}
+              rotation={[0.1, 0, 0]}
+            >
+              <Hand side={s} curl={curl} />
+            </group>
           </group>
         </group>
       ))}

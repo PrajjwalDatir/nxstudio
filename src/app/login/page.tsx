@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { NxLogo } from "@/components/icons";
+import { ArrowLeftIcon } from "@/components/icons";
 import { GitHubSignIn } from "./github-signin";
+import { CanvasPreview } from "@/components/landing/CanvasPreview";
 
 const ERROR_MESSAGES: Record<string, string> = {
   auth: "Sign-in failed. Please try again.",
@@ -20,35 +21,78 @@ export default async function LoginPage({
       : "/canvas";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-      <div className="canvas-glow" aria-hidden />
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="flex flex-col items-center text-center">
-          <NxLogo className="h-10 w-10 text-primary" />
-          <h1 className="mt-5 text-2xl font-bold tracking-tight">Welcome to nxstudio</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to turn your brief into a tech stack and one build prompt.
-          </p>
+    <div className="flex min-h-screen bg-black">
+      {/* Form Side - Left */}
+      <div className="relative flex w-full flex-col items-center justify-center px-8 py-12 bg-[#111111] lg:w-[45%] xl:px-12">
+        <div className="mx-auto flex w-full max-w-[340px] flex-col items-center text-center z-10 pb-24">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[#888888] transition-colors hover:text-white">
+            <ArrowLeftIcon className="h-3.5 w-3.5" />
+            Home
+          </Link>
+
+          <div className="mt-10 mb-10">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              Create your free account
+            </h1>
+            <p className="mt-3 text-[13px] text-[#888888]">
+              Sign in to turn your brief into a tech stack and one build prompt. No credit card required.
+            </p>
+          </div>
+          
+          <div className="w-full">
+            {error && ERROR_MESSAGES[error] && (
+              <p className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-left">
+                {ERROR_MESSAGES[error]}
+              </p>
+            )}
+
+            <GitHubSignIn redirectTo={safeRedirect} />
+            
+            <p className="mt-8 text-xs text-[#888888]">
+              By continuing, you agree to nxstudio&apos;s{" "}
+              <Link href="/terms" className="underline underline-offset-2 hover:text-white transition-colors">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-white transition-colors">
+                Privacy Policy
+              </Link>.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-8 rounded-2xl glass p-6">
-          {error && ERROR_MESSAGES[error] && (
-            <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-sm text-red-400">
-              {ERROR_MESSAGES[error]}
-            </p>
-          )}
-          <GitHubSignIn redirectTo={safeRedirect} />
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            By continuing you agree to the{" "}
-            <Link href="/terms" className="text-foreground underline underline-offset-2 hover:text-primary">
-              terms of service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="text-foreground underline underline-offset-2 hover:text-primary">
-              privacy policy
-            </Link>
-            .
+        {/* Footer Area */}
+        <div className="absolute bottom-8 left-0 right-0 w-full px-8 text-center">
+          <p className="text-sm text-[#888888] mb-8">
+            Already have an account? <Link href="/login" className="font-medium text-white hover:underline">Log in</Link>
           </p>
+          <p className="text-[11px] text-[#555555] mb-5">Trusted by teams at</p>
+          <div className="flex justify-center items-center gap-6 opacity-40 grayscale">
+            {/* Generic placeholders for logos to match reference layout */}
+            <span className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
+              <span className="h-4 w-4 rounded-full bg-white"></span>
+              headspace
+            </span>
+            <span className="text-sm font-bold tracking-tight text-white flex items-center gap-1">
+              airbnb
+            </span>
+            <span className="text-sm font-bold tracking-tight text-white">
+              Revolut
+            </span>
+            <span className="text-sm font-bold tracking-tighter text-white">
+              duolingo
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic Canvas Side - Right */}
+      <div className="relative hidden w-full overflow-hidden bg-black lg:flex lg:w-[55%] border-l border-white/10">
+        <div className="absolute inset-0 flex items-center justify-center [perspective:2000px]">
+          {/* Scaled and angled to create an immersive edge-to-edge collage effect */}
+          <div className="w-[1400px] xl:w-[1600px] origin-center opacity-80 pointer-events-none transition-transform [transform:rotateX(25deg)_rotateY(-15deg)_rotateZ(20deg)_scale(0.85)] xl:[transform:rotateX(25deg)_rotateY(-15deg)_rotateZ(20deg)_scale(1.0)] translate-x-20">
+            <CanvasPreview />
+          </div>
         </div>
       </div>
     </div>

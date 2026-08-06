@@ -5,11 +5,11 @@ import dynamic from "next/dynamic";
 import { useIsMobile } from "./use-is-mobile";
 import { CanvasPreview } from "./CanvasPreview";
 import { ArrowRightIcon, GithubIcon } from "@/components/icons";
+import { IndieHackersMark, NpmMark } from "./brand-icons";
 import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
-import { useMachineAudio } from "./useMachineAudio";
-import { AudioControl } from "./MachineHud";
 import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
+import { IdeFlipper } from "./IdeFlipper";
 
 // WebGL — client only, so the page still prerenders statically.
 const MachineScene = dynamic(() => import("./MachineScene"), { ssr: false });
@@ -30,7 +30,6 @@ const SECTION_TRIGGERS: [string, DialogueTrigger][] = [
 export function Hero() {
   const isMobile = useIsMobile();
   const { ref: stageRef, inView: stageInView } = useInView<HTMLDivElement>();
-  const { enabled: soundOn, playing, toggle: toggleSound, blip, thunk } = useMachineAudio();
   // Deterministic first line: pickLine() is random, and calling it during
   // render would make the server and client disagree.
   const [line, setLine] = useState<string>(FIRST_LINE);
@@ -38,14 +37,12 @@ export function Hero() {
   const idleTimer = useRef<number | undefined>(undefined);
 
   const say = useCallback(
-    (trigger: DialogueTrigger, sound: "blip" | "thunk" = "blip") => {
+    (trigger: DialogueTrigger) => {
       const next = pickLine(trigger, lastLine.current);
       lastLine.current = next;
       setLine(next);
-      if (sound === "thunk") thunk();
-      else blip();
     },
-    [blip, thunk]
+    []
   );
 
   // Drift back to an idle remark once a triggered line has had its moment.
@@ -96,7 +93,7 @@ export function Hero() {
       {mountMachine && (
         <MachineScene
           line={isMobile ? "" : line}
-          onPoke={() => say("poke", "thunk")}
+          onPoke={() => say("poke")}
           paused={!stageInView}
         />
       )}
@@ -116,42 +113,60 @@ export function Hero() {
           {/* Copy — left rail */}
           <div className="relative z-10 text-center md:text-left">
             <h1
-              style={{ animationDelay: "0.05s" }}
-              className="reveal-rise text-[2rem] font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl"
+              style={{ animationDelay: "0.28s" }}
+              className="reveal-rise text-3xl font-extrabold leading-[1.25] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.5rem] [text-wrap:balance]"
             >
-              Describe your app.{" "}
-              <span className="text-gradient">Bring it to life.</span>
+              Product context for <IdeFlipper />
             </h1>
 
             <p
-              style={{ animationDelay: "0.14s" }}
-              className="reveal-rise mx-auto mt-5 max-w-sm text-[15px] leading-relaxed text-muted-foreground sm:text-lg md:mx-0"
+              style={{ animationDelay: "0.48s" }}
+              className="reveal-rise mx-auto mt-5 max-w-xl text-base leading-snug text-muted-foreground sm:text-lg md:mx-0"
             >
-              Describe your vision once — your brand, your design, and your app&apos;s whole foundation.
+              Never prompt from scratch again. Map your spec into a .nx/ bundle powered by{" "}
+              <a
+                href="https://www.npmjs.com/package/nxhuman"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-md border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 text-xs font-medium text-red-200 transition-all hover:border-red-500/40 hover:bg-red-500/20 align-middle"
+              >
+                <NpmMark className="h-3 w-3 fill-current text-red-400 shrink-0" />
+                nxhuman
+              </a>{" "}
+              &amp; shared on{" "}
+              <a
+                href="https://www.indiehackers.com/prajj"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Indie Hackers (@prajj)"
+                className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 p-1 text-xs transition-all hover:border-white/20 hover:bg-white/10 align-middle"
+              >
+                <IndieHackersMark className="h-3.5 w-3.5 rounded-sm shrink-0" />
+              </a>.
             </p>
 
             <div
-              style={{ animationDelay: "0.22s" }}
+              style={{ animationDelay: "0.65s" }}
               className="reveal-rise mx-auto mt-9 flex max-w-[17rem] flex-col items-center gap-3 sm:max-w-none sm:flex-row md:mx-0 md:justify-start"
             >
               <AuthButton
                 source="hero"
                 onMouseEnter={() => say("cta-hover")}
-                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground border border-primary-foreground/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25),0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-4px_rgba(139,92,246,0.4)] transition-all hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_1px_3px_rgba(0,0,0,0.5),0_12px_28px_-4px_rgba(139,92,246,0.5)] sm:w-auto"
+                className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)] transition-all hover:-translate-y-0.5 hover:bg-primary/90 sm:w-auto"
               >
                 Start building — free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
               <a
                 href="#how"
-                className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-6 text-sm font-medium text-foreground backdrop-blur-md transition-colors hover:border-white/20 hover:bg-white/[0.08] sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-medium text-foreground backdrop-blur-md transition-colors hover:border-white/30 hover:bg-white/[0.09] sm:w-auto"
               >
                 See how it works
               </a>
             </div>
 
             <p
-              style={{ animationDelay: "0.3s" }}
+              style={{ animationDelay: "0.8s" }}
               className="reveal-rise mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground md:justify-start"
             >
               <GithubIcon className="h-3.5 w-3.5" />
@@ -160,36 +175,19 @@ export function Hero() {
 
           </div>
 
-          {/* Right column is a spacer on desktop: it reserves the area the
-              full-bleed canvas occupies so the copy never overlaps the unit.
-              On mobile the stage sits behind everything and this collapses. */}
+          {/* Right column is a spacer on desktop */}
           <div className="hidden md:block md:h-[520px]" aria-hidden />
         </div>
 
-        {/* Audio control — aligned to the content's right edge (inside the same
-            max-w container as everything else), not floated loose against the
-            viewport. */}
-        <div className="absolute right-5 top-3 z-30 sm:right-6">
-          <AudioControl enabled={soundOn} playing={playing} onToggle={toggleSound} />
-        </div>
       </div>
 
-      {/* The unit. One element, two framings driven purely by CSS so it never
-          unmounts (a remount would drop the WebGL context and detach the
-          in-view observer):
-            • Mobile — an in-flow, bounded frame below the copy: a single
-              deliberate focal object, not a full-bleed layer colliding with the
-              headline and CTAs.
-            • md+ — a full-bleed absolute layer behind the copy, framed by the
-              screen edge, the unit standing right-of-centre (copy owns the left
-              rail; the grid's right column reserves its space). */}
-      <div className="relative z-10 -mt-8 h-[440px] w-full md:pointer-events-none md:absolute md:inset-0 md:z-0 md:mt-0 md:h-[620px] lg:h-[680px]">
+      <div className="relative z-0 -mt-8 h-[440px] w-full md:pointer-events-none md:absolute md:inset-0 md:z-0 md:mt-0 md:h-[620px] lg:h-[680px]">
         {machine}
       </div>
 
       {/* The evidence */}
       <div
-        style={{ animationDelay: "0.42s" }}
+        style={{ animationDelay: "0.95s" }}
         className="reveal-rise relative z-10 mx-auto mt-4 max-w-5xl px-5 sm:mt-0 sm:px-6"
       >
         <CanvasPreview />

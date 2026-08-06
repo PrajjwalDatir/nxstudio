@@ -7,7 +7,7 @@ import { useSubscription } from "@/lib/use-subscription";
 import { Button } from "@/components/ui/button";
 import { BillingSection } from "@/components/billing/BillingSection";
 import { ReferralPanel } from "@/components/referral/ReferralPanel";
-import { GithubIcon, CheckCircleIcon, LoaderIcon, ExternalLinkIcon, SettingsIcon } from "@/components/icons";
+import { GithubIcon, CheckCircleIcon, LoaderIcon, ExternalLinkIcon, SettingsIcon, ScaffoldIcon } from "@/components/icons";
 
 function Field({
   label,
@@ -87,8 +87,19 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-      <p className="mt-1 text-muted-foreground">Configuration for {data.productName}.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="mt-1 text-muted-foreground">Configuration for {data.productName}.</p>
+        </div>
+        <Link
+          href="/canvas"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/40 transition-colors"
+        >
+          <ScaffoldIcon className="h-4 w-4" />
+          Back to Canvas
+        </Link>
+      </div>
 
       {/* Product */}
       <section className="mt-8 rounded-xl border border-border bg-card p-6">

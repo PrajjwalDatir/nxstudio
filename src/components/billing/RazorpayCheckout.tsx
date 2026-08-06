@@ -45,7 +45,19 @@ function loadCheckoutScript(): Promise<boolean> {
   });
 }
 
-export function RazorpayCheckout({ onActivated }: { onActivated?: () => void }) {
+export function RazorpayCheckout({ 
+  onActivated,
+  buttonText = "Pay with Card / UPI / Netbanking",
+  icon = <CreditCardIcon className="h-4 w-4" />,
+  className,
+  variant = "outline",
+}: { 
+  onActivated?: () => void;
+  buttonText?: string;
+  icon?: React.ReactNode;
+  className?: string;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+}) {
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [needsSupport, setNeedsSupport] = useState(false);
@@ -108,15 +120,15 @@ export function RazorpayCheckout({ onActivated }: { onActivated?: () => void }) 
       <Button
         onClick={start}
         disabled={loading}
-        variant="outline"
-        className="w-full gap-2 font-mono text-xs uppercase"
+        variant={variant}
+        className={className || "w-full gap-2 font-mono text-xs uppercase"}
       >
         {loading ? (
           <LoaderIcon className="h-4 w-4 animate-spin" />
         ) : (
-          <CreditCardIcon className="h-4 w-4" />
+          icon
         )}
-        {loading ? "Opening checkout…" : "Pay with Card / UPI / Netbanking"}
+        {loading ? "Opening checkout…" : buttonText}
       </Button>
       {note && (
         <p className={needsSupport ? "text-sm text-amber-400" : "text-sm text-muted-foreground"}>

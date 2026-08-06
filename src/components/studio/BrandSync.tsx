@@ -48,9 +48,11 @@ export function BrandSync() {
 
   // Refs for fresh cross-store reads (no stale closures).
   const valuesRef = useRef(values);
-  valuesRef.current = values;
   const brandRef = useRef(brand);
-  brandRef.current = brand;
+  useEffect(() => {
+    valuesRef.current = values;
+    brandRef.current = brand;
+  }, [values, brand]);
 
   // Persist across renders: "brand" means Effect 1 just wrote → Effect 2 must
   // skip. "ctrl" means Effect 2 just wrote → Effect 1 must skip. null = idle.

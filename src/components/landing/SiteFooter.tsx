@@ -7,9 +7,8 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Product",
     links: [
-      { label: "How it works", href: "/#how" },
-      { label: "Features", href: "/#features" },
-      { label: "Pricing", href: "/#pricing" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "FAQ", href: "/faq" },
       { label: "Sign in", href: "/login" },
     ],
   },
@@ -43,8 +42,7 @@ export function SiteFooter() {
             <span className="text-[15px] font-semibold tracking-tight">nxstudio</span>
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            {siteConfig.tagline} A founder-mode build tool that turns a brief into
-            a derived tech stack and one production-ready build prompt.
+            {siteConfig.tagline} Your staff-level tech cofounder. Describe your vision, get a production-ready build prompt.
           </p>
           <div className="mt-5 flex items-center gap-2">
             <a

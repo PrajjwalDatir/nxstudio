@@ -36,6 +36,6 @@ export const config = {
      * Supabase work, so anonymous landing traffic still costs one cheap cookie
      * read and the page itself stays statically served.
      */
-    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|twitter-image|apple-icon|icon|privacy|terms|refund|about|contact|_vercel|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|mp3|ogg|wav|m4a|mp4|webm|woff|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|twitter-image|apple-icon|icon|privacy|terms|refund|about|contact|pricing|faq|_vercel|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|mp3|ogg|wav|m4a|mp4|webm|woff|woff2|glb|gltf)$).*)",
   ],
 };
