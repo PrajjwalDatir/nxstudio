@@ -149,7 +149,7 @@ function PromptCard({ className, stack }: { className?: string; stack: CompiledS
   return (
     <CardShell
       title="Drop the bundle. Run the prompt."
-      line="Download your .nx/ context bundle or copy the master prompt — your agent reads disk and builds in one run."
+      line="Download your .nx/ context bundle or copy the master prompt, and your agent reads disk and builds in one run."
       className={className}
     >
       <div className="overflow-hidden rounded-xl border border-white/5 bg-background/50">
@@ -158,7 +158,7 @@ function PromptCard({ className, stack }: { className?: string; stack: CompiledS
           <div className="flex items-center gap-2">
             <button
               onClick={downloadZip}
-              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary transition-transform hover:-translate-y-0.5 hover:bg-primary/20"
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-accent-foreground transition-transform hover:-translate-y-0.5 hover:bg-primary/20"
             >
               <BoxIcon className="h-3 w-3" />
               Download .nx/ ZIP
@@ -179,7 +179,7 @@ function PromptCard({ className, stack }: { className?: string; stack: CompiledS
         </div>
         <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[11px] leading-relaxed text-foreground/80">
           {promptText.split("\n").map((ln, i) => (
-            <span key={i} className={ln.startsWith("#") ? "text-primary" : "text-emerald-400 font-semibold"}>
+            <span key={i} className={ln.startsWith("#") ? "text-accent-foreground" : "text-emerald-400 font-semibold"}>
               {ln}
               {"\n"}
             </span>
@@ -214,7 +214,7 @@ function StackCard({
   return (
     <CardShell
       title="Pick surfaces, get a stack"
-      line="Choose where it ships — the engine derives the rest."
+      line="Choose where it ships, the engine derives the rest."
       className={className}
     >
       <div className="flex flex-wrap gap-2">

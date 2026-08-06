@@ -5,7 +5,6 @@ import { TeamSection } from "@/components/landing/TeamSection";
 import { SectionKicker } from "@/components/landing/SectionKicker";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
 import { ArrowRightIcon, TargetIcon, RocketIcon, ShieldCheckIcon, CheckIcon } from "@/components/icons";
-import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About",
@@ -23,7 +22,7 @@ const VALUES = [
   {
     icon: RocketIcon,
     title: "Built for AI-native workflows.",
-    body: "Every output we generate is written specifically for the 'brain' that reads it next — whether that's Claude Code, Cursor, v0, or Windsurf. It's all plain, portable Markdown. No proprietary lock-in.",
+    body: "Every output we generate is written specifically for the 'brain' that reads it next, whether that's Claude Code, Cursor, v0, or Windsurf. It's all plain, portable Markdown. No proprietary lock-in.",
   },
   {
     icon: ShieldCheckIcon,
@@ -101,8 +100,8 @@ export default function AboutPage() {
                 </div>
 
                 {/* The nxstudio Way */}
-                <div className="relative rounded-2xl border border-primary/30 bg-primary/5 p-8 shadow-[0_0_40px_-15px_rgba(139,92,246,0.2)]">
-                  <div className="mb-6 flex items-center gap-3 text-primary">
+                <div className="relative rounded-2xl border border-primary/30 bg-primary/5 p-8 shadow-[0_0_40px_-15px_rgba(196,181,253,0.2)]">
+                  <div className="mb-6 flex items-center gap-3 text-accent-foreground">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
                       <CheckIcon className="h-4 w-4" />
                     </div>
@@ -111,19 +110,19 @@ export default function AboutPage() {
                   
                   <ul className="space-y-4 text-foreground/80">
                     <li className="flex items-start gap-3">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      Bring your brief — half a spec and a few screenshots is plenty.
+                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
+                      Bring your brief: half a spec and a few screenshots is plenty.
                     </li>
                     <li className="flex items-start gap-3">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
                       nxstudio instantly derives an opinionated architecture.
                     </li>
                     <li className="flex items-start gap-3">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
                       One production-ready context bundle is compiled.
                     </li>
                     <li className="flex items-start gap-3">
-                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" />
                       Your agent opens the repo already fully briefed and ready to code.
                     </li>
                   </ul>
@@ -150,7 +149,7 @@ export default function AboutPage() {
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                     <div className="relative">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/30 shadow-[0_0_15px_-3px_rgba(139,92,246,0.4)]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-accent-foreground border border-primary/30 shadow-[0_0_15px_-3px_rgba(196,181,253,0.4)]">
                         <v.icon className="h-6 w-6" />
                       </div>
                       <h3 className="mt-6 text-lg font-bold tracking-tight">{v.title}</h3>
@@ -179,9 +178,9 @@ export default function AboutPage() {
               </p>
               <AuthButton
                 source="about_closing"
-                className="group mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.4),0_16px_40px_-16px_rgba(139,92,246,0.8)] transition-transform hover:-translate-y-0.5"
+                className="group mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(196,181,253,0.4),0_16px_40px_-16px_rgba(196,181,253,0.8)] transition-transform hover:-translate-y-0.5"
               >
-                Start building — free
+                Start building for free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </AuthButton>
             </div>

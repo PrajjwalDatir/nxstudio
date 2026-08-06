@@ -14,8 +14,8 @@ export default function TeamPage() {
   const getRole = (name?: string | null) => {
     if (!name) return null;
     const lower = name.toLowerCase();
-    if (lower.includes("nxstudio")) return "Founder & Product";
-    if (lower.includes("contributor")) return "Distribution & Content Partner";
+    if (lower.includes("nxstudio")) return "Founder & GTM";
+    if (lower.includes("contributor")) return "Content & Distribution";
     return null;
   };
 
