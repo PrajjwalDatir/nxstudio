@@ -507,40 +507,48 @@ export function WorkspaceProvider({
   /* GitHub sync — single shared engine for every consumer of useSync ---- */
   const repo = activeProject.github.repo;
   const branch = activeProject.github.branch;
+  // Cache key must include the branch (and implicitly the project's repo config),
+  // otherwise two projects pointed at the same repo on different branches — or a
+  // project switch that lands mid-request — would read/write each other's result.
+  const repoKey = repo ? `${repo}@${branch}` : null;
   const [ghStatus, setGhStatus] = useState<GitHubStatus>(initialGitHubStatus);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(
     initialGitHubStatus.connected ? (repo ? "syncing" : "no-repo") : "disconnected"
   );
   const [resultByRepo, setResultByRepo] = useState<Record<string, SyncResult>>({});
   const [syncError, setSyncError] = useState<string | null>(null);
-  const syncInFlight = useRef(false);
+  const syncInFlightKey = useRef<string | null>(null);
 
-  const syncResult = repo ? resultByRepo[repo] ?? null : null;
+  const syncResult = repoKey ? resultByRepo[repoKey] ?? null : null;
 
   const runSync = useCallback(async () => {
     if (!ghStatus.connected) {
       setSyncStatus("disconnected");
       return;
     }
-    if (!repo) {
+    if (!repo || !repoKey) {
       setSyncStatus("no-repo");
       return;
     }
-    if (syncInFlight.current) return;
-    syncInFlight.current = true;
+    if (syncInFlightKey.current === repoKey) return;
+    syncInFlightKey.current = repoKey;
     setSyncStatus("syncing");
     setSyncError(null);
     try {
       const r = await syncRepo(repo, branch);
-      setResultByRepo((prev) => ({ ...prev, [repo]: r }));
+      // The active project/repo may have changed while this request was in
+      // flight; discard the response if it's no longer the one we asked for.
+      if (syncInFlightKey.current !== repoKey) return;
+      setResultByRepo((prev) => ({ ...prev, [repoKey]: r }));
       setSyncStatus("ok");
     } catch (e) {
+      if (syncInFlightKey.current !== repoKey) return;
       setSyncError(e instanceof Error ? e.message : "Sync failed.");
       setSyncStatus("error");
     } finally {
-      syncInFlight.current = false;
+      if (syncInFlightKey.current === repoKey) syncInFlightKey.current = null;
     }
-  }, [ghStatus.connected, repo, branch]);
+  }, [ghStatus.connected, repo, branch, repoKey]);
 
   // Sync on repo/connection change, then poll every 60s.
   useEffect(() => {
@@ -571,6 +579,7 @@ export function WorkspaceProvider({
     setGhStatus({ connected: false });
     setSyncStatus("disconnected");
     setResultByRepo({});
+    syncInFlightKey.current = null;
   }, []);
 
   const sync: SyncApi = {
