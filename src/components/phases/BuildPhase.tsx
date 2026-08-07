@@ -320,19 +320,13 @@ export function BuildPhase() {
                   onClick={() => setPreviewPrompt(p)}
                   className={`relative flex h-36 w-full cursor-pointer flex-col justify-between border-b border-border bg-gradient-to-br ${gradient} p-3.5 transition-all group-hover:brightness-105`}
                 >
-                  {/* Window Chrome macOS Dots */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/80" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/80" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/80" />
-                    </div>
-                    {p.category && (
+                  {p.category && (
+                    <div className="flex items-center justify-end">
                       <span className="rounded-full border border-primary/25 bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-primary uppercase shadow-xs backdrop-blur-md">
                         {p.category}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Luminous Center Emblem Badge */}
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background/90 text-primary shadow-md backdrop-blur-md transition-transform group-hover:scale-110">
