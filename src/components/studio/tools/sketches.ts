@@ -31,6 +31,10 @@ export type SketchFactory = () => Sketch;
 /** Flow field — particles advected along an animated Perlin-noise vector field. */
 const flow: SketchFactory = () => {
   let pts: { x: number; y: number }[] = [];
+  let cachedBg = "";
+  let cachedPrimary = "";
+  let fadeInk: P5.Color | null = null;
+  let primaryInk: P5.Color | null = null;
   const ensure = (p: P5, n: number) => {
     while (pts.length < n) pts.push({ x: p.random(p.width), y: p.random(p.height) });
     if (pts.length > n) pts.length = n;
@@ -43,15 +47,15 @@ const flow: SketchFactory = () => {
     },
     draw(p, params) {
       ensure(p, params.count);
-      const fade = p.color(params.background);
-      fade.setAlpha(18);
+      if (params.background !== cachedBg || !fadeInk) { cachedBg = params.background; fadeInk = p.color(params.background); }
+      fadeInk.setAlpha(18);
       p.noStroke();
-      p.fill(fade);
+      p.fill(fadeInk);
       p.rect(0, 0, p.width, p.height);
 
-      const ink = p.color(params.primary);
-      ink.setAlpha(110);
-      p.stroke(ink);
+      if (params.primary !== cachedPrimary || !primaryInk) { cachedPrimary = params.primary; primaryInk = p.color(params.primary); }
+      primaryInk.setAlpha(110);
+      p.stroke(primaryInk);
       p.strokeWeight(1.2);
 
       const t = p.frameCount * 0.002 * params.speed;
@@ -77,6 +81,9 @@ const flow: SketchFactory = () => {
 const particles: SketchFactory = () => {
   let ps: Particle2D[] = [];
   let spatialGrid = new SpatialHashGrid(130);
+  let cachedPrimary = "";
+  let lineInk: P5.Color | null = null;
+  let nodeInk: P5.Color | null = null;
 
   const ensure = (p: P5, n: number) => {
     while (ps.length < n) {
@@ -113,7 +120,11 @@ const particles: SketchFactory = () => {
       spatialGrid.build(ps);
 
       p.strokeWeight(1.2);
-      const lineInk = p.color(params.primary);
+      if (params.primary !== cachedPrimary || !lineInk || !nodeInk) {
+        cachedPrimary = params.primary;
+        lineInk = p.color(params.primary);
+        nodeInk = p.color(params.primary);
+      }
       // Query adjacent grid cells: average O(N) instead of O(N^2)
       for (let i = 0; i < ps.length; i++) {
         const a = ps[i];
@@ -134,7 +145,6 @@ const particles: SketchFactory = () => {
         }
       }
 
-      const nodeInk = p.color(params.primary);
       nodeInk.setAlpha(255);
       p.noStroke();
       p.fill(nodeInk);
@@ -148,6 +158,10 @@ const particles: SketchFactory = () => {
 /** Matrix — digital code rain with pooled character streams. */
 const matrix: SketchFactory = () => {
   let drops: { x: number; y: number; speed: number; chars: string[] }[] = [];
+  let cachedBg = "";
+  let cachedPrimary = "";
+  let fadeInk: P5.Color | null = null;
+  let primaryInk: P5.Color | null = null;
   const ensure = (p: P5, n: number) => {
     const colWidth = 20;
     const cols = Math.floor(p.width / colWidth);
@@ -168,15 +182,15 @@ const matrix: SketchFactory = () => {
     },
     draw(p, params) {
       ensure(p, params.count);
-      const fade = p.color(params.background);
-      fade.setAlpha(40);
+      if (params.background !== cachedBg || !fadeInk) { cachedBg = params.background; fadeInk = p.color(params.background); }
+      fadeInk.setAlpha(40);
       p.noStroke();
-      p.fill(fade);
+      p.fill(fadeInk);
       p.rect(0, 0, p.width, p.height);
 
       p.textSize(14);
       p.textFont("monospace");
-      const ink = p.color(params.primary);
+      if (params.primary !== cachedPrimary || !primaryInk) { cachedPrimary = params.primary; primaryInk = p.color(params.primary); }
       const sp = params.speed;
 
       for (let i = 0; i < drops.length; i++) {
@@ -187,8 +201,8 @@ const matrix: SketchFactory = () => {
         for (let j = 0; j < d.chars.length; j++) {
           const charY = d.y - j * 16;
           if (charY > 0 && charY < p.height) {
-            ink.setAlpha(p.map(j, 0, d.chars.length, 255, 30));
-            p.fill(ink);
+            primaryInk!.setAlpha(p.map(j, 0, d.chars.length, 255, 30));
+            p.fill(primaryInk!);
             p.text(d.chars[j], d.x, charY);
           }
         }
@@ -199,15 +213,17 @@ const matrix: SketchFactory = () => {
 
 /** Waves — undulating sine wave frequency lines. */
 const waves: SketchFactory = () => {
+  let cachedPrimary = "";
+  let primaryInk: P5.Color | null = null;
   return {
     init(p, params) {
       p.background(params.background);
     },
     draw(p, params) {
       p.background(params.background);
-      const ink = p.color(params.primary);
-      ink.setAlpha(160);
-      p.stroke(ink);
+      if (params.primary !== cachedPrimary || !primaryInk) { cachedPrimary = params.primary; primaryInk = p.color(params.primary); }
+      primaryInk.setAlpha(160);
+      p.stroke(primaryInk);
       p.strokeWeight(1.5);
       p.noFill();
 
@@ -229,6 +245,8 @@ const waves: SketchFactory = () => {
 
 /** Neon — concentric pulsing glowing geometric rings. */
 const neon: SketchFactory = () => {
+  let cachedPrimary = "";
+  let primaryInk: P5.Color | null = null;
   return {
     init(p, params) {
       p.background(params.background);
@@ -240,13 +258,13 @@ const neon: SketchFactory = () => {
       p.noFill();
 
       const rings = 12;
-      const ink = p.color(params.primary);
+      if (params.primary !== cachedPrimary || !primaryInk) { cachedPrimary = params.primary; primaryInk = p.color(params.primary); }
       const t = p.frameCount * 0.015 * params.speed;
 
       for (let i = 0; i < rings; i++) {
         const radius = (i + 1) * 28 + Math.sin(t + i * 0.4) * 15;
-        ink.setAlpha(p.map(i, 0, rings, 220, 40));
-        p.stroke(ink);
+        primaryInk!.setAlpha(p.map(i, 0, rings, 220, 40));
+        p.stroke(primaryInk!);
         p.strokeWeight(2);
         p.ellipse(0, 0, radius * 2, radius * 1.8);
       }
@@ -257,20 +275,30 @@ const neon: SketchFactory = () => {
 
 /** Noise — a flowing Perlin field rendered as a coloured grid between two tones. */
 const noise: SketchFactory = () => {
+  let cachedBg = "";
+  let cachedPrimary = "";
+  let r1=0, g1=0, b1=0, r2=0, g2=0, b2=0;
   return {
     init(p, params) {
       p.background(params.background);
     },
     draw(p, params) {
+      if (params.background !== cachedBg || params.primary !== cachedPrimary) {
+        cachedBg = params.background;
+        cachedPrimary = params.primary;
+        const from = p.color(params.background);
+        const to = p.color(params.primary);
+        r1 = p.red(from); g1 = p.green(from); b1 = p.blue(from);
+        r2 = p.red(to); g2 = p.green(to); b2 = p.blue(to);
+      }
+
       const step = 24;
       const t = p.frameCount * 0.01 * params.speed;
-      const from = p.color(params.background);
-      const to = p.color(params.primary);
       p.noStroke();
       for (let y = 0; y < p.height; y += step) {
         for (let x = 0; x < p.width; x += step) {
           const n = p.noise(x * 0.003, y * 0.003, t);
-          p.fill(p.lerpColor(from, to, n));
+          p.fill(r1 + (r2 - r1) * n, g1 + (g2 - g1) * n, b1 + (b2 - b1) * n);
           p.rect(x, y, step, step);
         }
       }

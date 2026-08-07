@@ -4,3 +4,6 @@
 ## 2026-08-04 - P5.js Color Object Allocation Overhead
 **Learning:** Calling `p.color(string)` inside tight, high-frequency rendering loops (like drawing particle connections every frame) causes immense garbage collection pressure because it has to parse the color string and allocate a new object repeatedly.
 **Action:** Hoist the color object initialization outside the loop (e.g. `const ink = p.color(primary)`) and reuse the single object by updating its properties (e.g. `ink.setAlpha(alpha)`) inside the loop.
+## 2026-08-05 - Avoid P5.js Color Object Allocation in Draw Loop
+**Learning:** Recreating `p.color(string)` inside high-frequency rendering loops (like the `draw` function that fires 60 frames per second) creates continuous garbage collection pressure, even if hoisted outside the inner component loops (e.g., drawing particles).
+**Action:** Cache the `P5.Color` object in an outer closure, updating it only when the input string (e.g. `params.primary`) actually changes, so the same object is reused across frames.
