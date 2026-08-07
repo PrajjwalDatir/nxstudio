@@ -160,31 +160,6 @@ html.light .hero-glow::after {
   }
 }
 
-/* Smooth theme transition — applied by JS during toggle, removed after 450ms.
- * Uses will-change to hint the compositor and transitions background, color,
- * border-color, and fill so every surface eases between dark ↔ light. */
-::view-transition-group(root),
-::view-transition-image-pair(root),
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none !important;
-  mix-blend-mode: normal !important;
-  display: block !important;
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  transform: none !important;
-}
-
-::view-transition-old(root) {
-  z-index: 1 !important;
-}
-
-::view-transition-new(root) {
-  z-index: 9999 !important;
-}
-
 /* Frosted surface for cards and panels.
  *
  * Elevation on a near-black canvas comes from *contrast and a light top edge*,
