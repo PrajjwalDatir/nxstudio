@@ -72,6 +72,7 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            aria-label="Close"
           >
             ✕
           </button>
