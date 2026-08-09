@@ -133,7 +133,7 @@ export default function ContextDirectoryPage() {
   const statusBadge = (s: NxDriftStatus) => {
     switch (s) {
       case "drifted":
-        return { label: "Drifted", class: "border-primary/40 bg-primary/10 text-primary" };
+        return { label: "Drifted", class: "border-primary/40 bg-primary/10 text-accent-foreground" };
       case "extra":
         return { label: "New file", class: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" };
       case "unchanged":
@@ -157,9 +157,9 @@ export default function ContextDirectoryPage() {
           </Link>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
-            <GitBranchIcon className="h-4 w-4 text-primary" />
+            <GitBranchIcon className="h-4 w-4 text-accent-foreground" />
             <h1 className="text-sm font-bold tracking-tight">.nx/ Context Directory</h1>
-            <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-primary">
+            <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-medium text-accent-foreground">
               {counts.all} Files
             </span>
           </div>
@@ -204,7 +204,7 @@ export default function ContextDirectoryPage() {
                   className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
                     filter === "drifted"
                       ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                      : "text-primary hover:bg-primary/10"
+                      : "text-accent-foreground hover:bg-primary/10"
                   }`}
                 >
                   Drifted ({counts.drifted})
@@ -256,7 +256,7 @@ export default function ContextDirectoryPage() {
                     <FileTextIcon
                       className={cn(
                         "h-4 w-4 shrink-0",
-                        isSelected ? "text-primary" : "text-muted-foreground"
+                        isSelected ? "text-accent-foreground" : "text-muted-foreground"
                       )}
                     />
                     <span className="truncate font-mono text-xs font-semibold text-foreground">
@@ -393,7 +393,7 @@ export default function ContextDirectoryPage() {
                 /* Temporal Git History Timeline View */
                 <div className="space-y-4 p-2 max-w-2xl mx-auto">
                   <div className="mb-4 text-xs text-muted-foreground text-center">
-                    Real Git commit history fetched from GitHub for <span className="font-mono text-primary">.nx/{shortPath(activeFile.path)}</span>. Tap any commit to inspect its exact historical revision.
+                    Real Git commit history fetched from GitHub for <span className="font-mono text-accent-foreground">.nx/{shortPath(activeFile.path)}</span>. Tap any commit to inspect its exact historical revision.
                   </div>
 
                   {loadingCommits ? (
@@ -415,7 +415,7 @@ export default function ContextDirectoryPage() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs font-bold text-primary">{c.sha}</span>
+                              <span className="font-mono text-xs font-bold text-accent-foreground">{c.sha}</span>
                               <span className="text-xs font-semibold text-foreground truncate max-w-md">{c.message}</span>
                             </div>
                             <a

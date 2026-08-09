@@ -100,7 +100,7 @@ export default function TeamPage() {
             {status === "disconnected" ? (
               <>
                 Connect GitHub in{" "}
-                <Link href="/settings" className="text-primary hover:underline">
+                <Link href="/settings" className="text-accent-foreground hover:underline">
                   Settings
                 </Link>{" "}
                 to see your team.
@@ -108,7 +108,7 @@ export default function TeamPage() {
             ) : status === "no-repo" ? (
               <>
                 Link a repository in{" "}
-                <Link href="/settings" className="text-primary hover:underline">
+                <Link href="/settings" className="text-accent-foreground hover:underline">
                   Settings
                 </Link>{" "}
                 to load contributors.

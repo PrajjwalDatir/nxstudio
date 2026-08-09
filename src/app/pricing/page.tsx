@@ -110,7 +110,7 @@ export default function PricingPage() {
                       <ul className="space-y-2.5">
                         {plan.features.map((feat) => (
                           <li key={feat} className="flex items-start gap-2.5 text-sm">
-                            <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                            <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-foreground" />
                             <span className="text-foreground/80">{feat}</span>
                           </li>
                         ))}

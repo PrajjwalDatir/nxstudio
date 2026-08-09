@@ -125,7 +125,7 @@ export function CryptoCheckout({
           </div>
           <a
             href={req?.url}
-            className="inline-block text-xs font-medium text-primary hover:underline"
+            className="inline-block text-xs font-medium text-accent-foreground hover:underline"
           >
             Open in wallet →
           </a>

@@ -70,7 +70,7 @@ export function DriftDiffModal({
   const statusBadge = useMemo(() => {
     switch (status) {
       case "drifted":
-        return { label: "Context Drifted", class: "border-primary/30 bg-primary/10 text-primary" };
+        return { label: "Context Drifted", class: "border-primary/30 bg-primary/10 text-accent-foreground" };
       case "extra":
         return { label: "New File in Repo", class: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" };
       case "unchanged":
@@ -109,7 +109,7 @@ export function DriftDiffModal({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border p-5 bg-card/50">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground">
                 <FileTextIcon className="h-5 w-5" />
               </div>
               <div>
@@ -228,7 +228,7 @@ export function DriftDiffModal({
               /* Temporal Git Revision Timeline View */
               <div className="space-y-4 p-2 max-w-2xl mx-auto">
                 <div className="mb-2 text-xs text-muted-foreground text-center">
-                  Real Git commit history fetched from GitHub for <span className="font-mono text-primary">.nx/{shortPath}</span>. Tap any commit to inspect its exact historical diff.
+                  Real Git commit history fetched from GitHub for <span className="font-mono text-accent-foreground">.nx/{shortPath}</span>. Tap any commit to inspect its exact historical diff.
                 </div>
 
                 {loadingCommits ? (
@@ -250,7 +250,7 @@ export function DriftDiffModal({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-primary">{c.sha}</span>
+                            <span className="font-mono text-xs font-bold text-accent-foreground">{c.sha}</span>
                             <span className="text-xs font-semibold text-foreground truncate max-w-md">{c.message}</span>
                           </div>
                           <a

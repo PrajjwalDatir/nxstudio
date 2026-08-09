@@ -39,7 +39,7 @@ export function CustomStagePhase({ stageId }: { stageId: string }) {
 
       <div className="rounded-xl glass p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-primary">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
             <PhaseIcon name={stage.icon} className="h-4.5 w-4.5" />
           </div>
           <div>

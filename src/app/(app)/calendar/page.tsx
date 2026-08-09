@@ -111,9 +111,9 @@ export default function CalendarPage() {
                     due && "bg-primary/10"
                   )}
                 >
-                  <div className={cn("font-medium", isToday && "text-primary")}>{day}</div>
+                  <div className={cn("font-medium", isToday && "text-accent-foreground")}>{day}</div>
                   {due && (
-                    <div className="mt-0.5 truncate text-[9px] leading-tight text-primary" title={due.join(", ")}>
+                    <div className="mt-0.5 truncate text-[9px] leading-tight text-accent-foreground" title={due.join(", ")}>
                       {due[0]}
                       {due.length > 1 && ` +${due.length - 1}`}
                     </div>
@@ -131,7 +131,7 @@ export default function CalendarPage() {
           <div className="mt-4 space-y-3">
             {PHASES.map((p) => (
               <div key={p.id} className="flex items-center justify-between gap-2">
-                <Link href={`/canvas/${p.id}`} className="text-sm hover:text-primary">
+                <Link href={`/canvas/${p.id}`} className="text-sm hover:text-accent-foreground">
                   {p.label}
                 </Link>
                 <DatePicker

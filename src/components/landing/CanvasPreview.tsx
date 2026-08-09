@@ -122,7 +122,7 @@ function StudioView() {
                 i === 0 && "ring-1 ring-primary/40"
               )}
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
                 <Icon className="h-4 w-4" />
               </div>
               <p className="mt-3 text-sm font-medium">{mode.label.replace("Studio: ", "")}</p>
@@ -212,7 +212,7 @@ function TasksView() {
         {TASKS.map((t) => (
           <div key={t.label} className="flex items-center gap-2.5 rounded-lg border border-border bg-background/50 px-3.5 py-2">
             {t.done ? (
-              <CheckCircleIcon className="h-4 w-4 shrink-0 text-primary" />
+              <CheckCircleIcon className="h-4 w-4 shrink-0 text-accent-foreground" />
             ) : (
               <CircleIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}

@@ -47,13 +47,13 @@ export default function AboutPage() {
                   Our Philosophy
                 </SectionKicker>
 
-                <h1 className="mt-6 font-mono text-xs uppercase tracking-widest text-primary flex items-center gap-1.5 font-bold">
+                <h1 className="mt-6 font-mono text-xs uppercase tracking-widest text-accent-foreground flex items-center gap-1.5 font-bold">
                   <SparklesIcon className="h-3.5 w-3.5" /> About Nx Studio
                 </h1>
 
                 {/* World-Class Single Paragraph Copywriting */}
                 <p className="mt-8 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight leading-[1.3] text-foreground">
-                  We built <span className="text-gradient">Nx Studio</span> on a singular conviction: the journey from human intent to production software should never be lost in context drift, decision fatigue, or repetitive boilerplate. By compiling raw product vision into precise, self-contained architecture bundles, Nx Studio equips modern AI agents—from Cursor to Claude Code—to build complete software systems with <span className="text-primary underline decoration-primary/40 underline-offset-4">absolute context</span>, uncompromised precision, and award-winning craftsmanship from line zero.
+                  We built <span className="text-gradient">Nx Studio</span> on a singular conviction: the journey from human intent to production software should never be lost in context drift, decision fatigue, or repetitive boilerplate. By compiling raw product vision into precise, self-contained architecture bundles, Nx Studio equips modern AI agents—from Cursor to Claude Code—to build complete software systems with <span className="text-accent-foreground underline decoration-primary/40 underline-offset-4">absolute context</span>, uncompromised precision, and award-winning craftsmanship from line zero.
                 </p>
 
                 <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">

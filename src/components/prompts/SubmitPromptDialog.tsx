@@ -61,7 +61,7 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-accent-foreground">
               <WandIcon className="h-5 w-5" />
             </div>
             <div>
@@ -142,7 +142,7 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
                 <label className="block text-xs font-medium text-muted-foreground">
                   Prompt Prose Body
                 </label>
-                <span className="font-mono text-[10px] text-primary">Tokens: {"{{name}}"}, {"{{ctx}}"}, {"{{fe}}"}</span>
+                <span className="font-mono text-[10px] text-accent-foreground">Tokens: {"{{name}}"}, {"{{ctx}}"}, {"{{fe}}"}</span>
               </div>
               <textarea
                 required

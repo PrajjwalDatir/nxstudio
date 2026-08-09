@@ -92,7 +92,7 @@ export function BuildPhase() {
           <LayersIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
           <p className="mt-3 text-sm text-muted-foreground">
             Pick your surfaces in the{" "}
-            <Link href="/canvas/tech-stack" className="text-primary hover:underline">
+            <Link href="/canvas/tech-stack" className="text-accent-foreground hover:underline">
               Tech Stack
             </Link>{" "}
             phase first — the build prompt is generated from your derived stack.
@@ -164,13 +164,13 @@ export function BuildPhase() {
       <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-accent-foreground">
               <WandIcon className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-xl font-semibold">Zip only. Say &quot;Start&quot;.</h2>
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Download your <span className="font-mono text-primary">.nx/</span> context bundle into your repo root.
+                Download your <span className="font-mono text-accent-foreground">.nx/</span> context bundle into your repo root.
                 Your AI agent reads disk directly — you only need to say &quot;Start&quot;.
               </p>
             </div>
@@ -240,14 +240,14 @@ export function BuildPhase() {
               <h2 className="text-xl font-bold tracking-tight">Refine after it&apos;s built</h2>
               <button
                 onClick={() => setSubmitOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-all hover:bg-primary/20 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-accent-foreground transition-all hover:bg-primary/20 hover:-translate-y-0.5"
               >
                 <PlusIcon className="h-3.5 w-3.5" /> Submit Prompt
               </button>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               Optional. Paste any of these into your project once it exists — each reads your{" "}
-              <span className="font-mono text-primary">.nx/</span> context and reviews one dimension in depth.
+              <span className="font-mono text-accent-foreground">.nx/</span> context and reviews one dimension in depth.
             </p>
           </div>
 
@@ -322,14 +322,14 @@ export function BuildPhase() {
                 >
                   {p.category && (
                     <div className="flex items-center justify-end">
-                      <span className="rounded-full border border-primary/25 bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-primary uppercase shadow-xs backdrop-blur-md">
+                      <span className="rounded-full border border-primary/25 bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-foreground uppercase shadow-xs backdrop-blur-md">
                         {p.category}
                       </span>
                     </div>
                   )}
 
                   {/* Luminous Center Emblem Badge */}
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background/90 text-primary shadow-md backdrop-blur-md transition-transform group-hover:scale-110">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background/90 text-accent-foreground shadow-md backdrop-blur-md transition-transform group-hover:scale-110">
                     <Icon className="h-6 w-6" />
                   </div>
 
@@ -345,7 +345,7 @@ export function BuildPhase() {
                   <div>
                     <h3
                       onClick={() => setPreviewPrompt(p)}
-                      className="cursor-pointer text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary"
+                      className="cursor-pointer text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-accent-foreground"
                     >
                       {p.title}
                     </h3>
@@ -360,7 +360,7 @@ export function BuildPhase() {
                       onClick={() => setPreviewPrompt(p)}
                       className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      <ChevronRightIcon className="h-3.5 w-3.5 text-primary" /> Preview
+                      <ChevronRightIcon className="h-3.5 w-3.5 text-accent-foreground" /> Preview
                     </button>
                     {locked ? (
                       <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
@@ -400,7 +400,7 @@ export function BuildPhase() {
             >
               <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground">
                     {(() => {
                       const Icon = DEPTH_ICONS[previewPrompt.id] ?? BadgeCheckIcon;
                       return <Icon className="h-5 w-5" />;
@@ -409,7 +409,7 @@ export function BuildPhase() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-bold tracking-tight">{previewPrompt.title}</h3>
-                      <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase text-primary">
+                      <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase text-accent-foreground">
                         {previewPrompt.category}
                       </span>
                     </div>

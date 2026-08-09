@@ -58,7 +58,7 @@ export function NxContextDirectoryModal({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground">
                 <GitBranchIcon className="h-5 w-5" />
               </div>
               <div>
@@ -99,7 +99,7 @@ export function NxContextDirectoryModal({
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     filter === "drifted"
                       ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                      : "text-primary hover:bg-primary/10"
+                      : "text-accent-foreground hover:bg-primary/10"
                   }`}
                 >
                   Drifted ({counts.drifted})
@@ -155,12 +155,12 @@ export function NxContextDirectoryModal({
                     }}
                     className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-3.5 transition-all hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5"
                   >
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary transition-colors">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground group-hover:border-primary/40 group-hover:text-accent-foreground transition-colors">
                       <FileTextIcon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="truncate font-mono text-xs font-semibold text-foreground group-hover:text-primary transition-colors" title={shortPath(f.path)}>
+                        <p className="truncate font-mono text-xs font-semibold text-foreground group-hover:text-accent-foreground transition-colors" title={shortPath(f.path)}>
                           {shortPath(f.path)}
                         </p>
                         <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground">
@@ -172,7 +172,7 @@ export function NxContextDirectoryModal({
                         <span
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase",
-                            isDrifted && "border-primary/40 bg-primary/10 text-primary",
+                            isDrifted && "border-primary/40 bg-primary/10 text-accent-foreground",
                             isNew && "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
                             isSynced && "border-border bg-secondary/60 text-muted-foreground"
                           )}

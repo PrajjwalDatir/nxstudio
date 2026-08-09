@@ -45,7 +45,7 @@ export function PremiumDialog({
       >
         <div className="flex items-start justify-between border-b border-border pb-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary border border-primary/30">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground border border-primary/30">
               <ZapIcon className="h-6 w-6" />
             </div>
             <div>
@@ -70,7 +70,7 @@ export function PremiumDialog({
               </h3>
               <button
                 onClick={() => setSelectedTier(null)}
-                className="text-xs font-mono text-primary hover:underline"
+                className="text-xs font-mono text-accent-foreground hover:underline"
               >
                 ← Back to Plans
               </button>

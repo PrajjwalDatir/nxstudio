@@ -54,7 +54,7 @@ export function PhaseCardBody({
   return (
     <>
       <div className="flex items-start justify-between">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-primary">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
           <PhaseIcon name={phase.icon} className="h-4.5 w-4.5" />
         </div>
         {action}

@@ -43,7 +43,7 @@ export function CopyButton({
       className={cn(
         "inline-flex items-center gap-2 rounded-lg text-sm font-medium transition-colors",
         variant === "solid"
-          ? "bg-primary/15 px-3 py-1.5 text-primary hover:bg-primary/25"
+          ? "bg-primary/15 px-3 py-1.5 text-accent-foreground hover:bg-primary/25"
           : "px-2 py-1.5 text-muted-foreground hover:text-foreground",
         className
       )}

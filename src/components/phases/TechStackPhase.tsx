@@ -84,7 +84,7 @@ export function TechStackPhase() {
           <LightbulbIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
           <p className="mt-3 text-sm text-muted-foreground">
             Finish the{" "}
-            <Link href="/canvas/idea" className="text-primary hover:underline">
+            <Link href="/canvas/idea" className="text-accent-foreground hover:underline">
               Brief
             </Link>{" "}
             first — the stack, brand tokens, and build prompt are all derived from your
@@ -132,7 +132,7 @@ export function TechStackPhase() {
                 >
                   <CheckIcon className="h-3 w-3" />
                 </span>
-                <Icon className={cn("h-6 w-6", on ? "text-primary" : "text-muted-foreground")} />
+                <Icon className={cn("h-6 w-6", on ? "text-accent-foreground" : "text-muted-foreground")} />
                 <span className="mt-1 font-medium">{opt.label}</span>
                 <span className="text-xs text-muted-foreground">{opt.description}</span>
               </button>
@@ -161,7 +161,7 @@ export function TechStackPhase() {
                   on ? "border-primary bg-accent/30" : "border-border hover:border-primary/40"
                 )}
               >
-                <Icon className={cn("mt-0.5 h-4.5 w-4.5 shrink-0", on ? "text-primary" : "text-muted-foreground")} />
+                <Icon className={cn("mt-0.5 h-4.5 w-4.5 shrink-0", on ? "text-accent-foreground" : "text-muted-foreground")} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{opt.label}</span>
                   <span className="block text-xs text-muted-foreground">{opt.description}</span>
@@ -183,7 +183,7 @@ export function TechStackPhase() {
       {/* Derived stack — live */}
       <section className="mt-8">
         <div className="flex items-center gap-2">
-          <LayersIcon className="h-4 w-4 text-primary" />
+          <LayersIcon className="h-4 w-4 text-accent-foreground" />
           <h2 className="text-lg font-semibold">Your derived stack</h2>
         </div>
 
@@ -221,7 +221,7 @@ export function TechStackPhase() {
             )}
 
             <div className="mt-4 rounded-lg border border-primary/30 bg-accent/30 p-3">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
                 Why this stack
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{stack.rationale}</p>

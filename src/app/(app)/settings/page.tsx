@@ -117,7 +117,7 @@ export default function SettingsPage() {
           <h2 className="font-semibold">GitHub Sync</h2>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Connect a repo so nxstudio reads your <span className="font-mono text-primary">.nx/</span>{" "}
+          Connect a repo so nxstudio reads your <span className="font-mono text-accent-foreground">.nx/</span>{" "}
           context and build activity back from GitHub.
         </p>
 

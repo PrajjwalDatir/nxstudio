@@ -135,7 +135,7 @@ function QuestionCard({
             className={cn(
               "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors",
               listening
-                ? "bg-primary/15 text-primary"
+                ? "bg-primary/15 text-accent-foreground"
                 : "bg-secondary text-muted-foreground hover:text-foreground"
             )}
           >
@@ -185,7 +185,7 @@ export function IdeaPhase() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Tell us about your idea</h2>
-          <span className="text-sm font-medium text-primary">
+          <span className="text-sm font-medium text-accent-foreground">
             {answered} / {QUESTIONS.length}
           </span>
         </div>
@@ -269,7 +269,7 @@ export function IdeaPhase() {
                   className={cn(
                     "rounded-lg border px-3 py-1.5 text-sm capitalize transition-colors",
                     data.brand.vibe === v
-                      ? "border-primary bg-primary/15 text-primary"
+                      ? "border-primary bg-primary/15 text-accent-foreground"
                       : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -300,7 +300,7 @@ export function IdeaPhase() {
 
       {/* Prompt output */}
       <div className="mt-6 flex items-center gap-4 rounded-xl glass p-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
           <WandIcon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
