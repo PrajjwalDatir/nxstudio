@@ -3,117 +3,266 @@
 /**
  * Radial theme-toggle reveal.
  *
- * Three things had to be worked out the hard way here, each confirmed by
- * instrumenting real clicks with an on-screen marker rather than guessing:
+ * Growing-hole mask on ::view-transition-old(root), not clip-path on
+ * ::view-transition-new(root).
  *
- * 1. Driving the circle via clip-path on the View Transitions API's
- *    ::view-transition-new(root) pseudo-element doesn't work reliably in
- *    this engine — that pseudo is positioned/sized by the browser
- *    per-transition to match the captured root element's geometry, not
- *    necessarily the viewport, and no author override (including
- *    !important on position/size) changed where its own clip-path actually
- *    rendered. A plain, ordinary <div> — full author control, no special UA
- *    layout path — sidesteps that entirely.
+ * Two earlier attempts at driving this off the View Transitions API both
+ * targeted ::view-transition-new(root)'s clip-path and both broke in this
+ * engine — once as a position/interpolation drift, once as a hard page
+ * freeze when the toggle fired on a scrolled page. Rather than a third
+ * attempt at the same target, this drives a different pseudo-element with a
+ * different CSS property: the browser already renders the real, live,
+ * already-swapped-to-new-theme DOM underneath the entire view-transition
+ * overlay by default, so ::view-transition-new(root) isn't needed at all —
+ * it's hidden outright. Instead a growing *hole* is cut into
+ * ::view-transition-old(root) via `mask-image` (a hard-edged radial
+ * gradient, alpha-based: transparent = hidden/hole, opaque = old snapshot
+ * still showing), so the real live page shows through progressively from
+ * the click point. Same proven-safe technique as before either way: no
+ * multi-keyframe WAAPI interpolation, every frame's value computed here and
+ * written directly — this time into a CSSOM rule, since pseudo-elements
+ * have no `.style` of their own to write to.
  *
- * 2. A solid *outgoing*-colored div that starts fully covering the screen
- *    and *shrinks* its clip-path circle down to 0 does NOT read as "reveal
- *    grows from the click point." clip-path: circle(R) defines the VISIBLE
- *    region, so shrinking R uncovers the far edges/corners first — the last
- *    surviving sliver of the old color sits right at the click point. The
- *    correct construction is a solid *incoming*-colored div that starts as
- *    a 0-radius circle at the click point and grows to cover the viewport,
- *    with the real page swapping underneath only once fully covered.
+ * Rapid re-toggling doesn't queue or get dropped: each call cancels
+ * whatever's currently mid-flight (skips the native transition, kills its
+ * rAF loop, tears down its injected <style>) and starts the new one
+ * immediately, rather than blocking input until the previous one finishes.
+ * A generation counter guards against a stale, cancelled run's async
+ * continuations (transition.ready/.finished, the next rAF tick) touching
+ * the DOM after a newer run has superseded it.
  *
- * 3. Even with (1) and (2) fixed — a plain div, correct color, correct
- *    growing direction, and an on-screen marker confirming (x, y) landed
- *    exactly on the button — the animated circle still visibly grew from
- *    the center of the screen instead. The one thing in common between that
- *    failure and the pseudo-element failure in (1) is the browser's own
- *    interpolation of the circle() shape function between two keyframes;
- *    both times a mathematically correct, marker-verified coordinate went
- *    in and something other than that coordinate came out on screen. So
- *    this drives clip-path manually with requestAnimationFrame instead of
- *    handing two circle() keyframes to the Web Animations API and trusting
- *    its interpolation — every frame's exact string is computed here, in
- *    plain arithmetic, and written directly to style.clipPath.
+ * Falls back to a solid-color overlay wipe (no live dual-theme reveal, just
+ * a color sweep) on browsers without View Transitions support, or if the
+ * native attempt throws.
  */
 
 export type Origin = { x: number; y: number };
 
-let transitionLocked = false;
-const LOCK_MS = 800;
-const DURATION_MS = 750;
+const DURATION_MS = 1100;
 
-function withTransitionLock(run: () => void) {
-  if (transitionLocked) return;
-  transitionLocked = true;
-  run();
-  window.setTimeout(() => {
-    transitionLocked = false;
-  }, LOCK_MS);
-}
+let currentGeneration = 0;
+let cancelCurrent: (() => void) | null = null;
 
 export function runRadialThemeTransition(origin: Origin, applyTheme: () => void) {
-  withTransitionLock(() => runRadialThemeTransitionInner(origin, applyTheme));
+  cancelCurrent?.();
+  cancelCurrent = null;
+  runRadialThemeTransitionInner(origin, applyTheme);
 }
 
-// Slow, slow, medium, fast, FAST — a steep ease-in. Quintic rather than a
-// cubic-bezier because we're evaluating this ourselves every frame; a plain
-// power curve is trivial arithmetic and reads the same "barely moves, then
-// rockets" way the requested easing curve did.
-function easeInQuint(t: number): number {
-  return t * t * t * t * t;
-}
-
-function runRadialThemeTransitionInner(origin: Origin, applyTheme: () => void) {
-  // Ensure origin coordinates are valid numbers and fallback to top-right nav position if invalid
+function resolveOrigin(origin: Origin): Origin {
   const x = typeof origin.x === "number" && !isNaN(origin.x) ? origin.x : window.innerWidth - 80;
   const y = typeof origin.y === "number" && !isNaN(origin.y) ? origin.y : 30;
+  return { x, y };
+}
 
-  // Calculate distance to the furthest corner of the viewport from the button
-  const maxRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
+function maxRadiusFrom(origin: Origin): number {
+  return Math.hypot(
+    Math.max(origin.x, window.innerWidth - origin.x),
+    Math.max(origin.y, window.innerHeight - origin.y)
   );
+}
 
-  if (typeof requestAnimationFrame !== "function") {
-    applyTheme();
+// A pure ease-in (t^5) puts ~97% of the visible growth in the animation's
+// final quarter — invisible for most of the duration, then the whole screen
+// flips at once, which reads as a snap rather than a reveal now that real
+// content is what's sweeping past instead of a flat color. Ease-in-out
+// spreads the motion across the full duration instead.
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+type ViewTransition = {
+  ready: Promise<void>;
+  finished: Promise<void>;
+  skipTransition?: () => void;
+};
+
+type DocumentWithViewTransitions = Document & {
+  startViewTransition?: (callback: () => void) => ViewTransition;
+};
+
+function runRadialThemeTransitionInner(originInput: Origin, applyTheme: () => void) {
+  const doc = document as DocumentWithViewTransitions;
+  const origin = resolveOrigin(originInput);
+  const generation = ++currentGeneration;
+
+  if (typeof doc.startViewTransition !== "function" || typeof requestAnimationFrame !== "function") {
+    runSolidOverlayFallback(origin, applyTheme, generation);
     return;
   }
+
+  try {
+    runGrowingHoleTransition(doc, origin, applyTheme, generation);
+  } catch {
+    runSolidOverlayFallback(origin, applyTheme, generation);
+  }
+}
+
+// Width of the blend band straddling the reveal radius — a hard two-stop
+// gradient cuts a razor-sharp ring that reads as a visible seam between old
+// and new; feathering it this wide turns that seam into a soft gradient
+// zone so the boundary itself disappears into the reveal.
+const FEATHER_PX = 64;
+
+function maskAt(origin: Origin, radius: number): string {
+  const inner = Math.max(0, radius - FEATHER_PX);
+  const outer = radius + FEATHER_PX;
+  return `radial-gradient(circle at ${origin.x}px ${origin.y}px, transparent ${inner}px, black ${outer}px)`;
+}
+
+function runGrowingHoleTransition(
+  doc: DocumentWithViewTransitions,
+  origin: Origin,
+  applyTheme: () => void,
+  generation: number
+) {
+  const maxRadius = maxRadiusFrom(origin);
+
+  // Kill the default cross-fade/resize-morph on all four view-transition
+  // pseudos (it would compete with our own mask), hide ::new(root) — the
+  // real live DOM already shows the new theme underneath, so the browser's
+  // own "new" snapshot layer is redundant — and start ::old(root) with a
+  // zero-radius hole (fully opaque, nothing revealed yet) so there's no
+  // flash of the new theme before the animation begins.
+  const style = document.createElement("style");
+  style.textContent = `
+    ::view-transition-group(root),
+    ::view-transition-image-pair(root),
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none !important;
+      mix-blend-mode: normal !important;
+    }
+    ::view-transition-new(root) {
+      display: none !important;
+    }
+    ::view-transition-old(root) {
+      mask-image: ${maskAt(origin, 0)};
+      -webkit-mask-image: ${maskAt(origin, 0)};
+    }
+  `;
+  document.head.appendChild(style);
+
+  const maskRule = Array.from(style.sheet?.cssRules ?? []).find(
+    (rule): rule is CSSStyleRule =>
+      rule instanceof CSSStyleRule && rule.selectorText === "::view-transition-old(root)"
+  );
+
+  if (!maskRule) {
+    // Couldn't get a handle on the rule to drive per-frame — bail out to
+    // the proven fallback rather than run a transition nobody can animate.
+    style.remove();
+    runSolidOverlayFallback(origin, applyTheme, generation);
+    return;
+  }
+
+  const isCurrent = () => generation === currentGeneration;
+
+  // A superseded run tears down quietly — no "end" event, no removing the
+  // color-fade class — because a newer run is about to (or already did)
+  // set that state up fresh for itself; firing them here would just be a
+  // one-frame flicker sandwiched between two "start" events.
+  cancelCurrent = () => {
+    style.remove();
+    try {
+      transition.skipTransition?.();
+    } catch {
+      // Already finished/skipped — nothing to do.
+    }
+  };
+
+  // Lets each component's own background/text/border color transition
+  // (globals.css) fade toward the new theme instead of snapping the instant
+  // classList flips, so a region can still be mid-fade when the mask
+  // uncovers it rather than already fully baked to its end color.
+  document.documentElement.classList.add("theme-transitioning");
+
+  const transition = doc.startViewTransition!(() => {
+    applyTheme();
+  });
+
+  const cleanup = () => {
+    if (!isCurrent()) return;
+    style.remove();
+    document.documentElement.classList.remove("theme-transitioning");
+    cancelCurrent = null;
+  };
+
+  transition.ready
+    .then(() => {
+      if (!isCurrent()) return;
+      const startTime = performance.now();
+      const tick = (now: number) => {
+        if (!isCurrent()) return;
+        const t = Math.min(1, (now - startTime) / DURATION_MS);
+        const radius = maxRadius * easeInOutCubic(t);
+        const mask = maskAt(origin, radius);
+        maskRule.style.maskImage = mask;
+        maskRule.style.webkitMaskImage = mask;
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        }
+      };
+      requestAnimationFrame(tick);
+    })
+    .catch(() => {
+      cleanup();
+    });
+
+  transition.finished.then(cleanup).catch(cleanup);
+}
+
+function runSolidOverlayFallback(
+  origin: Origin,
+  applyTheme: () => void,
+  generation: number
+) {
+  const maxRadius = maxRadiusFrom(origin);
+  const root = document.documentElement;
+  const isCurrent = () => generation === currentGeneration;
 
   // Peek at the *incoming* theme's background color without visibly
   // applying it: flip the class, read the computed value, flip back.
   // Nothing yields to the event loop between the two toggles, so no paint
   // happens in between — this is just a synchronous style recalc, invisible
   // to the viewer.
-  const root = document.documentElement;
   root.classList.toggle("light");
   const incomingBackground =
     getComputedStyle(root).getPropertyValue("--background").trim() || "#08080A";
   root.classList.toggle("light");
 
-  window.dispatchEvent(new CustomEvent("nx:theme-transition-start"));
-
   const overlay = document.createElement("div");
-  overlay.style.cssText = `position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:${incomingBackground};clip-path:circle(0px at ${x}px ${y}px);`;
+  overlay.style.cssText = `position:fixed;inset:0;z-index:2147483647;pointer-events:none;background:${incomingBackground};clip-path:circle(0px at ${origin.x}px ${origin.y}px);`;
+
+  let applied = false;
+  // Cancelling mid-flight means this click's theme swap — deferred to the
+  // end of its own animation, unlike the native path where it happens
+  // up front — may never have run yet. Apply it now so state stays correct
+  // for whatever toggle comes next, then get out of the way silently.
+  cancelCurrent = () => {
+    if (!applied) applyTheme();
+    overlay.remove();
+  };
+
+  root.classList.add("theme-transitioning");
   document.body.appendChild(overlay);
 
   const startTime = performance.now();
 
   const finish = () => {
-    // The overlay now fully covers the viewport in the incoming color —
-    // swap the real page underneath (invisible, hidden by the overlay),
-    // then drop the overlay. Same background color on both sides, so
-    // there's nothing to flash between the two.
+    if (!isCurrent()) return;
+    applied = true;
     applyTheme();
     overlay.remove();
-    window.dispatchEvent(new CustomEvent("nx:theme-transition-end"));
+    root.classList.remove("theme-transitioning");
+    cancelCurrent = null;
   };
 
   const tick = (now: number) => {
+    if (!isCurrent()) return;
     const t = Math.min(1, (now - startTime) / DURATION_MS);
-    const radius = maxRadius * easeInQuint(t);
-    overlay.style.clipPath = `circle(${radius}px at ${x}px ${y}px)`;
+    const radius = maxRadius * easeInOutCubic(t);
+    overlay.style.clipPath = `circle(${radius}px at ${origin.x}px ${origin.y}px)`;
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {

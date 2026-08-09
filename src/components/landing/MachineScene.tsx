@@ -157,13 +157,22 @@ const SPARK_SETTLE_S = 0.65;
 // Ceiling on the swing angle toward the machine for safety margin
 const MAX_SWING_TOWARD_MACHINE = 1.15;
 
-function SwingingLamp({ heroX }: { heroX: number }) {
+function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boolean }) {
   const isLight = useIsLightMode();
   const lampRef = useRef<THREE.Group>(null);
   const lastScrollY = useRef(0);
   const swingAngle = useRef(0);
   const swingVelocity = useRef(0);
   const initialLoadTime = useRef<number | null>(null);
+  // useFrame below is what normally consumes and decays swingVelocity every
+  // frame; while `paused` stops that loop (theme-toggle reveal, see
+  // Hero.tsx), this ref lets the scroll listener know to hold off adding
+  // more to it instead of letting it accumulate untouched and then dump
+  // into the lamp all at once — a visible jump — the instant frames resume.
+  const pausedRef = useRef(paused);
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   const bulbMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
   const sparkRef = useRef<THREE.Mesh>(null);
@@ -249,7 +258,10 @@ function SwingingLamp({ heroX }: { heroX: number }) {
     const handleScroll = () => {
       const currentY = window.scrollY;
       const delta = currentY - lastScrollY.current;
-      if (Math.abs(delta) > 1) {
+      // Track position through a pause either way, so there's no leftover
+      // delta to react to once frames resume — just skip turning it into
+      // swing velocity nothing is currently around to decay.
+      if (Math.abs(delta) > 1 && !pausedRef.current) {
         // Fluid, expressive pendulum reaction to scroll velocity
         const impulse = Math.min(Math.abs(delta) * 0.0008, 0.045) * Math.sign(delta);
         swingVelocity.current = THREE.MathUtils.clamp(
@@ -746,7 +758,7 @@ export default function MachineScene({
         />
 
         {/* Top-suspended swinging industrial bell lamp */}
-        <SwingingLamp heroX={heroX} />
+        <SwingingLamp heroX={heroX} paused={paused} />
 
         {/* Industrial ground uplight spotlight facing machine from bottom leftish center */}
         <FloorSpotlight heroX={heroX} />
