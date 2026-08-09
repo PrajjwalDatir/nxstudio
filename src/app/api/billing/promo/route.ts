@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveAccessState } from "@/lib/billing";
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
     if (upsertErr) {
       return NextResponse.json({ error: `DB error: ${upsertErr.message}` }, { status: 500 });
     }
+    revalidateTag(`subscription:${user.id}`, { expire: 0 });
 
     const state = deriveAccessState(
       { provider: "promo", current_period_end: newEnd },

@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { ReferralClaim } from "@/components/referral/ReferralClaim";
 import { MascotNudge } from "@/components/shell/MascotNudge";
-import { NxLogo } from "@/components/icons";
+import { ShellLoader } from "@/components/shell/ShellLoader";
 
 /**
  * Gates the app shell on store hydration. The server (and the first client
@@ -27,11 +27,7 @@ export function AppShell({
   const { isHydrated } = useWorkspace();
 
   if (!isHydrated) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <NxLogo className="h-8 w-8 text-primary/40" />
-      </div>
-    );
+    return <ShellLoader />;
   }
 
   return (
