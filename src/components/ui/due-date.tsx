@@ -107,7 +107,7 @@ export function DueDatePicker({
               {(date) => (
                 <CalendarCell
                   date={date}
-                  className="mx-auto flex h-8 w-8 cursor-default items-center justify-center rounded-lg text-sm outline-none transition-colors data-[outside-month]:text-muted-foreground/40 data-[hovered]:bg-secondary data-[selected]:bg-primary data-[selected]:font-semibold data-[selected]:text-primary-foreground data-[today]:font-semibold data-[today]:text-primary data-[selected]:data-[today]:text-primary-foreground data-[focus-visible]:ring-1 data-[focus-visible]:ring-ring data-[disabled]:opacity-40"
+                  className="mx-auto flex h-8 w-8 cursor-default items-center justify-center rounded-lg text-sm outline-none transition-colors data-[outside-month]:text-muted-foreground/40 data-[hovered]:bg-secondary data-[selected]:bg-primary data-[selected]:font-semibold data-[selected]:text-primary-foreground data-[today]:font-semibold data-[today]:text-accent-foreground data-[selected]:data-[today]:text-primary-foreground data-[focus-visible]:ring-1 data-[focus-visible]:ring-ring data-[disabled]:opacity-40"
                 />
               )}
             </CalendarGridBody>

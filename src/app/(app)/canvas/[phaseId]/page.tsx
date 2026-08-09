@@ -19,7 +19,7 @@ export default function PhasePage() {
     return (
       <div className="mx-auto max-w-3xl px-6 py-16 text-center">
         <h1 className="text-2xl font-bold">Phase not found</h1>
-        <Link href="/canvas" className="mt-4 inline-block text-primary hover:underline">
+        <Link href="/canvas" className="mt-4 inline-block text-accent-foreground hover:underline">
           ← Back to Canvas
         </Link>
       </div>

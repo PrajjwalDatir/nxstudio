@@ -70,7 +70,7 @@ export function AdminPromptsPanel() {
     <section className="mt-8 rounded-xl border border-primary/30 bg-card p-6 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-accent-foreground">
             <LockIcon className="h-4 w-4" />
           </div>
           <div>
@@ -80,7 +80,7 @@ export function AdminPromptsPanel() {
             </p>
           </div>
         </div>
-        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-primary uppercase">
+        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-foreground uppercase">
           Admin Only
         </span>
       </div>
@@ -132,7 +132,7 @@ export function AdminPromptsPanel() {
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">{t.description}</p>
                   {t.submitted_by && (
-                    <p className="mt-1 font-mono text-[11px] text-primary/80">
+                    <p className="mt-1 font-mono text-[11px] text-accent-foreground/80">
                       Submitted by: {t.submitted_by}
                     </p>
                   )}

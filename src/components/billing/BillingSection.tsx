@@ -52,10 +52,10 @@ export function BillingSection() {
     <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ZapIcon className="h-5 w-5 text-primary" />
+          <ZapIcon className="h-5 w-5 text-accent-foreground" />
           <h2 className="font-semibold text-lg">Subscription Tier</h2>
         </div>
-        <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-primary">
+        <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-accent-foreground">
           {tierName}
         </span>
       </div>

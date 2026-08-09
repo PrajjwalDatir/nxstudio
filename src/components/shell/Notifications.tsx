@@ -52,7 +52,7 @@ export function Notifications() {
         {status === "disconnected" ? (
           <EmptyState>
             Connect GitHub in{" "}
-            <Link href="/settings" className="text-primary hover:underline">
+            <Link href="/settings" className="text-accent-foreground hover:underline">
               Settings
             </Link>{" "}
             to see activity.
@@ -60,7 +60,7 @@ export function Notifications() {
         ) : status === "no-repo" ? (
           <EmptyState>
             Link a repository in{" "}
-            <Link href="/settings" className="text-primary hover:underline">
+            <Link href="/settings" className="text-accent-foreground hover:underline">
               Settings
             </Link>{" "}
             to see activity.
@@ -81,7 +81,7 @@ export function Notifications() {
                   >
                     <CircleIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">{i.title}</span>
+                      <span className="truncate text-[13px] font-medium text-foreground group-hover:text-accent-foreground transition-colors">{i.title}</span>
                       <span className="text-[11px] text-muted-foreground">#{i.number} — Action required</span>
                     </div>
                   </a>
@@ -108,7 +108,7 @@ export function Notifications() {
               href={`https://github.com/${result.repo}`} 
               target="_blank" 
               rel="noreferrer"
-              className="text-xs font-medium text-primary hover:underline flex items-center gap-1.5"
+              className="text-xs font-medium text-accent-foreground hover:underline flex items-center gap-1.5"
             >
               View Repository <ExternalLinkIcon className="h-3 w-3" />
             </a>

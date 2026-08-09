@@ -80,7 +80,7 @@ export function ModeToolbar() {
             aria-pressed={active}
             className={cn(
               "relative flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium transition-colors cursor-pointer pointer-events-auto z-10",
-              active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              active ? "text-accent-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {active && (

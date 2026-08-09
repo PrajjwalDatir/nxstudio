@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 type Status = "in-progress" | "ready" | "complete";
 
 const STATUS_STYLES: Record<Status, string> = {
-  "in-progress": "bg-primary/15 text-primary",
+  "in-progress": "bg-primary/15 text-accent-foreground",
   ready: "bg-emerald-500/15 text-emerald-400",
   complete: "bg-emerald-500/15 text-emerald-400",
 };

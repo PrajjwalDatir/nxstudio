@@ -39,7 +39,7 @@ export default function TasksPage() {
               <div className="mb-2 flex items-center justify-between">
                 <Link
                   href={`/canvas/${phase.id}`}
-                  className="text-sm font-semibold hover:text-primary"
+                  className="text-sm font-semibold hover:text-accent-foreground"
                 >
                   {phase.label}
                 </Link>
@@ -62,7 +62,7 @@ export default function TasksPage() {
                         <span
                           className={cn(
                             "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-xs",
-                            done ? "border-primary bg-primary/15 text-primary" : "border-border"
+                            done ? "border-primary bg-primary/15 text-accent-foreground" : "border-border"
                           )}
                         >
                           {done && <CheckIcon className="h-3 w-3" />}
@@ -83,7 +83,7 @@ export default function TasksPage() {
                     className={cn(
                       "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-xs",
                       progress.done >= progress.total && progress.total > 0
-                        ? "border-primary bg-primary/15 text-primary"
+                        ? "border-primary bg-primary/15 text-accent-foreground"
                         : "border-border"
                     )}
                   >

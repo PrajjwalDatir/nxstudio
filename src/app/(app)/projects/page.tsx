@@ -133,12 +133,12 @@ export default function ProjectsPage() {
     return (
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-start justify-between">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-primary">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
             <FolderIcon className="h-4 w-4" />
           </div>
           <div className="flex items-center gap-1.5">
             {isActive && (
-              <span className="flex items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <span className="flex items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-accent-foreground">
                 <CheckIcon className="h-3 w-3" /> ACTIVE
               </span>
             )}
@@ -250,7 +250,7 @@ export default function ProjectsPage() {
             Free accounts are limited to {limit} product.{" "}
             <span className="font-medium text-foreground">Upgrade to build multi-product workspaces.</span>
           </span>
-          <span className="shrink-0 font-semibold text-primary">Upgrade →</span>
+          <span className="shrink-0 font-semibold text-accent-foreground">Upgrade →</span>
         </button>
       )}
 
@@ -326,7 +326,7 @@ export default function ProjectsPage() {
                     setRenaming(c.id);
                     setRenameValue(c.name);
                   }}
-                  className="text-lg font-semibold tracking-tight hover:text-primary"
+                  className="text-lg font-semibold tracking-tight hover:text-accent-foreground"
                   title="Rename collection"
                 >
                   {c.name}
