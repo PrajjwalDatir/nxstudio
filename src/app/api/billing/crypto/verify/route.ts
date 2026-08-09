@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyPayment } from "@/lib/solana/client";
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
     if (updateErr) {
       return NextResponse.json({ error: `DB error: ${updateErr.message}` }, { status: 500 });
     }
+    revalidateTag(`subscription:${user.id}`, { expire: 0 });
 
     // Convert any pending referral now that this user is premium. Best-effort:
     // a referral hiccup must never fail a verified payment.

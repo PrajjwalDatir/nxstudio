@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/razorpay/client";
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  const { error } = await admin
+  const { data, error } = await admin
     .from("subscriptions")
     .update({
       status: entity.status ?? "created",
@@ -48,12 +49,15 @@ export async function POST(request: Request) {
       current_start: entity.current_start ? new Date(entity.current_start * 1000).toISOString() : null,
       current_end: entity.current_end ? new Date(entity.current_end * 1000).toISOString() : null,
     })
-    .eq("razorpay_subscription_id", entity.id);
+    .eq("razorpay_subscription_id", entity.id)
+    .select("user_id")
+    .maybeSingle();
 
   if (error) {
     // 500 → Razorpay retries with backoff.
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  if (data?.user_id) revalidateTag(`subscription:${data.user_id}`, { expire: 0 });
 
   return NextResponse.json({ ok: true });
 }
