@@ -301,6 +301,7 @@ export function StudioShowcase() {
                   <button
                     onClick={() => setSeed(Math.floor(10000 + Math.random() * 89999))}
                     title="Randomize seed"
+                    aria-label="Randomize seed"
                     className="flex h-8 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <DiscIcon className="h-3.5 w-3.5" />
