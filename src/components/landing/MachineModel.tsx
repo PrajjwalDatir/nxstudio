@@ -23,6 +23,9 @@ import { Html } from "@react-three/drei";
 import gsap from "gsap";
 import * as THREE from "three";
 import { MachineBubble } from "@/components/ui/MachineBubble";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
+
+export { usePrefersReducedMotion };
 
 /**
  * Per-frame animation values the "how it works" stage feeds the unit. These are
@@ -161,18 +164,6 @@ export function useIsLightMode() {
     return () => observer.disconnect();
   }, []);
   return isLight;
-}
-
-export function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const on = () => setReduce(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
 }
 
 /** Outer plate shell — dielectric ceramic/plastic with clearcoat gloss. */
