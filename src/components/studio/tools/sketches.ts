@@ -264,13 +264,27 @@ const noise: SketchFactory = () => {
     draw(p, params) {
       const step = 24;
       const t = p.frameCount * 0.01 * params.speed;
+
       const from = p.color(params.background);
       const to = p.color(params.primary);
+
+      const r1 = p.red(from);
+      const g1 = p.green(from);
+      const b1 = p.blue(from);
+
+      const r2 = p.red(to);
+      const g2 = p.green(to);
+      const b2 = p.blue(to);
+
       p.noStroke();
       for (let y = 0; y < p.height; y += step) {
         for (let x = 0; x < p.width; x += step) {
           const n = p.noise(x * 0.003, y * 0.003, t);
-          p.fill(p.lerpColor(from, to, n));
+          p.fill(
+            r1 + (r2 - r1) * n,
+            g1 + (g2 - g1) * n,
+            b1 + (b2 - b1) * n
+          );
           p.rect(x, y, step, step);
         }
       }
