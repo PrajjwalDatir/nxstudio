@@ -36,21 +36,6 @@ const SECTION_TRIGGERS: [string, DialogueTrigger][] = [
 export function Hero() {
   const isMobile = useIsMobile();
   const { ref: stageRef, inView: stageInView } = useInView<HTMLDivElement>();
-  // Paused for the ~550ms the theme-toggle circle reveal runs — see
-  // theme-transition.ts. The view-transition snapshot/compositing work and
-  // this scene's own render loop otherwise compete for the same frames,
-  // which can make an otherwise-smooth clip-path animation visibly stutter.
-  const [transitionPausing, setTransitionPausing] = useState(false);
-  useEffect(() => {
-    const onStart = () => setTransitionPausing(true);
-    const onEnd = () => setTransitionPausing(false);
-    window.addEventListener("nx:theme-transition-start", onStart);
-    window.addEventListener("nx:theme-transition-end", onEnd);
-    return () => {
-      window.removeEventListener("nx:theme-transition-start", onStart);
-      window.removeEventListener("nx:theme-transition-end", onEnd);
-    };
-  }, []);
   // Deterministic first line: pickLine() is random, and calling it during
   // render would make the server and client disagree.
   const [line, setLine] = useState<string>(FIRST_LINE);
@@ -133,7 +118,7 @@ export function Hero() {
         <MachineScene
           line={isMobile ? "" : line}
           onPoke={() => say("poke")}
-          paused={!stageInView || transitionPausing}
+          paused={!stageInView}
         />
       )}
     </div>

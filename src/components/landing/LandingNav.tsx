@@ -22,10 +22,21 @@ export function ThemeToggle() {
     () => (typeof document !== "undefined" && document.documentElement.classList.contains("light") ? "light" : "dark")
   );
   const btnRef = useRef<HTMLButtonElement>(null);
+  // Tracks the theme rapid clicks are resolving toward, updated eagerly and
+  // synchronously on every click. The classList flip that actually reflects
+  // a click's outcome is deferred inside the view-transition callback (the
+  // API owns when that runs), so under fast re-toggling a click can land
+  // before the previous one's classList/state update has landed — reading
+  // either of those as "current" would make several rapid clicks see the
+  // same stale value and all resolve to the same "next," collapsing what
+  // should be alternating toggles. This ref is the one thing that always
+  // advances immediately, so it's the only correct source for "next."
+  const pendingThemeRef = useRef(theme);
 
   const toggleTheme = (e?: React.MouseEvent<HTMLButtonElement>) => {
-    const next = theme === "dark" ? "light" : "dark";
     const root = document.documentElement;
+    const next = pendingThemeRef.current === "dark" ? "light" : "dark";
+    pendingThemeRef.current = next;
 
     const applyThemeClass = () => {
       setTheme(next);

@@ -151,6 +151,16 @@ html.light .hero-glow::after {
   background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1px, transparent 1px);
 }
 
+/* Scoped to the ~900ms the theme-toggle radial reveal runs (theme-transition.ts
+ * toggles this class for that window). The mask reveal controls *where* the
+ * new theme becomes visible; this controls *how* each component's own colors
+ * get there, so a newly-uncovered area can still be mid-fade instead of
+ * already fully baked to its end color. */
+html.theme-transitioning,
+html.theme-transitioning * {
+  transition: background-color 0.9s ease, color 0.9s ease, border-color 0.9s ease, fill 0.9s ease, box-shadow 0.9s ease !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
