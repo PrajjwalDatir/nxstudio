@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Canvas } from "@react-three/fiber";
 import { useWorkspace } from "@/lib/workspace-store";
 import { PHASES, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
-import { Machine, usePrefersReducedMotion } from "@/components/landing/MachineModel";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
+import { resolveAppSection, type AppSection } from "@/lib/app-context";
+import { trackMascotTip, trackMascotAction, trackFieldEngagement, type MascotTipKind } from "@/lib/analytics";
 import { ArrowRightIcon, XIcon } from "@/components/icons";
 
 const NEXT_STEP_COPY: Record<string, string> = {
@@ -97,6 +98,23 @@ const PAGE_CONTEXT: Record<string, { title: string; desc: string; tips: string[]
   }
 };
 
+/**
+ * Resolves what the assistant should say about the current section — same
+ * key the Topbar breadcrumb uses (see resolveAppSection), so on a specific
+ * canvas phase it names and describes that phase directly instead of always
+ * falling back to the generic "Canvas" blurb.
+ */
+function pageContextFor(section: AppSection) {
+  if (section.phaseId) {
+    return {
+      title: section.label,
+      desc: section.description ?? PAGE_CONTEXT["/canvas"].desc,
+      tips: PAGE_CONTEXT["/canvas"].tips,
+    };
+  }
+  return PAGE_CONTEXT[section.key] ?? null;
+}
+
 // Companion tips — shown once, matched to the field's aria-label when it has
 // one (see IdeaPhase's textareas), otherwise a generic pick.
 const FIELD_TIPS: Record<string, string[]> = {
@@ -131,6 +149,13 @@ type Pose = "dormant" | "briefed" | "ready" | "curious" | "excited" | "proud";
 // cluster (hips/legs/feet) is rotated as one rigid piece below the waist
 // seam, so every pixel is the genuine rendered character, just re-posed.
 type WalkFrame = "a" | "mid" | "b";
+
+const ALL_POSES: Pose[] = ["dormant", "briefed", "ready", "curious", "excited", "proud"];
+const ALL_WALK_FRAMES: WalkFrame[] = ["a", "mid", "b"];
+
+function spriteSrc(pose: Pose, walking: boolean, frame: WalkFrame): string {
+  return walking ? `/mascot/walk/${pose}-${frame}.png` : `/mascot/${pose}.png`;
+}
 
 // Cycled while idly wandering, so it isn't stuck reading as sad/sleepy the
 // whole time — a fresh one is picked each time it picks a new waypoint.
@@ -237,6 +262,7 @@ function collectPlatforms(excludeEl: HTMLElement | null): Platform[] {
 export function MascotNudge() {
   const pathname = usePathname();
   const { data } = useWorkspace();
+  const section = resolveAppSection(pathname ?? "", data.customStages);
   const [open, setOpen] = useState(false);
   const [bubble, setBubble] = useState<Anchor>({ above: true, right: false });
   const [pose, setPose] = useState<Pose>("dormant");
@@ -293,11 +319,12 @@ export function MascotNudge() {
   const chatterTimer = useRef(360); // ~6s before the first one
   const chatterHold = useRef(0);
 
-  // Keep pathname in ref for the animation loop
-  const pathnameRef = useRef(pathname);
+  // Keep the resolved section in a ref for the animation loop, which reads
+  // it on every tick and would otherwise capture a stale value.
+  const sectionRef = useRef(section);
   useEffect(() => {
-    pathnameRef.current = pathname;
-  }, [pathname]);
+    sectionRef.current = section;
+  }, [section]);
 
   useEffect(() => {
     openRef.current = open;
@@ -320,6 +347,16 @@ export function MascotNudge() {
     wrapRef.current?.style.setProperty("transform", `translate3d(${x}px, ${y}px, 0)`);
   }, []);
 
+  // Warm the browser cache for every pose/frame up front (24 small PNGs,
+  // ~700KB total) so switching sprites mid-animation never blocks on a
+  // network fetch. Static images only — no GPU/WebGL context involved.
+  useEffect(() => {
+    for (const p of ALL_POSES) {
+      new Image().src = `/mascot/${p}.png`;
+      for (const f of ALL_WALK_FRAMES) new Image().src = `/mascot/walk/${p}-${f}.png`;
+    }
+  }, []);
+
   // Speak up on its own the moment real progress happens — not on mount.
   useEffect(() => {
     const key = allDone ? "done" : (next?.id ?? null);
@@ -328,6 +365,7 @@ export function MascotNudge() {
       if (msg) {
         setAutoAnchor(anchorFor(pos.current));
         setAutoMsg(msg);
+        trackMascotTip("progress", sectionRef.current.label);
         if (autoMsgTimer.current) clearTimeout(autoMsgTimer.current);
         autoMsgTimer.current = setTimeout(() => setAutoMsg(null), 6500);
       }
@@ -471,6 +509,9 @@ export function MascotNudge() {
             const pool = (label && FIELD_TIPS[label]) || GENERIC_TIPS;
             setAutoAnchor(anchorFor(p));
             setAutoMsg(pool[Math.floor(Math.random() * pool.length)]);
+            trackMascotTip("field_tip", sectionRef.current.label);
+            // Field name only, never the value being typed.
+            trackFieldEngagement(label ?? "unlabeled field", sectionRef.current.label);
             if (autoMsgTimer.current) clearTimeout(autoMsgTimer.current);
             autoMsgTimer.current = setTimeout(() => setAutoMsg(null), 6000);
           }
@@ -487,16 +528,18 @@ export function MascotNudge() {
           chatterTimer.current -= 1;
           if (chatterTimer.current <= 0) {
             const n = nextRef.current;
-            const currentPath = pathnameRef.current;
-            const matchedPrefix = Object.keys(PAGE_CONTEXT).find(k => currentPath?.startsWith(k));
-            
+            const currentSection = sectionRef.current;
+            const ctx = pageContextFor(currentSection);
+
             const talkNext = n && Math.random() < 0.5;
-            
+
             let pool = EXPLORE_TIPS;
-            if (matchedPrefix && !talkNext) {
-              const ctxTips = PAGE_CONTEXT[matchedPrefix].tips;
-              if (Math.random() < 0.6) pool = ctxTips;
+            let kind: MascotTipKind = "explore_tip";
+            if (ctx && !talkNext && Math.random() < 0.6) {
+              pool = ctx.tips;
+              kind = "page_tip";
             }
+            if (talkNext) kind = "progress";
 
             const msg = talkNext
               ? (NEXT_STEP_COPY[n.id] ?? n.description)
@@ -504,6 +547,7 @@ export function MascotNudge() {
 
             setAutoAnchor(anchorFor(p));
             setAutoMsg(msg);
+            trackMascotTip(kind, currentSection.label);
             if (autoMsgTimer.current) clearTimeout(autoMsgTimer.current);
             autoMsgTimer.current = setTimeout(() => setAutoMsg(null), 5500);
             chatterHold.current = 140; // stands still for a beat while "talking"
@@ -714,6 +758,7 @@ export function MascotNudge() {
       setBubble(anchorFor(pos.current));
       setAutoMsg(null); // don't show both at once
     }
+    trackMascotAction(open ? "closed" : "opened", section.label);
     setOpen((v) => !v);
   };
 
@@ -727,8 +772,7 @@ export function MascotNudge() {
     ...(a.right ? { right: 24 } : { left: 24 }),
   });
 
-  const matchedContextKey = pathname ? Object.keys(PAGE_CONTEXT).find(k => pathname.startsWith(k)) : undefined;
-  const context = matchedContextKey ? PAGE_CONTEXT[matchedContextKey] : null;
+  const context = pageContextFor(section);
 
   return (
     <div
@@ -768,24 +812,16 @@ export function MascotNudge() {
           aria-label="nx — what's next"
           className="relative z-10 flex h-full w-full items-center justify-center drop-shadow-xl transition-transform hover:scale-105"
         >
-          <div className="absolute -inset-6 pointer-events-none">
-            <Canvas
-              dpr={[1, 1.5]}
-              camera={{ position: [0, 0.2, 5.5], fov: 36 }}
-              gl={{ alpha: true, antialias: true }}
-              style={{ background: "transparent" }}
-            >
-              <ambientLight intensity={1.4} />
-              <directionalLight position={[-2, 4, 4]} intensity={3.2} color="#F1F5F9" />
-              <pointLight position={[0.4, 1.2, 2.5]} intensity={14} color="#C4B5FD" />
-              <pointLight position={[0, 1.5, -2.5]} intensity={22} color="#8B5CF6" />
-              <Suspense fallback={null}>
-                <group position={[0, -0.8, 0]} scale={[0.75, 0.75, 0.75]}>
-                  <Machine reduce={reduce} pose={pose} />
-                </group>
-              </Suspense>
-            </Canvas>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- animated
+              sprite swapped by ref on every frame; next/image's loading
+              state would flicker on rapid src changes like this. */}
+          <img
+            ref={spriteRef}
+            src={spriteSrc(pose, isWalking, walkFrame)}
+            alt=""
+            draggable={false}
+            className="pointer-events-none h-full w-full select-none object-contain"
+          />
         </button>
 
         {/* Unprompted companion nudge — appears on its own when progress moves. */}
@@ -802,7 +838,7 @@ export function MascotNudge() {
           <div className="absolute z-10" style={bubbleStyle(bubble)}>
             <div className="rounded-2xl border border-border bg-card p-4 shadow-xl">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-semibold tracking-wide text-primary uppercase">
+                <span className="text-xs font-semibold tracking-wide text-accent-foreground uppercase">
                   {context ? context.title : (next ? "Next step" : "You're all set")}
                 </span>
                 <button
@@ -821,8 +857,11 @@ export function MascotNudge() {
               {next && (
                 <Link
                   href={`/canvas/${next.id}`}
-                  onClick={() => setOpen(false)}
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                  onClick={() => {
+                    trackMascotAction("continue_clicked", section.label);
+                    setOpen(false);
+                  }}
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent-foreground hover:underline"
                 >
                   Continue to {next.label}
                   <ArrowRightIcon className="h-3.5 w-3.5" />

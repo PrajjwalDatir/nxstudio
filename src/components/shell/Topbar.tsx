@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
-import { getPhase } from "@/lib/phases";
+import { resolveAppSection } from "@/lib/app-context";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { ProductNameCrumb } from "@/components/shell/ProductNameCrumb";
 import { Notifications } from "@/components/shell/Notifications";
@@ -23,22 +23,10 @@ export function Topbar() {
     { label: "Workspaces", href: "/canvas" },
   ];
 
-  const phaseMatch = pathname.match(/^\/canvas\/([^/]+)/);
-  const SECTION: Record<string, string> = {
-    "/studio": "Studio",
-    "/projects": "Projects",
-    "/team": "Team",
-    "/calendar": "Calendar",
-    "/tasks": "Tasks",
-    "/settings": "Settings",
-  };
-  if (phaseMatch) {
-    const phase = getPhase(phaseMatch[1]);
-    const custom = customStages.find((s) => s.id === phaseMatch[1]);
-    if (phase) crumbs.push({ label: phase.label });
-    else if (custom) crumbs.push({ label: custom.label });
-  } else if (SECTION[pathname]) {
-    crumbs.push({ label: SECTION[pathname] });
+  // Bare "/canvas" gets no extra crumb — "Workspaces" already implies it.
+  const section = resolveAppSection(pathname, customStages);
+  if (section.phaseId || section.key !== "/canvas") {
+    crumbs.push({ label: section.label });
   }
 
   return (
