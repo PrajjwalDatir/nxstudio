@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CursorMark, ClaudeMark, WindsurfMark, V0Mark } from "./brand-icons";
+import { CursorMark, ClaudeMark, WindsurfMark, V0Mark, ProductHuntMark } from "./brand-icons";
 
 const IDES = [
   {
@@ -109,6 +109,7 @@ export function IdeBadgeFlipper() {
 
 const LAUNCHES = [
   {
+    type: "image",
     name: "Launchstag",
     href: "https://launchstag.com",
     lightImg: "https://launchstag.com/badge-light.svg",
@@ -116,11 +117,12 @@ const LAUNCHES = [
     alt: "Featured on Launchstag",
   },
   {
+    type: "custom",
     name: "Product Hunt",
     href: "https://www.producthunt.com",
-    lightImg: "https://api.producthunt.com/widgets/embed-v1/featured.svg?post_id=nx-studio&theme=light",
-    darkImg: "https://api.producthunt.com/widgets/embed-v1/featured.svg?post_id=nx-studio&theme=neutral",
-    alt: "Featured on Product Hunt",
+    Icon: ProductHuntMark,
+    label: "Product Hunt",
+    accent: "text-[#FF6154]",
   },
 ];
 
@@ -152,29 +154,41 @@ export function LaunchBadgeFlipper() {
             mass: 0.9,
           }}
         >
-          <a
-            href={current.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 transition-transform hover:-translate-y-0.5"
-          >
-            {/* Light mode badge */}
-            <img
-              src={current.lightImg}
-              alt={current.alt}
-              width={198}
-              height={62}
-              className="h-9 w-auto dark:hidden"
-            />
-            {/* Dark mode badge */}
-            <img
-              src={current.darkImg}
-              alt={current.alt}
-              width={198}
-              height={62}
-              className="hidden h-9 w-auto dark:block"
-            />
-          </a>
+          {current.type === "image" ? (
+            <a
+              href={current.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 transition-transform hover:-translate-y-0.5"
+            >
+              {/* Light mode badge */}
+              <img
+                src={current.lightImg}
+                alt={current.alt}
+                width={198}
+                height={62}
+                className="h-9 w-auto dark:hidden"
+              />
+              {/* Dark mode badge */}
+              <img
+                src={current.darkImg}
+                alt={current.alt}
+                width={198}
+                height={62}
+                className="hidden h-9 w-auto dark:block"
+              />
+            </a>
+          ) : (
+            <a
+              href={current.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/40 px-3.5 py-1.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:-translate-y-0.5"
+            >
+              {current.Icon && <current.Icon className={`h-4 w-4 shrink-0 ${current.accent}`} />}
+              <span className="font-semibold text-foreground text-xs sm:text-sm">{current.name}</span>
+            </a>
+          )}
         </motion.div>
       </AnimatePresence>
     </div>

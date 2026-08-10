@@ -7,7 +7,7 @@ import { supabaseUrl, supabasePublishableKey } from "./config";
  * because inbound webhooks (e.g. Razorpay) have no user session — they are
  * authenticated by verifying an HMAC signature inside the handler instead.
  */
-const PUBLIC_PREFIXES = ["/login", "/auth", "/api/webhooks"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/webhooks", "/api/stats"];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
