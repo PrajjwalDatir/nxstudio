@@ -23,6 +23,7 @@ import {
   LayersIcon,
   LoaderIcon,
   PlusIcon,
+  XIcon,
 } from "@/components/icons";
 
 const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
@@ -264,8 +265,9 @@ export function BuildPhase() {
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
-                ✕
+                <XIcon className="h-3 w-3" />
               </button>
             )}
           </div>
@@ -419,8 +421,9 @@ export function BuildPhase() {
                 <button
                   onClick={() => setPreviewPrompt(null)}
                   className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  aria-label="Close preview"
                 >
-                  ✕
+                  <XIcon className="h-4 w-4" />
                 </button>
               </div>
 
