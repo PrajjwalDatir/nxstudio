@@ -106,3 +106,77 @@ export function IdeBadgeFlipper() {
     </div>
   );
 }
+
+const LAUNCHES = [
+  {
+    name: "Launchstag",
+    href: "https://launchstag.com",
+    lightImg: "https://launchstag.com/badge-light.svg",
+    darkImg: "https://launchstag.com/badge-dark.svg",
+    alt: "Featured on Launchstag",
+  },
+  {
+    name: "Product Hunt",
+    href: "https://www.producthunt.com",
+    lightImg: "https://api.producthunt.com/widgets/embed-v1/featured.svg?post_id=nx-studio&theme=light",
+    darkImg: "https://api.producthunt.com/widgets/embed-v1/featured.svg?post_id=nx-studio&theme=neutral",
+    alt: "Featured on Product Hunt",
+  },
+];
+
+export function LaunchBadgeFlipper() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % LAUNCHES.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const current = LAUNCHES[index];
+
+  return (
+    <div className="relative inline-flex h-10 items-center justify-center min-w-[150px] [perspective:1000px]">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={current.name}
+          initial={{ rotateX: -90, opacity: 0, scale: 0.95, y: 6 }}
+          animate={{ rotateX: 0, opacity: 1, scale: 1, y: 0 }}
+          exit={{ rotateX: 90, opacity: 0, scale: 0.95, y: -6 }}
+          transition={{
+            type: "spring",
+            stiffness: 200,
+            damping: 22,
+            mass: 0.9,
+          }}
+        >
+          <a
+            href={current.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 transition-transform hover:-translate-y-0.5"
+          >
+            {/* Light mode badge */}
+            <img
+              src={current.lightImg}
+              alt={current.alt}
+              width={198}
+              height={62}
+              className="h-9 w-auto dark:hidden"
+            />
+            {/* Dark mode badge */}
+            <img
+              src={current.darkImg}
+              alt={current.alt}
+              width={198}
+              height={62}
+              className="hidden h-9 w-auto dark:block"
+            />
+          </a>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
