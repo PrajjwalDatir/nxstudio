@@ -10,6 +10,7 @@ import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
 import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
 import { IdeFlipper } from "./IdeFlipper";
+import { MachineReadout } from "./MachineHud";
 
 // WebGL — client only, so the page still prerenders statically. No GLTF asset
 // to fetch (the machine is built from primitive geometry), so the delay
@@ -136,8 +137,11 @@ export function Hero() {
           copy column opts back in since it has real buttons and links. */}
       <div className="relative z-10 mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-6 sm:pt-10 md:pb-16 pointer-events-none">
         <div className="grid items-center gap-6 md:grid-cols-2 md:gap-8 lg:gap-12 pointer-events-none">
-          {/* Copy — left rail */}
-          <div className="relative z-10 text-center md:text-left max-w-2xl lg:max-w-3xl pointer-events-auto">
+          {/* Left column is a spacer on desktop — frames the 3D Machine on the left rail */}
+          <div className="hidden md:block md:col-start-1 md:order-1 md:h-[520px] pointer-events-none" aria-hidden />
+
+          {/* Copy — right rail on desktop, top on mobile */}
+          <div className="relative z-10 text-center md:text-left max-w-2xl lg:max-w-3xl pointer-events-auto md:col-start-2 md:order-2">
             {/* Top Proof Badges — Indie Hackers + Product Hunt */}
             <div
               style={{ animationDelay: "0.12s" }}
@@ -213,23 +217,53 @@ export function Hero() {
             </p>
 
           </div>
-
-          {/* Right column is a spacer on desktop — pointer-events-none so it
-              doesn't shadow the interactive canvas underneath it (the machine
-              and lamp live in a separate absolutely-positioned layer below). */}
-          <div className="hidden md:block md:h-[520px] pointer-events-none" aria-hidden />
         </div>
 
       </div>
 
-      <div className="relative z-0 -mt-8 h-[440px] w-full md:pointer-events-none md:absolute md:inset-0 md:z-0 md:mt-0 md:h-[620px] lg:h-[680px]">
-        {machine}
-      </div>
+      {/* 3D Machine — Internal Web App Card on Mobile, Full Stage on Desktop */}
+      {isMobile ? (
+        <div className="relative z-10 mx-auto mt-4 max-w-sm px-4">
+          <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card/80 shadow-2xl backdrop-blur-md">
+            {/* Web App Internal Header Bar */}
+            <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-3.5 py-2">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-foreground/80">
+                  Unit 01 · Agent Status
+                </span>
+              </div>
+              <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground/80">
+                INTERACTIVE
+              </span>
+            </div>
+
+            {/* Miniature Machine Viewport */}
+            <div className="relative h-[250px] w-full overflow-hidden bg-background/40">
+              {machine}
+            </div>
+
+            {/* Internal HUD Readout */}
+            {line && (
+              <div className="border-t border-border/50 bg-background/60 p-2.5 flex justify-center">
+                <MachineReadout line={line} />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="relative z-0 md:pointer-events-none md:absolute md:inset-0 md:z-0 md:h-[540px] lg:h-[580px]">
+          {machine}
+        </div>
+      )}
 
       {/* The evidence */}
       <div
         style={{ animationDelay: "0.95s" }}
-        className="reveal-rise relative z-10 mx-auto mt-4 max-w-5xl px-5 sm:mt-0 sm:px-6"
+        className="reveal-rise relative z-10 mx-auto mt-2 max-w-5xl px-5 sm:px-6 md:-mt-12 lg:-mt-16"
       >
         <CanvasPreview />
       </div>

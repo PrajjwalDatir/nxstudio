@@ -152,117 +152,44 @@ const BULB_REST_COLOR = new THREE.Color("#FFB700");
 const BULB_SPARK_COLOR = new THREE.Color("#FF3B1A");
 // Total arc of the post-snap flourish: a hot ignition spike, then a settle back to the resting glow.
 const SPARK_IGNITE_S = 0.1;
-const SPARK_SETTLE_S = 0.65;
-
+const SPARK_SETTLE_S = 0.6;
 // Ceiling on the swing angle toward the machine for safety margin
 const MAX_SWING_TOWARD_MACHINE = 1.15;
 
-function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boolean }) {
+function SwingingLamp({
+  heroX,
+  paused = false,
+  onPoke,
+}: {
+  heroX: number;
+  paused?: boolean;
+  onPoke?: () => void;
+}) {
   const isLight = useIsLightMode();
   const lampRef = useRef<THREE.Group>(null);
   const lastScrollY = useRef(0);
   const swingAngle = useRef(0);
   const swingVelocity = useRef(0);
   const initialLoadTime = useRef<number | null>(null);
-  // useFrame below is what normally consumes and decays swingVelocity every
-  // frame; while `paused` stops that loop (theme-toggle reveal, see
-  // Hero.tsx), this ref lets the scroll listener know to hold off adding
-  // more to it instead of letting it accumulate untouched and then dump
-  // into the lamp all at once — a visible jump — the instant frames resume.
+  const lastLampHitTime = useRef(0);
   const pausedRef = useRef(paused);
+
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
 
+  const sparkElapsed = useRef<number | null>(null);
   const bulbMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
   const sparkRef = useRef<THREE.Mesh>(null);
-  const sparkElapsed = useRef<number | null>(null);
   const originFrameCount = useRef(0);
 
-  // Grab-and-throw: while held, pointer movement drives swingAngle directly
-  // (the spring in useFrame stands down) and the drag's last velocity sample
-  // becomes the release throw — the pendulum then swings on exactly the same
-  // spring/damping it already uses for scroll impulses.
-  const isDragging = useRef(false);
-  const dragLastClientX = useRef(0);
-  const dragLastTime = useRef(0);
-  const dragAngularVelocity = useRef(0);
-
-  useEffect(() => {
-    const onPointerMove = (e: PointerEvent) => {
-      if (!isDragging.current) return;
-      const now = performance.now();
-      const dxPixels = e.clientX - dragLastClientX.current;
-      const dt = Math.max(1, now - dragLastTime.current) / 1000;
-      // A full-width swipe traces a wide, fluid, natural-feeling arc.
-      const angleDelta = (dxPixels / window.innerWidth) * 3.2;
-      swingAngle.current = THREE.MathUtils.clamp(swingAngle.current + angleDelta, -1.3, 1.3);
-      dragAngularVelocity.current = angleDelta / dt;
-      dragLastClientX.current = e.clientX;
-      dragLastTime.current = now;
-    };
-    // Shared release path for pointerup/pointercancel/unmount — every exit
-    // from a drag must restore the cursor and re-enable touch scrolling, or
-    // they stay stuck the next time this runs.
-    const endDrag = (throwVelocity: number) => {
-      if (!isDragging.current) return;
-      isDragging.current = false;
-      swingVelocity.current = throwVelocity;
-      document.body.style.cursor = "";
-      document.body.style.touchAction = "";
-    };
-    const onPointerUp = () => {
-      // Hand off to the spring with the last drag velocity as the throw.
-      endDrag(THREE.MathUtils.clamp(dragAngularVelocity.current * 0.22, -0.8, 0.8));
-    };
-    // A dropped drag (alt-tab mid-hold, a touch gesture the OS hijacks, a
-    // right-click opening the context menu) fires pointercancel instead of
-    // pointerup — without this, isDragging never clears, the lamp freezes
-    // (the physics step in useFrame stands down whenever it's true), and the
-    // cursor/touch-action stay stuck. Release with zero throw, since an
-    // aborted grab isn't a real throw.
-    const onPointerCancel = () => endDrag(0);
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerCancel);
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerCancel);
-      // Guard against unmounting mid-drag leaving the cursor/touch-action stuck.
-      endDrag(0);
-    };
-  }, []);
-
-  const handleLampPointerDown = (e: ThreeEvent<PointerEvent>) => {
-    // Only the primary pointer/button grabs the lamp — a right-click or a
-    // second touch point shouldn't start a drag (and for a right-click,
-    // stopPropagation doesn't stop the native context menu from opening,
-    // which would otherwise leave us mid-"drag" with no matching pointerup).
-    if (e.nativeEvent.button !== 0 || !e.nativeEvent.isPrimary) return;
-    e.stopPropagation();
-    isDragging.current = true;
-    swingVelocity.current = 0;
-    dragLastClientX.current = e.nativeEvent.clientX;
-    dragLastTime.current = performance.now();
-    dragAngularVelocity.current = 0;
-    document.body.style.cursor = "grabbing";
-    // Only suppressed for the drag's duration (restored on every release
-    // path above) — R3F doesn't set this itself, so without it a touch-drag
-    // on the lamp also pans the page underneath it.
-    document.body.style.touchAction = "none";
-  };
-
+  // Scroll listener: fluid pendulum sway in response to page scrolling
   useEffect(() => {
     lastScrollY.current = window.scrollY;
     const handleScroll = () => {
       const currentY = window.scrollY;
       const delta = currentY - lastScrollY.current;
-      // Track position through a pause either way, so there's no leftover
-      // delta to react to once frames resume — just skip turning it into
-      // swing velocity nothing is currently around to decay.
       if (Math.abs(delta) > 1 && !pausedRef.current) {
-        // Fluid, expressive pendulum reaction to scroll velocity
         const impulse = Math.min(Math.abs(delta) * 0.0008, 0.045) * Math.sign(delta);
         swingVelocity.current = THREE.MathUtils.clamp(
           swingVelocity.current + impulse,
@@ -277,8 +204,6 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // The bulb sparks and settles right after the theme snaps to dark —
-  // the payoff that makes the flash-cut feel finished, not abrupt.
   useEffect(() => {
     const onDarkSnap = () => {
       sparkElapsed.current = 0;
@@ -294,46 +219,26 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
     const elapsed = state.clock.getElapsedTime() - initialLoadTime.current;
 
     let loadImpulse = 0;
-    if (elapsed < 5.0 && !isDragging.current) {
-      // Wide, soft initial swing on page load
+    if (elapsed < 5.0) {
       loadImpulse = Math.sin(elapsed * 1.6) * Math.exp(-elapsed * 0.5) * 0.35;
     }
 
-    // Pendulum physics loop: low spring rigidity allows long, fluid, buttery-smooth arcs.
-    if (!isDragging.current) {
-      swingAngle.current += swingVelocity.current;
-      // High momentum retention (0.982) for graceful carry across frames
-      swingVelocity.current *= 0.982;
-      // Soft spring constant (0.024) reduces rigidity so swings flow far and wide
-      swingVelocity.current -= swingAngle.current * 0.024;
-    }
+    // Pendulum physics loop driven purely by scroll & load impulses
+    swingAngle.current += swingVelocity.current;
+    swingVelocity.current *= 0.982;
+    swingVelocity.current -= swingAngle.current * 0.024;
 
     let totalZ = swingAngle.current + loadImpulse;
-
-    // Soft elastic boundary pushback near max swing limit
-    const pivotX = heroX > 0 ? 0.9 : 0;
-    if (heroX - pivotX > 1 && totalZ > MAX_SWING_TOWARD_MACHINE) {
-      const excess = totalZ - MAX_SWING_TOWARD_MACHINE;
-      swingVelocity.current -= excess * 0.12;
-      totalZ = MAX_SWING_TOWARD_MACHINE + excess * 0.15;
-    }
-
-    // Held: no synthetic sway on top of the hand — the shade goes exactly
-    // where the cursor takes it. Free-swinging: subtle natural sway.
-    const totalX = isDragging.current
-      ? 0
-      : Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
+    const totalX = Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
 
     if (lampRef.current) {
-      // Buttery smooth visual follow rate
-      const followRate = isDragging.current ? 1 : 0.08;
-      lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, followRate);
-      lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, followRate);
+      lampRef.current.rotation.z = THREE.MathUtils.lerp(lampRef.current.rotation.z, totalZ, 0.08);
+      lampRef.current.rotation.x = THREE.MathUtils.lerp(lampRef.current.rotation.x, totalX, 0.08);
 
       // Project the shade's screen position every few frames for theme toggle
       originFrameCount.current += 1;
       if (originFrameCount.current % 4 === 0) {
-        const worldPos = lampRef.current.localToWorld(new THREE.Vector3(0, -3.4, 0));
+        const worldPos = lampRef.current.localToWorld(new THREE.Vector3(0, -3.6, 0));
         const ndc = worldPos.project(state.camera);
         const rect = state.gl.domElement.getBoundingClientRect();
         lampOrigin.x = rect.left + (ndc.x * 0.5 + 0.5) * rect.width;
@@ -345,7 +250,7 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
     if (sparkElapsed.current !== null) {
       sparkElapsed.current += delta;
       const t = sparkElapsed.current;
-      const restIntensity = isLight ? 6.0 : 18.0;
+      const restIntensity = isLight ? 7.0 : 20.0;
 
       if (bulbMaterialRef.current) {
         if (t < SPARK_IGNITE_S) {
@@ -385,38 +290,34 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
     }
   });
 
-  const wallPivot: [number, number, number] = [heroX > 0 ? 0.9 : 0, 4.3, -0.6];
+  // Placed further in background at Z = -2.5 behind the machine at Z = 0
+  const wallPivot: [number, number, number] = [
+    heroX < 0 ? heroX + 1.2 : heroX > 0 ? 0.9 : 0,
+    4.4,
+    -2.5,
+  ];
 
   return (
     <group position={wallPivot}>
       {/* Wall anchor bracket */}
       <mesh position={[0, 0, -0.2]}>
-        <boxGeometry args={[0.24, 0.24, 0.1]} />
+        <boxGeometry args={[0.32, 0.32, 0.12]} />
         <meshStandardMaterial color={isLight ? "#CBD5E1" : "#3B384E"} metalness={0.85} roughness={0.2} />
       </mesh>
 
-      {/* Swinging Pendulum Group — grab it and throw it */}
-      <group
-        ref={lampRef}
-        onPointerDown={handleLampPointerDown}
-        onPointerOver={() => {
-          if (!isDragging.current) document.body.style.cursor = "grab";
-        }}
-        onPointerOut={() => {
-          if (!isDragging.current) document.body.style.cursor = "";
-        }}
-      >
-        {/* Braided steel suspension cable — longer arm means the same swing
-         * angle sweeps a wider radius at the shade. */}
-        <mesh position={[0, -1.7, 0]}>
-          <cylinderGeometry args={[0.009, 0.009, 3.4, 10]} />
+      {/* Swinging Pendulum Group */}
+      <group ref={lampRef}>
+        {/* Heavy braided steel suspension cable */}
+        <mesh position={[0, -1.8, 0]}>
+          <cylinderGeometry args={[0.012, 0.012, 3.6, 10]} />
           <meshStandardMaterial color={isLight ? "#94A3B8" : "#38354A"} metalness={0.9} roughness={0.3} />
         </mesh>
 
-        {/* Industrial Bell Lamp Shade — Bright Metallic Fixture (Hangs straight down along cable) */}
-        <group position={[0, -3.4, 0]} rotation={[0, 0, 0]}>
+        {/* Larger Industrial Bell Lamp Shade */}
+        <group position={[0, -3.6, 0]} rotation={[0, 0, 0]}>
+          {/* Outer shade shell */}
           <mesh>
-            <cylinderGeometry args={[0.18, 0.48, 0.42, 28, 1, true]} />
+            <cylinderGeometry args={[0.24, 0.62, 0.54, 28, 1, true]} />
             <meshStandardMaterial
               color={isLight ? "#D0D0E2" : "#1A1828"}
               metalness={isLight ? 0.85 : 0.92}
@@ -425,8 +326,9 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
             />
           </mesh>
 
+          {/* Inner reflective amber warmth lining */}
           <mesh position={[0, -0.02, 0]}>
-            <cylinderGeometry args={[0.17, 0.46, 0.38, 28, 1, true]} />
+            <cylinderGeometry args={[0.23, 0.60, 0.50, 28, 1, true]} />
             <meshStandardMaterial
               color="#F59E0B"
               metalness={0.95}
@@ -435,26 +337,27 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
             />
           </mesh>
 
-          <mesh position={[0, 0.24, 0]}>
-            <cylinderGeometry args={[0.08, 0.12, 0.1, 16]} />
+          {/* Heavy brass top fixture cap */}
+          <mesh position={[0, 0.31, 0]}>
+            <cylinderGeometry args={[0.10, 0.15, 0.12, 16]} />
             <meshStandardMaterial color="#EAB308" metalness={0.92} roughness={0.15} />
           </mesh>
 
-          {/* Glowing Tungsten Yellow Light Bulb Core */}
-          <mesh position={[0, -0.05, 0]}>
-            <sphereGeometry args={[0.16, 24, 20]} />
+          {/* Enlarged Glowing Tungsten Yellow Light Bulb Core */}
+          <mesh position={[0, -0.06, 0]}>
+            <sphereGeometry args={[0.20, 24, 20]} />
             <meshStandardMaterial
               ref={bulbMaterialRef}
               color="#FFE066"
               emissive="#FFB700"
-              emissiveIntensity={isLight ? 6.0 : 18.0}
+              emissiveIntensity={isLight ? 7.0 : 20.0}
               toneMapped={false}
             />
           </mesh>
 
-          {/* One-shot ignition spark — pops and fades right after a dark-mode snap */}
-          <mesh ref={sparkRef} position={[0.1, 0.02, 0.09]} scale={0.001}>
-            <sphereGeometry args={[0.055, 12, 10]} />
+          {/* One-shot ignition spark */}
+          <mesh ref={sparkRef} position={[0.12, 0.02, 0.1]} scale={0.001}>
+            <sphereGeometry args={[0.065, 12, 10]} />
             <meshBasicMaterial
               color="#FFF3D0"
               transparent
@@ -465,31 +368,31 @@ function SwingingLamp({ heroX, paused = false }: { heroX: number; paused?: boole
             />
           </mesh>
 
-          {/* Photorealistic Volumetric Light Cone — 100% smooth bottom opacity falloff */}
+          {/* Photorealistic Volumetric Light Cone */}
           <VolumetricLightCone
-            position={[0, -1.9, 0]}
-            height={3.8}
-            topRadius={0.22}
-            bottomRadius={1.5}
+            position={[0, -2.1, 0]}
+            height={4.2}
+            topRadius={0.28}
+            bottomRadius={1.8}
             color="#FDE047"
           />
 
-          {/* Radiant Studio Point Light */}
+          {/* Radiant Background Studio Point Light */}
           <pointLight
             position={[0, -0.15, 0]}
-            intensity={isLight ? 120 : 550}
-            distance={32}
+            intensity={isLight ? 160 : 700}
+            distance={36}
             color="#FFD000"
           />
 
-          {/* High-Intensity Downward Studio Spotlight */}
+          {/* High-Intensity Downward Background Studio Spotlight (angled forward toward machine) */}
           <spotLight
             position={[0, 0, 0]}
-            target-position={[heroX > 0 ? 1.7 : 0, -1.2, 0.6]}
-            angle={0.88}
+            target-position={[heroX, -0.15, 2.5]}
+            angle={0.92}
             penumbra={0.35}
-            intensity={isLight ? 180 : 650}
-            distance={28}
+            intensity={isLight ? 240 : 850}
+            distance={36}
             color="#FFD000"
           />
         </group>
@@ -553,13 +456,17 @@ function FloorSpotlight({ heroX }: { heroX: number }) {
       );
       lightHousingRef.current.rotation.y = THREE.MathUtils.lerp(
         lightHousingRef.current.rotation.y,
-        0.55 + totalTilt * 0.4,
+        (heroX < 0 ? -0.55 : 0.55) + totalTilt * 0.4,
         0.1
       );
     }
   });
 
-  const floorPos: [number, number, number] = [-0.6, -2.4, 0.6];
+  const floorPos: [number, number, number] = [
+    heroX < 0 ? heroX + 0.6 : heroX > 0 ? heroX - 0.6 : -0.6,
+    -2.4,
+    0.6,
+  ];
 
   return (
     <group position={floorPos}>
@@ -733,7 +640,7 @@ export default function MachineScene({
   const reduce = usePrefersReducedMotion();
   const isDesktop = useIsDesktop();
   const hitRef = useRef<MachineHitState | null>(null);
-  const heroX = isDesktop ? 3.3 : 0;
+  const heroX = isDesktop ? -3.3 : 0;
 
   return (
     <Canvas
@@ -751,25 +658,22 @@ export default function MachineScene({
       <Suspense fallback={null}>
         {/* Radiant Ambient Wall Reflection Light Pool */}
         <pointLight
-          position={[heroX > 0 ? 0.9 : 0, 1.8, -1.2]}
+          position={[heroX < 0 ? -0.9 : heroX > 0 ? 0.9 : 0, 1.8, -1.2]}
           intensity={isLight ? 140 : 420}
           distance={18}
           color={isLight ? "#7C3AED" : "#C084FC"}
         />
 
         {/* Top-suspended swinging industrial bell lamp */}
-        <SwingingLamp heroX={heroX} paused={paused} />
-
-        {/* Industrial ground uplight spotlight facing machine from bottom leftish center */}
-        <FloorSpotlight heroX={heroX} />
+        <SwingingLamp heroX={heroX} paused={paused} onPoke={onPoke} />
 
         {/* Hero Machine */}
         <group position={[heroX, -0.15, 0]}>
           {reduce ? (
-            <Machine reduce onPoke={onPoke} pose="ready" line={line} hitRef={hitRef} />
+            <Machine reduce onPoke={onPoke} pose="ready" line={line} hitRef={hitRef} facing={isDesktop ? 0.44 : 0} />
           ) : (
             <Float speed={1.1} rotationIntensity={0.12} floatIntensity={0.35}>
-              <Machine reduce={false} onPoke={onPoke} pose="ready" line={line} hitRef={hitRef} />
+              <Machine reduce={false} onPoke={onPoke} pose="ready" line={line} hitRef={hitRef} facing={isDesktop ? 0.44 : 0} />
             </Float>
           )}
         </group>

@@ -68,3 +68,41 @@ export function IdeFlipper() {
     </span>
   );
 }
+
+export function IdeBadgeFlipper() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % IDES.length);
+    }, 3600);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const current = IDES[index];
+  const Icon = current.mark;
+
+  return (
+    <div className="relative inline-flex h-10 items-center justify-center min-w-[150px] [perspective:1000px]">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={current.name}
+          initial={{ rotateX: -90, opacity: 0, scale: 0.95, y: 6 }}
+          animate={{ rotateX: 0, opacity: 1, scale: 1, y: 0 }}
+          exit={{ rotateX: 90, opacity: 0, scale: 0.95, y: -6 }}
+          transition={{
+            type: "spring",
+            stiffness: 200,
+            damping: 22,
+            mass: 0.9,
+          }}
+          className="group flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/40 px-3.5 py-1.5 text-sm font-semibold text-foreground shadow-sm transition-all"
+        >
+          <Icon className={`h-4 w-4 shrink-0 ${current.iconColor}`} />
+          <span className="font-semibold text-foreground text-xs sm:text-sm">{current.name}</span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
