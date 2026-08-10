@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { Hero } from "@/components/landing/Hero";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-import { ClaudeMark, CursorMark, V0Mark, WindsurfMark } from "@/components/landing/brand-icons";
 import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { TeamSection } from "@/components/landing/TeamSection";
@@ -11,13 +10,7 @@ import { ClosingScene } from "@/components/landing/ClosingScene";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { ArrowRightIcon } from "@/components/icons";
-
-const AGENTS = [
-  { name: "Claude Code", Icon: ClaudeMark, hoverColor: "group-hover:text-[#D97757]", hoverBg: "hover:border-[#D97757]/30 hover:bg-[#D97757]/10" },
-  { name: "Cursor", Icon: CursorMark, hoverColor: "group-hover:text-foreground", hoverBg: "hover:border-foreground/20 hover:bg-foreground/10" },
-  { name: "v0 by Vercel", Icon: V0Mark, hoverColor: "group-hover:text-foreground", hoverBg: "hover:border-foreground/20 hover:bg-foreground/10" },
-  { name: "Windsurf", Icon: WindsurfMark, hoverColor: "group-hover:text-[#00D2FF]", hoverBg: "hover:border-[#00D2FF]/30 hover:bg-[#00D2FF]/10" },
-];
+import { IdeBadgeFlipper } from "@/components/landing/IdeFlipper";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -34,27 +27,50 @@ export default function LandingPage() {
       <main>
         <Hero />
 
-        {/* ── Works-with strip ────────────────────────────────────────── */}
-        <section className="relative z-10 py-10 px-5 sm:px-6">
+        {/* ── Integration & Launch Badges Strip ───────────────────────────── */}
+        <section className="relative z-10 py-6 px-5 sm:px-6">
           <div className="mx-auto max-w-5xl">
-            <div className="glass flex flex-col items-center gap-4 rounded-2xl px-6 py-5 md:flex-row md:justify-between md:gap-8">
-              <p className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-                </span>
-                Speaks your agent&apos;s language
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-2.5">
-                {AGENTS.map(({ name, Icon, hoverColor, hoverBg }) => (
-                  <span
-                    key={name}
-                    className={`group flex items-center gap-2 rounded-xl border border-border bg-secondary/30 px-3.5 py-2 text-sm text-foreground/80 transition-all hover:-translate-y-0.5 ${hoverBg} hover:text-foreground`}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/* Left Card: Use with (Animated IDE Flipper) */}
+              <div className="glass flex flex-col items-center justify-between gap-3 rounded-2xl px-6 py-3.5 sm:flex-row sm:gap-6">
+                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
+                  Use with
+                </p>
+                <div className="flex items-center justify-center">
+                  <IdeBadgeFlipper />
+                </div>
+              </div>
+
+              {/* Right Card: Also, launched on (Launchstag Badge) */}
+              <div className="glass flex flex-col items-center justify-between gap-3 rounded-2xl px-6 py-3.5 sm:flex-row sm:gap-6">
+                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
+                  Also, launched on
+                </p>
+                <div className="flex items-center justify-center">
+                  <a
+                    href="https://launchstag.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex shrink-0 transition-transform hover:-translate-y-0.5"
                   >
-                    <Icon className={`h-4 w-4 text-foreground/60 transition-colors ${hoverColor}`} />
-                    {name}
-                  </span>
-                ))}
+                    {/* Light mode badge */}
+                    <img
+                      src="https://launchstag.com/badge-light.svg"
+                      alt="Featured on Launchstag"
+                      width={198}
+                      height={62}
+                      className="h-9 w-auto dark:hidden"
+                    />
+                    {/* Dark mode badge */}
+                    <img
+                      src="https://launchstag.com/badge-dark.svg"
+                      alt="Featured on Launchstag"
+                      width={198}
+                      height={62}
+                      className="hidden h-9 w-auto dark:block"
+                    />
+                  </a>
+                </div>
               </div>
             </div>
           </div>

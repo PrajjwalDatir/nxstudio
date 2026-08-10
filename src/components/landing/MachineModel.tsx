@@ -492,7 +492,7 @@ export function Machine({
     // The stage drives them directly (dyn.eye); on the beat they pulse.
     const eyeTarget = dyn ? dyn.eye : target.eye;
     eyes.current.forEach((m) => {
-      if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, eyeTarget, a);
+      if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, eyeTarget * 2.8, a);
     });
 
     // Assembly: parts ease from scattered → seated as `build` rises. Every
@@ -621,70 +621,48 @@ export function Machine({
         </mesh>
 
         {/* Smoked-glass helmet visor band — adapts cleanly to light and dark themes */}
-        <mesh position={[0, 0.06, 0.38]} rotation={[0.08, 0, 0]}>
-          <boxGeometry args={[0.72, 0.22, 0.3]} />
+        <mesh position={[0, 0.06, 0.36]} rotation={[0.08, 0, 0]}>
+          <boxGeometry args={[0.72, 0.22, 0.12]} />
           <meshStandardMaterial color={isLight ? "#9490B0" : "#06050C"} roughness={0.1} metalness={isLight ? 0.78 : 0.95} />
         </mesh>
 
-        {/* Eyes: almond-proportioned lens assemblies (wide, flattened — not
-            circular camera lenses) with a two-tone iris and a brow arc, so
-            they read as eyes rather than optical sensors. */}
+        {/* Minimalist Warm-Light Glowing Capsule Eyes — vibrant, friendly, iconic */}
         {[-0.2, 0.2].map((x) => (
-          <group key={x} position={[x, 0.06, 0.46]} rotation={[0.04, x * 0.28, 0]}>
-            {/* Outer chamfered bezel — stretched wide and flattened tall, the
-                classic almond proportion */}
-            <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.28, 0.8, 1]}>
-              <cylinderGeometry args={[0.125, 0.12, 0.06, 24]} />
-              <Joint />
-            </mesh>
-            {/* Inner dark optical well */}
-            <mesh position={[0, 0, 0.012]} rotation={[Math.PI / 2, 0, 0]} scale={[1.28, 0.8, 1]}>
-              <cylinderGeometry args={[0.1, 0.095, 0.05, 24]} />
+          <group key={x} position={[x, 0.06, 0.44]} rotation={[0.04, x * 0.28, 0]}>
+            {/* Dark recessed socket frame — subtle titanium bezel */}
+            <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.4, 0.85, 1]}>
+              <cylinderGeometry args={[0.11, 0.105, 0.04, 24]} />
               <Recess />
             </mesh>
-            {/* Iris — warm amber ring around the core, the way a real iris
-                reads as a distinct band rather than one flat color */}
-            <mesh position={[0, 0, 0.026]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.062, 0.016, 14, 28]} />
-              <meshStandardMaterial color="#FCD34D" emissive="#F59E0B" emissiveIntensity={1.8} toneMapped={false} />
-            </mesh>
-            {/* Core radiant lilac emissive pupil */}
-            <mesh position={[0, 0, 0.03]} scale={[1.12, 0.86, 1]}>
-              <sphereGeometry args={[0.068, 24, 20]} />
+
+            {/* Main Glowing Capsule Lens — Vibrant radiant white with soft glow */}
+            <mesh position={[0, 0, 0.025]} scale={[1.45, 0.88, 1]}>
+              <sphereGeometry args={[0.08, 24, 20]} />
               <meshStandardMaterial
                 ref={(m) => {
                   if (m) eyes.current[x < 0 ? 0 : 1] = m;
                 }}
-                color="#7C3AED"
-                emissive="#DDD6FE"
-                emissiveIntensity={3.6}
-                toneMapped={false}
-              />
-            </mesh>
-            {/* Concentric aperture glow ring */}
-            <mesh position={[0, 0, 0.046]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.04, 0.01, 16, 32]} />
-              <meshStandardMaterial
                 color="#FFFFFF"
-                emissive="#FAF5FF"
-                emissiveIntensity={4.2}
+                emissive={isLight ? "#A78BFA" : "#DDD6FE"}
+                emissiveIntensity={4.5}
                 toneMapped={false}
               />
             </mesh>
-            {/* Glossy glass catchlight reflection dot */}
-            <mesh position={[0.03, 0.024, 0.068]}>
-              <sphereGeometry args={[0.017, 12, 10]} />
+
+            {/* Inner radiant highlight core */}
+            <mesh position={[0, 0, 0.05]} scale={[1.1, 0.65, 0.8]}>
+              <sphereGeometry args={[0.045, 16, 12]} />
               <meshStandardMaterial
                 color="#FFFFFF"
                 emissive="#FFFFFF"
-                emissiveIntensity={2.5}
+                emissiveIntensity={6.0}
                 toneMapped={false}
               />
             </mesh>
-            {/* Brow arc — a slim raised crease above the eye, angled up at
-                the outer corner for an alert, expressive read */}
-            <mesh position={[x > 0 ? 0.01 : -0.01, 0.095, 0.03]} rotation={[0, 0, x > 0 ? -0.18 : 0.18]}>
-              <torusGeometry args={[0.11, 0.012, 8, 20, Math.PI * 0.62]} />
+
+            {/* Expressive arching brow line above each capsule */}
+            <mesh position={[x > 0 ? 0.01 : -0.01, 0.105, 0.025]} rotation={[0, 0, x > 0 ? -0.15 : 0.15]}>
+              <torusGeometry args={[0.11, 0.01, 8, 20, Math.PI * 0.6]} />
               <Joint />
             </mesh>
           </group>
