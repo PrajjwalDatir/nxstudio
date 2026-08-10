@@ -114,10 +114,13 @@ const particles: SketchFactory = () => {
 
       p.strokeWeight(1.2);
       const lineInk = p.color(params.primary);
+
+      const nearby: Particle2D[] = [];
+
       // Query adjacent grid cells: average O(N) instead of O(N^2)
       for (let i = 0; i < ps.length; i++) {
         const a = ps[i];
-        const nearby = spatialGrid.getNearby(a);
+        spatialGrid.getNearby(a, nearby);
         for (let j = 0; j < nearby.length; j++) {
           const b = nearby[j];
           if (a === b) continue;
