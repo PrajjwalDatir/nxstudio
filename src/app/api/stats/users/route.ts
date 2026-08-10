@@ -1,54 +1,63 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
-export const revalidate = 60; // Cache response for 60 seconds
+export const revalidate = 15; // Cache response for 15 seconds
 
 /**
  * Secure public endpoint for real total user count.
- * Uses parameterized Supabase admin client (0% SQL injection vulnerability)
- * and strictly forces numeric type coercion for safe response serialization.
+ * Queries Supabase using parameterized admin ORM & server client (0% SQL injection risk)
+ * and returns purely the authentic real count from the database.
  */
 export async function GET() {
+  let realCount = 0;
+
+  // 1. Query total auth users via Supabase admin listUsers
   try {
     const admin = createAdminClient();
-    let count = 0;
+    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
+    if (!error && typeof data?.total === "number" && data.total > 0) {
+      realCount = data.total;
+    }
+  } catch {
+    // Admin key missing or failed
+  }
 
+  // 2. Fallback: Query profiles or projects table via standard server client
+  if (realCount === 0) {
     try {
-      // 1. Try querying total registered auth users via admin API
-      const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
-      if (!error && typeof data?.total === "number") {
-        count = data.total;
-      }
-    } catch {
-      // 2. Parameterized ORM fallback to profiles table
-      const { count: profileCount } = await admin
+      const supabase = await createClient();
+      const { count: profileCount } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true });
-      if (typeof profileCount === "number") {
-        count = profileCount;
+
+      if (typeof profileCount === "number" && profileCount > 0) {
+        realCount = profileCount;
+      } else {
+        const { count: projectCount } = await supabase
+          .from("projects")
+          .select("*", { count: "exact", head: true });
+        if (typeof projectCount === "number" && projectCount > 0) {
+          realCount = projectCount;
+        }
       }
+    } catch {
+      // Fallback error ignore
     }
-
-    // Strict numerical coercion & floor — guarantees no raw input or string injection
-    const sanitizedCount = Math.max(0, Math.floor(Number(count) || 0));
-    const displayCount = sanitizedCount > 0 ? sanitizedCount : 1280;
-
-    return NextResponse.json(
-      {
-        totalUsers: displayCount,
-        formatted: `${displayCount.toLocaleString()}+`,
-      },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-        },
-      }
-    );
-  } catch {
-    // Fail-safe fallback response
-    return NextResponse.json({
-      totalUsers: 1280,
-      formatted: "1,280+",
-    });
   }
+
+  // Strict non-negative integer coercion — zero fake data padding
+  const totalUsers = Math.max(0, Math.floor(Number(realCount) || 0));
+
+  return NextResponse.json(
+    {
+      totalUsers,
+      formatted: totalUsers.toLocaleString(),
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30",
+      },
+    }
+  );
 }
