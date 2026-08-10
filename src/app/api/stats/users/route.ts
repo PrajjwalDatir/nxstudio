@@ -45,12 +45,13 @@ export async function GET(req: Request) {
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
 
       // Attempt to log visitor impression into Supabase database entry
-      await admin
-        .from("visitor_logs")
-        .insert([{ ip_hash: ip.slice(0, 10), user_agent: userAgent.slice(0, 60) }])
-        .select()
-        .single()
-        .catch(() => null);
+      try {
+        await admin
+          .from("visitor_logs")
+          .insert([{ ip_hash: ip.slice(0, 10), user_agent: userAgent.slice(0, 60) }]);
+      } catch {
+        // Table uninitialized fallback
+      }
 
       // Query total visitor log database count
       const { count: visitorCount } = await admin
