@@ -2,3 +2,7 @@
 **Vulnerability:** Found that user-controlled inputs (`repo` mapped to `owner` and `name`, and `branch`) in `src/app/api/github/sync/route.ts` were passed unsanitized and unencoded into `src/lib/github-server.ts` to construct `fetch` URLs for the GitHub API. An attacker could potentially use path traversal characters or query string delimiters to alter the endpoint or manipulate the queries.
 **Learning:** External API URLs constructed from dynamic user inputs must always be properly URL-encoded.
 **Prevention:** Use `encodeURIComponent` on dynamic segments before inserting them into template literal URLs, and split file paths by `/` to encode individual segments.
+## 2024-05-18 - [Fix Authorization Bypass]
+**Vulnerability:** In `src/app/api/admin/prompts/route.ts`, authorization was relying on `user.user_metadata?.role === "admin"` as an alternative to `app_metadata`.
+**Learning:** `user_metadata` in Supabase can be freely modified by users via the client-side Auth API. Checking it for sensitive access like "admin" leads to a critical authorization bypass vulnerability.
+**Prevention:** Rely only on `app_metadata` or secure database tables for authorization checks. Never trust `user_metadata` for security enforcement.

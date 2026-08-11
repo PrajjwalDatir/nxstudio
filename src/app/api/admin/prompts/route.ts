@@ -8,7 +8,9 @@ async function checkIsAdmin() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
-    if (user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin") {
+    // Security: Rely on app_metadata or secure database tables for authorization.
+    // Never trust user_metadata for security, as it is editable by the user via the client-side Auth API.
+    if (user.app_metadata?.role === "admin") {
       return true;
     }
 
