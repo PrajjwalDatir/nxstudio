@@ -28,8 +28,34 @@ export interface Sketch {
 
 export type SketchFactory = () => Sketch;
 
+
+class ColorCache {
+  private primaryStr: string = "";
+  private bgStr: string = "";
+
+  // By keeping separate P5.Color instances for each distinct usage in a sketch,
+  // we avoid the shared mutable state issue when setAlpha is called on them.
+  public primary1!: P5.Color;
+  public primary2!: P5.Color;
+  public bg1!: P5.Color;
+
+  update(p: P5, params: GenParams) {
+    if (this.primaryStr !== params.primary) {
+      this.primaryStr = params.primary;
+      this.primary1 = p.color(params.primary);
+      this.primary2 = p.color(params.primary);
+    }
+    if (this.bgStr !== params.background) {
+      this.bgStr = params.background;
+      this.bg1 = p.color(params.background);
+    }
+  }
+}
+
+
 /** Flow field — particles advected along an animated Perlin-noise vector field. */
 const flow: SketchFactory = () => {
+  const colors = new ColorCache();
   let pts: { x: number; y: number }[] = [];
   const ensure = (p: P5, n: number) => {
     while (pts.length < n) pts.push({ x: p.random(p.width), y: p.random(p.height) });
@@ -43,13 +69,14 @@ const flow: SketchFactory = () => {
     },
     draw(p, params) {
       ensure(p, params.count);
-      const fade = p.color(params.background);
+      colors.update(p, params);
+      const fade = colors.bg1;
       fade.setAlpha(18);
       p.noStroke();
       p.fill(fade);
       p.rect(0, 0, p.width, p.height);
 
-      const ink = p.color(params.primary);
+      const ink = colors.primary1;
       ink.setAlpha(110);
       p.stroke(ink);
       p.strokeWeight(1.2);
@@ -75,6 +102,7 @@ const flow: SketchFactory = () => {
 
 /** Particles — spatial-grid accelerated constellation with O(N) proximity querying. */
 const particles: SketchFactory = () => {
+  const colors = new ColorCache();
   let ps: Particle2D[] = [];
   let spatialGrid = new SpatialHashGrid(130);
 
@@ -113,7 +141,8 @@ const particles: SketchFactory = () => {
       spatialGrid.build(ps);
 
       p.strokeWeight(1.2);
-      const lineInk = p.color(params.primary);
+      colors.update(p, params);
+      const lineInk = colors.primary1;
       // Query adjacent grid cells: average O(N) instead of O(N^2)
       for (let i = 0; i < ps.length; i++) {
         const a = ps[i];
@@ -134,7 +163,7 @@ const particles: SketchFactory = () => {
         }
       }
 
-      const nodeInk = p.color(params.primary);
+      const nodeInk = colors.primary2;
       nodeInk.setAlpha(255);
       p.noStroke();
       p.fill(nodeInk);
@@ -147,6 +176,7 @@ const particles: SketchFactory = () => {
 
 /** Matrix — digital code rain with pooled character streams. */
 const matrix: SketchFactory = () => {
+  const colors = new ColorCache();
   let drops: { x: number; y: number; speed: number; chars: string[] }[] = [];
   const ensure = (p: P5, n: number) => {
     const colWidth = 20;
@@ -168,7 +198,8 @@ const matrix: SketchFactory = () => {
     },
     draw(p, params) {
       ensure(p, params.count);
-      const fade = p.color(params.background);
+      colors.update(p, params);
+      const fade = colors.bg1;
       fade.setAlpha(40);
       p.noStroke();
       p.fill(fade);
@@ -176,7 +207,7 @@ const matrix: SketchFactory = () => {
 
       p.textSize(14);
       p.textFont("monospace");
-      const ink = p.color(params.primary);
+      const ink = colors.primary1;
       const sp = params.speed;
 
       for (let i = 0; i < drops.length; i++) {
@@ -199,13 +230,15 @@ const matrix: SketchFactory = () => {
 
 /** Waves — undulating sine wave frequency lines. */
 const waves: SketchFactory = () => {
+  const colors = new ColorCache();
   return {
     init(p, params) {
       p.background(params.background);
     },
     draw(p, params) {
       p.background(params.background);
-      const ink = p.color(params.primary);
+      colors.update(p, params);
+      const ink = colors.primary1;
       ink.setAlpha(160);
       p.stroke(ink);
       p.strokeWeight(1.5);
@@ -229,6 +262,7 @@ const waves: SketchFactory = () => {
 
 /** Neon — concentric pulsing glowing geometric rings. */
 const neon: SketchFactory = () => {
+  const colors = new ColorCache();
   return {
     init(p, params) {
       p.background(params.background);
@@ -240,7 +274,8 @@ const neon: SketchFactory = () => {
       p.noFill();
 
       const rings = 12;
-      const ink = p.color(params.primary);
+      colors.update(p, params);
+      const ink = colors.primary1;
       const t = p.frameCount * 0.015 * params.speed;
 
       for (let i = 0; i < rings; i++) {
@@ -257,6 +292,7 @@ const neon: SketchFactory = () => {
 
 /** Noise — a flowing Perlin field rendered as a coloured grid between two tones. */
 const noise: SketchFactory = () => {
+  const colors = new ColorCache();
   return {
     init(p, params) {
       p.background(params.background);
@@ -264,8 +300,9 @@ const noise: SketchFactory = () => {
     draw(p, params) {
       const step = 24;
       const t = p.frameCount * 0.01 * params.speed;
-      const from = p.color(params.background);
-      const to = p.color(params.primary);
+      colors.update(p, params);
+      const from = colors.bg1;
+      const to = colors.primary1;
       p.noStroke();
       for (let y = 0; y < p.height; y += step) {
         for (let x = 0; x < p.width; x += step) {
