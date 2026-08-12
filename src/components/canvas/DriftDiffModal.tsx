@@ -134,6 +134,7 @@ export function DriftDiffModal({
 
             <button
               onClick={onClose}
+              aria-label="Close modal"
               className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               ✕

@@ -71,6 +71,7 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             ✕

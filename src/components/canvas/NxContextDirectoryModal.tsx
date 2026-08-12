@@ -73,6 +73,7 @@ export function NxContextDirectoryModal({
 
             <button
               onClick={onClose}
+              aria-label="Close modal"
               className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               ✕
@@ -132,6 +133,7 @@ export function NxContextDirectoryModal({
             {/* Quick Search */}
             <input
               type="text"
+              aria-label="Filter by file path"
               placeholder="Filter by file path…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
