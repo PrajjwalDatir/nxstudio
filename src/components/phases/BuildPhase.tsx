@@ -263,6 +263,7 @@ export function BuildPhase() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
               >
                 ✕
@@ -418,6 +419,7 @@ export function BuildPhase() {
                 </div>
                 <button
                   onClick={() => setPreviewPrompt(null)}
+                  aria-label="Close preview"
                   className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   ✕
