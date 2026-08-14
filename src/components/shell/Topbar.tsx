@@ -4,10 +4,11 @@ import { usePathname } from "next/navigation";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { resolveAppSection } from "@/lib/app-context";
 import { useCommand } from "@/components/shell/CommandPalette";
+import { useSidebar } from "@/components/shell/sidebar-context";
 import { ProductNameCrumb } from "@/components/shell/ProductNameCrumb";
 import { Notifications } from "@/components/shell/Notifications";
 import { WorkspacesMenu } from "@/components/shell/WorkspacesMenu";
-import { SearchIcon, GithubIcon } from "@/components/icons";
+import { SearchIcon, GithubIcon, MenuIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/landing/LandingNav";
 import Link from "next/link";
 
@@ -16,6 +17,7 @@ export function Topbar() {
   const { customStages } = useWorkspace();
   const { status: syncStatus } = useSync();
   const { open } = useCommand();
+  const { openMobile } = useSidebar();
 
   // Breadcrumb: Workspaces › [editable product name] › [Phase]
   // "Workspaces" points at the board, not "/" — "/" is the marketing page now.
@@ -30,10 +32,17 @@ export function Topbar() {
   }
 
   return (
-    <header className="relative z-30 pointer-events-auto flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-sidebar px-5">
+    <header className="relative z-30 pointer-events-auto flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-sidebar px-4 sm:px-5">
       {/* Breadcrumbs. The project name sits between "Workspaces" and the
           optional phase crumb, and renames in place rather than navigating. */}
-      <nav className="flex items-center gap-2.5 text-sm min-w-0">
+      <nav className="flex min-w-0 items-center gap-2.5 text-sm">
+        <button
+          onClick={openMobile}
+          aria-label="Open menu"
+          className="-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground md:hidden"
+        >
+          <MenuIcon className="h-5 w-5" />
+        </button>
         <WorkspacesMenu />
 
         <span className="text-muted-foreground/40 font-light select-none">/</span>

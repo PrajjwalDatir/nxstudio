@@ -1,10 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useState, useSyncExternalStore } from "react";
 
 interface SidebarCtx {
   collapsed: boolean;
   toggle: () => void;
+  /** Mobile off-canvas drawer — separate from `collapsed`, which is a desktop-only rail width. */
+  mobileOpen: boolean;
+  openMobile: () => void;
+  closeMobile: () => void;
+  toggleMobile: () => void;
 }
 
 const Ctx = createContext<SidebarCtx | null>(null);
@@ -41,6 +46,8 @@ function getServerSnapshot() {
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const collapsed = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  // Device-local, not persisted — always starts closed, including after reload.
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggle = useCallback(() => {
     try {
@@ -49,5 +56,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     listeners.forEach((l) => l());
   }, [collapsed]);
 
-  return <Ctx.Provider value={{ collapsed, toggle }}>{children}</Ctx.Provider>;
+  const openMobile = useCallback(() => setMobileOpen(true), []);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const toggleMobile = useCallback(() => setMobileOpen((v) => !v), []);
+
+  return (
+    <Ctx.Provider value={{ collapsed, toggle, mobileOpen, openMobile, closeMobile, toggleMobile }}>
+      {children}
+    </Ctx.Provider>
+  );
 }

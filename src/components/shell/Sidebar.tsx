@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useProjects } from "@/lib/workspace-store";
@@ -19,6 +19,7 @@ import {
   UserIcon,
   SaveIcon,
   ZapIcon,
+  XIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,12 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
   const { createProject } = useProjects();
   const { atLimit } = useProductLimit();
   const { state, refresh } = useSubscription();
-  const { collapsed, toggle } = useSidebar();
+  const { collapsed: collapsedPref, toggle, mobileOpen, closeMobile } = useSidebar();
+  // The mobile drawer always renders expanded — the icon-only rail is a desktop
+  // space-saving affordance that makes no sense once the sidebar is already an
+  // overlay, and a stale "collapsed" localStorage value from a desktop session
+  // would otherwise render an unreadable, unusably narrow drawer on mobile.
+  const collapsed = collapsedPref && !mobileOpen;
   const [open, setOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [name, setName] = useState("");
@@ -45,14 +51,48 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
     router.push("/canvas");
   };
 
+  // Close the mobile drawer on navigation — clicking a nav Link should dismiss
+  // it, not leave it hanging open over the new page.
+  useEffect(() => {
+    closeMobile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Lock background scroll and allow Escape to dismiss while the drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMobile();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen, closeMobile]);
+
   return (
-    <aside
-      className={cn(
-        "relative z-30 pointer-events-auto hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out",
-        collapsed ? "w-16" : "w-[212px]"
+    <>
+      {/* Mobile backdrop — tap to dismiss */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={closeMobile}
+          aria-hidden="true"
+        />
       )}
-    >
-      {/* Brand + collapse toggle */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-out",
+          "md:relative md:z-30 md:w-[212px] md:translate-x-0 md:transition-[width]",
+          "pointer-events-auto",
+          mobileOpen && "translate-x-0",
+          collapsed ? "md:w-16" : "md:w-[212px]"
+        )}
+      >
+      {/* Brand + collapse toggle (desktop) / close (mobile) */}
       <div className={cn("flex h-14 items-center border-b border-sidebar-border", collapsed ? "justify-center px-0" : "gap-2 px-4")}>
         {collapsed ? (
           <button
@@ -73,9 +113,17 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
               onClick={toggle}
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
-              className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              className="ml-auto hidden h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground md:flex"
             >
               <PanelLeftIcon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={closeMobile}
+              title="Close menu"
+              aria-label="Close menu"
+              className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground md:hidden"
+            >
+              <XIcon className="h-4 w-4" />
             </button>
           </>
         )}
@@ -293,6 +341,7 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
           </form>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
