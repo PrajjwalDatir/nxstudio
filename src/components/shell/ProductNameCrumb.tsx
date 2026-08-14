@@ -73,7 +73,7 @@ export function ProductNameCrumb({ isLast }: { isLast: boolean }) {
       }}
       title="Rename project"
       className={cn(
-        "min-w-0 truncate rounded-md px-1.5 py-0.5 text-sm transition-colors hover:bg-secondary hover:text-foreground",
+        "min-w-0 max-w-[90px] truncate rounded-md px-1.5 py-0.5 text-sm transition-colors hover:bg-secondary hover:text-foreground sm:max-w-[220px]",
         isLast ? "font-medium text-foreground" : "text-muted-foreground"
       )}
     >
