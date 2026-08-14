@@ -30,8 +30,7 @@ import { cn } from "@/lib/utils";
  * a static screenshot.
  */
 const PREVIEW_PROGRESS: Record<PhaseId, PhaseProgress> = {
-  idea: { done: 4, total: 4, percent: 100 },
-  "tech-stack": { done: 2, total: 5, percent: 40 },
+  idea: { done: 6, total: 9, percent: 67 },
   build: { done: 1, total: 1, percent: 100 },
 };
 

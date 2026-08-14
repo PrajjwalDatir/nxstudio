@@ -48,13 +48,13 @@ const STEPS = [
     kicker: "The Hard Calls",
     title: "It picks a direction.",
     body: "nxstudio reads your vibe and derives an opinionated, production-ready stack. No more agonizing over six different database options at 1 AM.",
-    // The Tech Stack phase card, exactly as it renders on the board.
+    // The Brief phase card (idea + tech stack live together now), mid-stack-pick.
     artifact: (
       <div className="max-w-[280px]">
         <PhaseCardFrame>
           <PhaseCardBody
-            phase={PHASES.find((p) => p.id === "tech-stack")!}
-            progress={{ done: 5, total: 5, percent: 100 }}
+            phase={PHASES.find((p) => p.id === "idea")!}
+            progress={{ done: 6, total: 9, percent: 67 }}
           />
         </PhaseCardFrame>
       </div>

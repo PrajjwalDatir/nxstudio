@@ -143,6 +143,7 @@ function PromptCard({ className, stack }: { className?: string; stack: CompiledS
       tech: { surfaces: ["web"], capabilities: ["auth", "database"] },
       checklist: {},
       customStages: [],
+      iterations: [],
     });
   }, []);
 
