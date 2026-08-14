@@ -114,6 +114,7 @@ export {
   Loader2 as LoaderIcon,
   Database as DatabaseIcon,
   CreditCard as CreditCardIcon,
+  AlertTriangle as AlertTriangleIcon,
 } from "lucide-react";
 
 import {
