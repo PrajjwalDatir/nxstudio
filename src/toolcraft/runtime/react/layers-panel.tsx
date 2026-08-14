@@ -19,9 +19,10 @@ import {
   ScrollFade,
   stopPanelHeaderButtonPointerDown,
 } from "@/toolcraft/ui";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 
 import type { ToolcraftLayer, ToolcraftPanelState } from "../state/types";
+import { useIsMobile } from "../../ui/hooks/use-mobile";
 import {
   getToolcraftLayerDepth,
   getToolcraftVisibleLayerRows,
@@ -386,19 +387,23 @@ function LayerActionButtons({
   displayName,
   isEditingName,
   isDragging,
+  isMobile,
   isReorderDragging,
   isVisible,
   layer,
   onDelete,
+  onStartRename,
   onToggleVisibility,
 }: {
   displayName: string;
   isEditingName: boolean;
   isDragging: boolean;
+  isMobile: boolean;
   isReorderDragging: boolean;
   isVisible: boolean;
   layer: ToolcraftLayer;
   onDelete: () => void;
+  onStartRename: () => void;
   onToggleVisibility: () => void;
 }): React.JSX.Element | null {
   if (isEditingName) {
@@ -406,13 +411,17 @@ function LayerActionButtons({
   }
 
   const mutedIconStyle = isVisible ? undefined : { opacity: 0.3 };
+  // On touch there's no hover state to reveal these on — show them
+  // unconditionally instead of gating on group-hover/layer, same as the
+  // isDragging reveal already does.
+  const revealed = isMobile || isDragging;
 
   return (
     <div
       className={cn(
         "inline-flex w-0 translate-x-[7px] shrink-0 items-center self-center gap-px overflow-hidden opacity-0",
-        isDragging && "pointer-events-none w-auto overflow-visible opacity-100 transition-none",
-        !isDragging &&
+        revealed && "pointer-events-none w-auto overflow-visible opacity-100 transition-none",
+        !revealed &&
           (isReorderDragging
             ? "pointer-events-none transition-none"
             : "transition-none group-hover/layer:w-auto group-hover/layer:overflow-visible group-hover/layer:opacity-100"),
@@ -420,6 +429,23 @@ function LayerActionButtons({
       data-layer-actions=""
       data-visible={isVisible ? "true" : "false"}
     >
+      {isMobile ? (
+        <Button
+          aria-label={`Rename ${displayName}`}
+          className="cursor-default!"
+          onClick={(event) => {
+            event.stopPropagation();
+            onStartRename();
+          }}
+          onDoubleClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <Pencil style={mutedIconStyle} />
+        </Button>
+      ) : null}
       <Button
         aria-label={layer.visible ? `Hide ${displayName}` : `Show ${displayName}`}
         className="cursor-default!"
@@ -510,6 +536,7 @@ function LayerRow({
   isDropTarget,
   isGroupDropAvailable,
   isGroupHighlighted,
+  isMobile,
   isReorderDragging,
   isSelected,
   isVisible,
@@ -532,6 +559,7 @@ function LayerRow({
   isDropTarget: boolean;
   isGroupDropAvailable: boolean;
   isGroupHighlighted: boolean;
+  isMobile: boolean;
   isReorderDragging: boolean;
   isSelected: boolean;
   isVisible: boolean;
@@ -650,10 +678,12 @@ function LayerRow({
           displayName={displayName}
           isEditingName={nameEditing.isEditingName}
           isDragging={isDragging}
+          isMobile={isMobile}
           isReorderDragging={isReorderDragging}
           isVisible={isVisible}
           layer={layer}
           onDelete={onDelete}
+          onStartRename={nameEditing.startEditingName}
           onToggleVisibility={onToggleVisibility}
         />
       </div>
@@ -785,6 +815,7 @@ export function LayersPanel({
   panelState,
 }: LayersPanelProps): React.JSX.Element | null {
   const { dispatch, state } = useToolcraft();
+  const isMobile = useIsMobile();
   const [internalCollapsed, setInternalCollapsed] = React.useState(false);
   const [dragState, setDragState] = React.useState<LayerDragState | null>(null);
   const [dropTargetGroupId, setDropTargetGroupId] = React.useState<string | null>(null);
@@ -1246,6 +1277,7 @@ export function LayersPanel({
                     canMoveLayerIntoGroup(state.layers, dragState.layerId, layer.id)
                   }
                   isGroupHighlighted={highlightedGroupId === layer.id}
+                  isMobile={isMobile}
                   isReorderDragging={isReorderDragging}
                   isSelected={state.selectedLayerId === layer.id}
                   isVisible={isVisible}
