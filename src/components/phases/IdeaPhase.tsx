@@ -4,11 +4,23 @@ import { useRef, useState, useId } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSpeechInput } from "@/lib/use-speech-input";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
+import { compileStack } from "@/lib/platform-engine";
 import { IdeaData } from "@/lib/types";
+import type { BriefAnalysisResult } from "@/app/api/context/analyze-brief/route";
+import { EXAMPLE_BRIEFS, type ExampleBrief } from "@/lib/example-briefs";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
+import { TechStackPhase } from "./TechStackPhase";
 import Link from "next/link";
-import { PaperclipIcon, MicIcon, WandIcon, ChevronRightIcon } from "@/components/icons";
+import {
+  PaperclipIcon,
+  MicIcon,
+  WandIcon,
+  ChevronRightIcon,
+  SparklesIcon,
+  LoaderIcon,
+  AlertTriangleIcon,
+} from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 const QUESTIONS: {
@@ -170,16 +182,275 @@ function radiusToNum(raw: string): number {
   return raw.includes("rem") ? Math.round(n * 16) : Math.round(n);
 }
 
+type AnalysisState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "done"; result: BriefAnalysisResult };
+
+const VERDICT_STYLE: Record<BriefAnalysisResult["verdict"], string> = {
+  promising: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  "needs-work": "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  unclear: "border-border bg-secondary text-muted-foreground",
+};
+
+/** Renders the AI's draft tables/endpoints as the same markdown shape nx-compiler emits into db-schema.md/api-routes.md. */
+function formatSchemaDraft(schema: BriefAnalysisResult["schema"]) {
+  const dbSchema = schema.tables
+    .map((t) => {
+      const rel = t.relationships.length ? `\n  Relationships: ${t.relationships.join(", ")}` : "";
+      return `### ${t.name}\n${t.purpose}\n- Columns: ${t.keyColumns.join(", ")}${rel}`;
+    })
+    .join("\n\n");
+
+  const apiRoutes = schema.endpoints
+    .map((e) => `- \`${e.method} ${e.path}\` — ${e.purpose}${e.authRequired ? " (auth required)" : ""}`)
+    .join("\n");
+
+  return { dbSchema, apiRoutes };
+}
+
+function BriefAnalysisPanel({
+  projectId,
+  idea,
+  tech,
+  onAccept,
+  initialResult,
+}: {
+  projectId: string;
+  idea: IdeaData;
+  tech: { surfaces: string[]; capabilities: string[] };
+  onAccept: (
+    draft: { dbSchema: string; apiRoutes: string },
+    insights: { sharpenedProblem: string; riskiestAssumptions: string[]; stackConcerns: string[] }
+  ) => void;
+  /** Pre-cached result to show immediately — e.g. from an example brief — so
+   *  there's something on screen before the founder ever spends a real call. */
+  initialResult?: BriefAnalysisResult;
+}) {
+  const [state, setState] = useState<AnalysisState>(() =>
+    initialResult ? { status: "done", result: initialResult } : { status: "idle" }
+  );
+  const [isExample, setIsExample] = useState(!!initialResult);
+  const [accepted, setAccepted] = useState(false);
+
+  const canRun = idea.problem.trim().length > 0 && tech.surfaces.length > 0;
+
+  const run = async () => {
+    setState({ status: "loading" });
+    setAccepted(false);
+    setIsExample(false);
+    try {
+      const res = await fetch("/api/context/analyze-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, idea, tech }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Analysis failed.");
+      setState({ status: "done", result: body.result as BriefAnalysisResult });
+    } catch (e) {
+      setState({ status: "error", message: e instanceof Error ? e.message : "Analysis failed." });
+    }
+  };
+
+  const accept = () => {
+    if (state.status !== "done") return;
+    onAccept(formatSchemaDraft(state.result.schema), {
+      sharpenedProblem: state.result.sharpenedProblem,
+      riskiestAssumptions: state.result.riskiestAssumptions,
+      stackConcerns: state.result.stackConcerns,
+    });
+    setAccepted(true);
+  };
+
+  return (
+    <div className="mt-8 rounded-xl glass p-5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
+          <SparklesIcon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium">AI brief analysis</div>
+          <div className="truncate text-sm text-muted-foreground">
+            Runs in nxstudio — idea pressure-test, stack check, and a starting data model + API surface
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={run}
+          disabled={!canRun || state.status === "loading"}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+        >
+          {state.status === "loading" ? (
+            <LoaderIcon className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <SparklesIcon className="h-3.5 w-3.5" />
+          )}
+          {state.status === "loading" ? "Analyzing…" : "Run"}
+        </button>
+      </div>
+
+      {!canRun && state.status === "idle" && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Describe the problem above and pick at least one surface in Tech Stack to run this.
+        </p>
+      )}
+
+      {state.status === "error" && <p className="mt-3 text-xs text-rose-400">{state.message}</p>}
+
+      {state.status === "done" && (
+        <div className="mt-4 space-y-4 border-t border-border pt-4">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase",
+                VERDICT_STYLE[state.result.verdict]
+              )}
+            >
+              {state.result.verdict.replace("-", " ")}
+            </span>
+            {isExample && (
+              <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+                Example output
+              </span>
+            )}
+          </div>
+
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Sharpened problem</div>
+            <p className="mt-1 text-sm">{state.result.sharpenedProblem}</p>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Riskiest assumptions</div>
+            <ul className="mt-1 list-disc space-y-1 pl-4 text-sm">
+              {state.result.riskiestAssumptions.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Who to interview first</div>
+            <ul className="mt-1 list-disc space-y-1 pl-4 text-sm">
+              {state.result.whoToInterview.map((w, i) => (
+                <li key={i}>{w}</li>
+              ))}
+            </ul>
+          </div>
+
+          {state.result.stackConcerns.length > 0 && (
+            <div>
+              <div className="text-xs font-medium text-amber-400">Stack concerns</div>
+              <ul className="mt-1 list-disc space-y-1 pl-4 text-sm">
+                {state.result.stackConcerns.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Starting data model</div>
+            <div className="mt-1.5 space-y-2">
+              {state.result.schema.tables.map((t) => (
+                <div key={t.name} className="rounded-lg border border-border bg-secondary/30 p-2.5">
+                  <div className="font-mono text-xs font-semibold">{t.name}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{t.purpose}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Columns: {t.keyColumns.join(", ")}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium text-muted-foreground">Starting API surface</div>
+            <ul className="mt-1.5 space-y-1">
+              {state.result.schema.endpoints.map((e, i) => (
+                <li key={i} className="font-mono text-xs">
+                  <span className="text-accent-foreground">{e.method}</span> {e.path}
+                  <span className="ml-2 font-sans text-muted-foreground">— {e.purpose}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex items-center gap-3 border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={accept}
+              disabled={accepted}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            >
+              {accepted ? "Accepted" : "Accept into Brief"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {isExample
+                ? "Showing example output — click Run above to analyze your own answers."
+                : "Still a starting draft — edit or regenerate anytime before the build."}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function IdeaPhase() {
-  const { data, updateIdea, updateBrand } = useWorkspace();
+  const {
+    data,
+    updateIdea,
+    updateBrand,
+    updateTech,
+    updateSchemaDraft,
+    updateBriefInsights,
+    briefInsightsStale,
+    toggleChecklist,
+    isStepDone,
+    activeId,
+  } = useWorkspace();
   const { prompts } = useCompiledPrompts();
+  const [selectedExample, setSelectedExample] = useState<ExampleBrief | null>(null);
 
   const answered = QUESTIONS.filter((q) => data.idea[q.field].trim().length > 0).length;
   const percent = Math.round((answered / QUESTIONS.length) * 100);
 
+  const stack = compileStack(data.tech);
+  const stackConfigured = isStepDone("tech-stack", "configured");
+  const confirmStack = () => {
+    if (data.tech.surfaces.length > 0 && !stackConfigured) toggleChecklist("tech-stack", "configured");
+  };
+
+  const applyExample = (ex: ExampleBrief) => {
+    (Object.keys(ex.idea) as (keyof IdeaData)[]).forEach((field) => updateIdea(field, ex.idea[field]));
+    updateTech("surfaces", ex.tech.surfaces);
+    updateTech("capabilities", ex.tech.capabilities);
+    setSelectedExample(ex);
+  };
+
   return (
     <>
       <PhaseHeader title="Brief" status="in-progress" phaseId="idea" showTeam />
+
+      {/* Try an example — only while the brief is still empty, so it can't clobber real work */}
+      {data.idea.problem.trim().length === 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border p-3">
+          <span className="text-xs text-muted-foreground">New here? Try an example —</span>
+          {EXAMPLE_BRIEFS.map((ex) => (
+            <button
+              key={ex.id}
+              type="button"
+              onClick={() => applyExample(ex)}
+              className="rounded-lg border border-border bg-secondary/40 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary"
+            >
+              {ex.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Progress */}
       <div className="mb-6">
@@ -312,18 +583,77 @@ export function IdeaPhase() {
         <CopyButton value={prompts?.idea.prompt ?? ""} label="Copy" variant="solid" />
       </div>
 
-      {/* Continue */}
-      {answered === QUESTIONS.length && (
+      <TechStackPhase />
+
+      <BriefAnalysisPanel
+        key={selectedExample?.id ?? "live"}
+        projectId={activeId}
+        idea={data.idea}
+        tech={data.tech}
+        onAccept={(draft, insights) => {
+          updateSchemaDraft(draft);
+          updateBriefInsights({
+            ...insights,
+            sourceIdea: data.idea,
+            sourceCapabilities: data.tech.capabilities,
+            sourceSurfaces: data.tech.surfaces,
+          });
+        }}
+        initialResult={selectedExample?.analysis}
+      />
+
+      {/* Persistent view of the accepted analysis — survives a reload, unlike
+          BriefAnalysisPanel's own internal state, which resets on mount. */}
+      {data.briefInsights && (
+        <div
+          className={cn(
+            "mt-4 rounded-xl glass p-5",
+            briefInsightsStale && "border border-amber-500/40"
+          )}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">Accepted analysis</span>
+            {briefInsightsStale && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase text-amber-400">
+                <AlertTriangleIcon className="h-3 w-3" />
+                Idea changed since this ran
+              </span>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">{data.briefInsights.sharpenedProblem}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">
+            {data.briefInsights.riskiestAssumptions.map((a, i) => (
+              <li key={i}>{a}</li>
+            ))}
+          </ul>
+          {briefInsightsStale && (
+            <p className="mt-3 text-xs text-amber-400/90">
+              You&apos;ve edited the idea or capabilities since this ran — the risks above may no
+              longer match. Run the analysis above again to refresh them.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Continue — requires both the idea questions and a stack, so the build
+          prompt never ships with "(not provided)" standing in for the brief. */}
+      {stack && answered === QUESTIONS.length ? (
         <div className="mt-6 flex justify-end">
           <Link
-            href="/canvas/tech-stack"
+            href="/canvas/build"
+            onClick={confirmStack}
             className="inline-flex items-center gap-1 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Continue to Tech Stack
+            Continue to Build
             <ChevronRightIcon className="h-4 w-4" />
           </Link>
         </div>
-      )}
+      ) : stack ? (
+        <p className="mt-6 text-right text-xs text-muted-foreground">
+          Answer the {QUESTIONS.length - answered} remaining question
+          {QUESTIONS.length - answered === 1 ? "" : "s"} above to continue to Build.
+        </p>
+      ) : null}
     </>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentType } from "react";
-import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-store";
 import {
   CAPABILITY_OPTIONS,
@@ -10,10 +9,8 @@ import {
   stackSlots,
 } from "@/lib/platform-engine";
 import { Capability, Surface } from "@/lib/types";
-import { PhaseHeader } from "./PhaseHeader";
 import {
   CheckIcon,
-  ChevronRightIcon,
   LayersIcon,
   GlobeIcon,
   MonitorIcon,
@@ -26,7 +23,6 @@ import {
   BellIcon,
   SparklesIcon,
   PaletteIcon,
-  LightbulbIcon,
 } from "@/components/icons";
 import { AppleMark, AndroidMark } from "@/components/landing/brand-icons";
 import { cn } from "@/lib/utils";
@@ -56,50 +52,25 @@ function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 }
 
+/**
+ * The Tech Stack section — embedded inside the Brief page (IdeaPhase) below
+ * the idea questions, not a standalone phase. No header/gate/footer of its
+ * own; the Brief page owns the single "Continue to Build" CTA and commits
+ * the checklist's "tech-stack" step (see getPhaseProgress in phases.ts,
+ * which still scores it as part of the merged Brief phase).
+ */
 export function TechStackPhase() {
-  const { data, updateTech, toggleChecklist, isStepDone } = useWorkspace();
+  const { data, updateTech } = useWorkspace();
   const { surfaces, capabilities } = data.tech;
   const stack = compileStack(data.tech);
-  const configured = isStepDone("tech-stack", "configured");
 
   const setSurfaces = (s: Surface) => updateTech("surfaces", toggle(surfaces, s));
   const setCapabilities = (c: Capability) => updateTech("capabilities", toggle(capabilities, c));
 
-  const confirm = () => {
-    if (surfaces.length > 0 && !configured) toggleChecklist("tech-stack", "configured");
-  };
-
-  const ideaDone = [
-    data.idea.problem,
-    data.idea.targetUsers,
-    data.idea.currentSolutions,
-    data.idea.differentiation,
-  ].every((v) => v.trim().length > 0);
-
-  if (!ideaDone) {
-    return (
-      <>
-        <PhaseHeader title="Tech Stack" status="in-progress" phaseId="tech-stack" />
-        <div className="rounded-xl border border-dashed border-border p-8 text-center">
-          <LightbulbIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            Finish the{" "}
-            <Link href="/canvas/idea" className="text-accent-foreground hover:underline">
-              Brief
-            </Link>{" "}
-            first — the stack, brand tokens, and build prompt are all derived from your
-            problem, users, and differentiation.
-          </p>
-        </div>
-      </>
-    );
-  }
-
   return (
-    <>
-      <PhaseHeader title="Tech Stack" status="in-progress" phaseId="tech-stack" />
-
-      <p className="max-w-2xl text-sm text-muted-foreground">
+    <section className="mt-10 border-t border-border pt-8">
+      <h2 className="text-xl font-semibold">Tech Stack</h2>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
         Pick what you&apos;re shipping and what it needs to do. nx derives the framework, backend,
         and libraries — you never choose them by hand.
       </p>
@@ -229,20 +200,6 @@ export function TechStackPhase() {
           </div>
         )}
       </section>
-
-      {/* Continue */}
-      {stack && (
-        <div className="mt-6 flex justify-end">
-          <Link
-            href="/canvas/build"
-            onClick={confirm}
-            className="inline-flex items-center gap-1 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Continue to Build
-            <ChevronRightIcon className="h-4 w-4" />
-          </Link>
-        </div>
-      )}
-    </>
+    </section>
   );
 }
