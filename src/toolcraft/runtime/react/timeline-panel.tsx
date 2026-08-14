@@ -2638,12 +2638,12 @@ function TimelinePanelHeader({
   if (variant === 'compact') {
     return (
       <div
-        className="relative flex h-full min-w-0 shrink-0 items-center justify-center"
+        className="group/timeline-panel-header relative flex h-full min-w-0 shrink-0 items-center gap-1 px-1"
         data-slot="timeline-panel-header"
         data-timeline-panel-variant="compact"
       >
         <div
-          className="relative z-10 inline-flex shrink-0 items-center"
+          className="relative z-10 inline-flex shrink-0 items-center gap-1"
           data-slot="timeline-transport-controls"
         >
           <TimelineIconButton
@@ -2653,7 +2653,23 @@ function TimelinePanelHeader({
           >
             {isPlaying ? <Pause /> : <Play />}
           </TimelineIconButton>
+          <TimelineIconButton
+            label={isLooping ? 'Disable loop' : 'Enable loop'}
+            onClick={onToggleLoop}
+          >
+            {isLooping ? <Repeat data-icon="loop-enabled" /> : <Repeat1 data-icon="loop-disabled" />}
+          </TimelineIconButton>
         </div>
+        <TimelinePlaybackStrip
+          currentTimeSeconds={currentTimeSeconds}
+          durationSeconds={durationSeconds}
+          isScrubbing={isScrubbing}
+          onKeyDown={onScrubKeyDown}
+          onPointerDown={onScrubPointerDown}
+          onPointerMove={onScrubPointerMove}
+          onPointerUp={onScrubPointerUp}
+          stripRef={stripRef}
+        />
       </div>
     );
   }
@@ -2944,8 +2960,16 @@ export function TimelinePanel({
   const { panelRef: timelineSurfaceRef, responsiveLayout } = useTimelinePanelResponsiveLayout(
     isExpanded && !shouldConstrainToContainer,
   );
+  // The 36px compact width is sized for an icon-only floating dock (desktop).
+  // Inside a mobile sheet (placement="surface"), compact now also carries a
+  // loop toggle and a scrub strip — cap it at the same width as the
+  // collapsed/non-compact variant instead, so `w-full` (already applied when
+  // shouldConstrainToContainer, see className below) isn't defeated by an
+  // unrelated 36px maxWidth.
   const unconstrainedTimelinePanelWidth = isCompact
-    ? timelinePanelCompactWidthPx
+    ? shouldConstrainToContainer
+      ? timelinePanelCollapsedWidthPx
+      : timelinePanelCompactWidthPx
     : isExpanded
     ? expandedPanelSize.width
     : timelinePanelCollapsedWidthPx;

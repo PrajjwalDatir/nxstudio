@@ -33,7 +33,7 @@ export function StudioCanvas({ onAnnotationApi }: { onAnnotationApi?: (api: Exca
     () => (
       <>
         <AnnotationLayer onApi={onAnnotationApi} />
-        <div className="pointer-events-none absolute right-[21rem] top-4 z-[9999] flex items-center gap-3">
+        <div className="pointer-events-none absolute right-2.5 top-4 z-[9999] flex items-center gap-3 md:right-[21rem]">
           <ModeToolbar />
           <StudioActions containerRef={containerRef} />
         </div>

@@ -79,7 +79,7 @@ export function ModeToolbar() {
             aria-label={`${m.label} (${m.subtitle})`}
             aria-pressed={active}
             className={cn(
-              "relative flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium transition-colors cursor-pointer pointer-events-auto z-10",
+              "relative flex h-9 items-center gap-2 rounded-xl px-2 text-xs font-medium transition-colors cursor-pointer pointer-events-auto z-10 md:px-3",
               active ? "text-accent-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -91,20 +91,20 @@ export function ModeToolbar() {
               />
             )}
             <Icon className="relative z-10 h-4 w-4 shrink-0" />
-            <span className="relative z-10 font-medium tracking-tight">{m.label}</span>
+            <span className="relative z-10 hidden font-medium tracking-tight md:inline">{m.label}</span>
           </button>
         );
       })}
 
       <div className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
-      
+
       <Link
         href="/canvas"
-        className="flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer z-10 pointer-events-auto"
+        className="flex h-9 items-center gap-2 rounded-xl px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer z-10 pointer-events-auto md:px-3"
         title="Back to Canvas"
       >
         <ScaffoldIcon className="h-4 w-4 shrink-0" />
-        <span className="font-medium tracking-tight">Canvas</span>
+        <span className="hidden font-medium tracking-tight md:inline">Canvas</span>
       </Link>
     </nav>
   );

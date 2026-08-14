@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import "@excalidraw/excalidraw/index.css";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { useToolcraftValue } from "@/toolcraft/runtime/react";
+import { useIsMobile } from "@/toolcraft/ui/hooks/use-mobile";
 import { STUDIO_MODE } from "@/lib/studio/schema";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,7 @@ const ExcalidrawSurface = React.memo(function ExcalidrawSurface({
   sketching: boolean;
   onApi?: (api: ExcalidrawImperativeAPI) => void;
 }) {
+  const isMobile = useIsMobile();
   const handleApi = useCallback(
     (api: ExcalidrawImperativeAPI) => {
       onApi?.(api);
@@ -78,11 +80,12 @@ const ExcalidrawSurface = React.memo(function ExcalidrawSurface({
   return (
     <div
       className={cn(
-        "absolute inset-0 right-[21rem] z-20 transition-opacity duration-200",
+        "absolute inset-0 right-0 z-20 transition-opacity duration-200 md:right-[21rem]",
         sketching
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-90",
       )}
+      style={{ "--shapes-offset": isMobile ? "0rem" : "10.5rem" } as React.CSSProperties}
     >
       {/* Hide Excalidraw's native menus — they overlap our ModeToolbar */}
       <style jsx global>{`
@@ -97,15 +100,19 @@ const ExcalidrawSurface = React.memo(function ExcalidrawSurface({
         /* Excalidraw docks its shape toolbar at top-center, where it hides
            behind our ModeToolbar. Float it down to sit just above the bottom
            zoom panel (which lives at bottom-2.5 of the app) instead. The
-           Excalidraw surface is inset by the 21rem controls panel on the right,
-           so its own centre sits 10.5rem left of the viewport centre — offset
-           the toolbar back so it lines up with the (viewport-centred) zoom bar. */
+           Excalidraw surface is inset by the 21rem controls panel on the right
+           on desktop only (see the sibling className above), so its own centre
+           sits 10.5rem left of the viewport centre there — offset the toolbar
+           back so it lines up with the (viewport-centred) zoom bar. On mobile
+           the surface isn't inset, so no compensation is needed; --shapes-offset
+           carries that distinction from the same isMobile check driving the
+           className, instead of a second hardcoded breakpoint in raw CSS. */
         .excalidraw .shapes-section {
           position: absolute;
           left: 50%;
           right: auto;
           bottom: 4.25rem;
-          transform: translateX(calc(-50% + 10.5rem));
+          transform: translateX(calc(-50% + var(--shapes-offset, 10.5rem)));
           justify-content: center;
           z-index: 4;
         }

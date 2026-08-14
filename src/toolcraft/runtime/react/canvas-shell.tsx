@@ -233,6 +233,24 @@ function getZoomedCanvasOffset({
   };
 }
 
+type CanvasPinchPoint = { x: number; y: number };
+
+function getPinchDistance(pointers: Map<number, CanvasPinchPoint>): number | null {
+  const [a, b] = Array.from(pointers.values());
+  if (!a || !b) {
+    return null;
+  }
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function getPinchMidpoint(pointers: Map<number, CanvasPinchPoint>): CanvasPinchPoint | null {
+  const [a, b] = Array.from(pointers.values());
+  if (!a || !b) {
+    return null;
+  }
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
 export function CanvasShell({
   children,
   renderDefaultMedia = true,
@@ -240,6 +258,12 @@ export function CanvasShell({
   const { dispatch, state } = useToolcraft();
   const [dragOver, setDragOver] = React.useState(false);
   const dragRef = React.useRef<CanvasDragState | null>(null);
+  // Two-finger pinch-to-zoom — tracked independently of dragRef's single-
+  // pointer pan so the two gestures can never run concurrently (see
+  // handlePointerDown/Move below: a second finger arriving always cancels
+  // an in-progress pan).
+  const pinchPointersRef = React.useRef<Map<number, CanvasPinchPoint>>(new Map());
+  const pinchStateRef = React.useRef<{ lastDistance: number } | null>(null);
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
   const uploadEnabled = state.schema.canvas.upload;
   const { offset, size, zoom } = state.canvas;
@@ -352,7 +376,34 @@ export function CanvasShell({
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (
     event,
   ) => {
-    if (!state.schema.canvas.draggable || event.button !== 0) {
+    if (!state.schema.canvas.draggable) {
+      return;
+    }
+
+    // Record every pointer that reaches the viewport (mouse or touch) before
+    // deciding what it means — a second finger arriving here is what turns
+    // this into a pinch instead of a pan.
+    pinchPointersRef.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    if (pinchPointersRef.current.size >= 2) {
+      // A pinch just started (or a third finger touched down, which is
+      // ignored beyond bookkeeping — getPinchDistance/Midpoint only ever
+      // read the map's first two entries). Cancel any single-pointer pan so
+      // the two gestures never run at once.
+      dragRef.current = null;
+      const distance = getPinchDistance(pinchPointersRef.current);
+      pinchStateRef.current = distance === null ? null : { lastDistance: distance };
+      event.preventDefault();
+      if (typeof event.currentTarget.setPointerCapture === "function") {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+      return;
+    }
+
+    if (event.button !== 0) {
       return;
     }
 
@@ -374,6 +425,46 @@ export function CanvasShell({
   const handlePointerMove: React.PointerEventHandler<HTMLDivElement> = (
     event,
   ) => {
+    if (pinchPointersRef.current.has(event.pointerId)) {
+      pinchPointersRef.current.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    }
+
+    if (pinchPointersRef.current.size >= 2 && pinchStateRef.current) {
+      const distance = getPinchDistance(pinchPointersRef.current);
+      const midpoint = getPinchMidpoint(pinchPointersRef.current);
+
+      if (distance === null || midpoint === null || pinchStateRef.current.lastDistance === 0) {
+        return;
+      }
+
+      const currentZoom = zoomRef.current;
+      const nextZoom = clampToolcraftCanvasZoom(
+        Math.round(currentZoom * (distance / pinchStateRef.current.lastDistance)),
+      );
+      pinchStateRef.current.lastDistance = distance;
+
+      if (nextZoom === currentZoom) {
+        return;
+      }
+
+      dispatch({
+        offset: getZoomedCanvasOffset({
+          clientX: midpoint.x,
+          clientY: midpoint.y,
+          currentZoom,
+          nextZoom,
+          offset: offsetRef.current,
+          viewportElement: event.currentTarget,
+        }),
+        type: "canvas.setViewport",
+        zoom: nextZoom,
+      });
+      return;
+    }
+
     const drag = dragRef.current;
 
     if (!drag || drag.pointerId !== event.pointerId) {
@@ -392,8 +483,13 @@ export function CanvasShell({
   const handlePointerUp: React.PointerEventHandler<HTMLDivElement> = (
     event,
   ) => {
-    if (dragRef.current?.pointerId !== event.pointerId) {
-      return;
+    pinchPointersRef.current.delete(event.pointerId);
+    if (pinchPointersRef.current.size < 2) {
+      // Don't try to resume a pan from whichever finger is left — its
+      // dragRef was already cleared when the pinch started and re-arming it
+      // here would jump from a stale origin. The user just starts a fresh
+      // single-finger touch (a new pointerdown) to pan again.
+      pinchStateRef.current = null;
     }
 
     if (
@@ -401,6 +497,10 @@ export function CanvasShell({
       event.currentTarget.hasPointerCapture(event.pointerId)
     ) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (dragRef.current?.pointerId !== event.pointerId) {
+      return;
     }
 
     dragRef.current = null;
