@@ -38,6 +38,15 @@ export async function syncRepo(repo: string, branch = "main"): Promise<SyncResul
   return (await res.json()) as SyncResult;
 }
 
+export async function closeGitHubIssue(repo: string, issueNumber: number): Promise<boolean> {
+  const res = await fetch("/api/github/close-issue", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ repo, issueNumber }),
+  });
+  return res.ok;
+}
+
 export async function getGhUser(token: string): Promise<GhUser | null> {
   const res = await fetch("https://api.github.com/user", {
     headers: {
