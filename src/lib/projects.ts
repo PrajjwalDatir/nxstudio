@@ -96,6 +96,7 @@ export function newWorkspaceData(name: string): WorkspaceData {
     },
     checklist: {},
     customStages: [],
+    iterations: [],
   };
 }
 
@@ -128,6 +129,7 @@ export function hydrateData(
     },
     checklist: stored.checklist ?? {},
     customStages: stored.customStages ?? [],
+    iterations: stored.iterations ?? [],
   };
 }
 

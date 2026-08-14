@@ -11,7 +11,9 @@ import React, {
 } from "react";
 import { getStoredValue, setStoredValue } from "./storage";
 import { createClient } from "@/lib/supabase/client";
-import { CustomStage, IdeaData, TechStackInput, WorkspaceData } from "./types";
+import { CustomStage, IdeaData, IterationEntry, TechStackInput, WorkspaceData } from "./types";
+import { mergeNxIntoWorkspace } from "./nx-compiler";
+import { isBriefInsightsStale } from "./staleness";
 import {
   Collection,
   GitHubConnection,
@@ -83,6 +85,19 @@ interface WorkspaceContextType {
   updateIdea: <K extends keyof IdeaData>(field: K, value: IdeaData[K]) => void;
   updateBrand: (field: keyof WorkspaceData["brand"], value: string) => void;
   updateDesignNotes: (text: string) => void;
+  updateSchemaDraft: (draft: WorkspaceData["schemaDraft"]) => void;
+  updateBriefInsights: (insights: WorkspaceData["briefInsights"]) => void;
+  /** True when the idea or capabilities have changed since briefInsights was accepted. */
+  briefInsightsStale: boolean;
+  addIteration: (entry: IterationEntry) => void;
+  markIterationShipped: (id: string) => void;
+  /**
+   * Apply a server-computed reconciliation patch (see /api/context/scope-change).
+   * `base` is the workspace snapshot the patch was computed against — when given,
+   * a field is only overwritten if it still matches `base`, so an edit the founder
+   * made locally while the request was in flight doesn't get silently reverted.
+   */
+  applyWorkspacePatch: (patch: Partial<WorkspaceData>, base?: WorkspaceData) => void;
   updateTech: <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) => void;
   toggleChecklist: (phaseId: string, stepId: string) => void;
   isStepDone: (phaseId: string, stepId: string) => boolean;
@@ -403,6 +418,54 @@ export function WorkspaceProvider({
     [patchData]
   );
 
+  const updateSchemaDraft = useCallback(
+    (draft: WorkspaceData["schemaDraft"]) => patchData((d) => ({ ...d, schemaDraft: draft })),
+    [patchData]
+  );
+
+  const updateBriefInsights = useCallback(
+    (insights: WorkspaceData["briefInsights"]) => patchData((d) => ({ ...d, briefInsights: insights })),
+    [patchData]
+  );
+
+  const briefInsightsStale = useMemo(
+    () => isBriefInsightsStale(activeProject.data),
+    [activeProject]
+  );
+
+  const addIteration = useCallback(
+    (entry: IterationEntry) => patchData((d) => ({ ...d, iterations: [...d.iterations, entry] })),
+    [patchData]
+  );
+
+  const markIterationShipped = useCallback(
+    (id: string) =>
+      patchData((d) => ({
+        ...d,
+        iterations: d.iterations.map((it) => (it.id === id ? { ...it, status: "shipped" as const } : it)),
+      })),
+    [patchData]
+  );
+
+  const applyWorkspacePatch = useCallback(
+    (patch: Partial<WorkspaceData>, base?: WorkspaceData) => {
+      if (Object.keys(patch).length === 0) return;
+      patchData((d) => {
+        if (!base) return { ...d, ...patch };
+        const safePatch: Partial<WorkspaceData> = {};
+        for (const key of Object.keys(patch) as (keyof WorkspaceData)[]) {
+          // Only take the server's value for a field the founder hasn't edited
+          // locally since the request that computed this patch was sent.
+          if (JSON.stringify(d[key]) === JSON.stringify(base[key])) {
+            (safePatch as Record<string, unknown>)[key] = patch[key];
+          }
+        }
+        return Object.keys(safePatch).length ? { ...d, ...safePatch } : d;
+      });
+    },
+    [patchData]
+  );
+
   const updateTech = useCallback(
     <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) =>
       patchData((d) => ({ ...d, tech: { ...d.tech, [field]: value } })),
@@ -521,6 +584,34 @@ export function WorkspaceProvider({
 
   const syncResult = repoKey ? resultByRepo[repoKey] ?? null : null;
 
+  // Ambient full auto-merge: reconcile repo-authored .nx/ content back into
+  // WorkspaceData whenever a sync lands. Computed against a ref (not
+  // activeProject.data directly) so this doesn't re-run on every keystroke —
+  // only when a new sync result actually arrives — and skipped entirely when
+  // there's nothing to merge, so it doesn't trigger a save every poll.
+  const activeDataRef = useRef(activeProject.data);
+  useEffect(() => {
+    activeDataRef.current = activeProject.data;
+  }, [activeProject.data]);
+
+  // The 60s poll (see runSync below) writes a fresh SyncResult object every
+  // tick even when nothing changed upstream, so gate the (relatively
+  // expensive) diffNx/mergeNxIntoWorkspace rebuild on the fetched .nx/ doc
+  // content actually changing — keyed per project+repo so switching between
+  // two projects that share a repo still reconciles each one independently.
+  const lastMergedDocsRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    if (!syncResult || !repoKey) return;
+    const mergeKey = `${store.activeId}:${repoKey}`;
+    const docsSignature = JSON.stringify(syncResult.context.docs);
+    if (lastMergedDocsRef.current.get(mergeKey) === docsSignature) return;
+    lastMergedDocsRef.current.set(mergeKey, docsSignature);
+
+    const patch = mergeNxIntoWorkspace(syncResult.context, activeDataRef.current);
+    if (Object.keys(patch).length === 0) return;
+    patchData((d) => ({ ...d, ...patch }));
+  }, [syncResult, patchData, repoKey, store.activeId]);
+
   const runSync = useCallback(async () => {
     if (!ghStatus.connected) {
       setSyncStatus("disconnected");
@@ -614,6 +705,12 @@ export function WorkspaceProvider({
         updateIdea,
         updateBrand,
         updateDesignNotes,
+        updateSchemaDraft,
+        updateBriefInsights,
+        briefInsightsStale,
+        addIteration,
+        markIterationShipped,
+        applyWorkspacePatch,
         updateTech,
         toggleChecklist,
         isStepDone,

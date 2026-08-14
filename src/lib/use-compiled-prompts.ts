@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { CompiledPrompts } from "@/lib/prompts-server";
+import { AgentTarget } from "@/lib/types";
 
 interface State {
   prompts: CompiledPrompts | null;
@@ -25,7 +26,7 @@ const promptCache = new Map<string, { prompts: CompiledPrompts; locked: boolean 
  * from cache when switching tabs, and recompile silently in the background when
  * context changes.
  */
-export function useCompiledPrompts() {
+export function useCompiledPrompts(agentTarget: AgentTarget = "generic") {
   const { activeId, data } = useWorkspace();
 
   // Serialize just the fields that affect compilation so we don't refetch on
@@ -37,6 +38,9 @@ export function useCompiledPrompts() {
     brand: data.brand,
     tech: data.tech,
     designNotes: data.designNotes,
+    schemaDraft: data.schemaDraft,
+    briefInsights: data.briefInsights,
+    agentTarget,
   });
 
   const cached = promptCache.get(signature);
@@ -73,7 +77,7 @@ export function useCompiledPrompts() {
       const res = await fetch("/api/prompts/compile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: dataRef.current }),
+        body: JSON.stringify({ data: dataRef.current, agentTarget }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Failed to load prompts.");
@@ -95,7 +99,7 @@ export function useCompiledPrompts() {
         error: e instanceof Error ? e.message : "Failed to load prompts.",
       }));
     }
-  }, [signature]);
+  }, [signature, agentTarget]);
 
   useEffect(() => {
     // Recompile (debounced) whenever signature changes, or immediately if uncached

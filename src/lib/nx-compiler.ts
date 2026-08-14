@@ -8,9 +8,9 @@
  *      the IDE committed to GitHub (see the sync store).
  */
 
-import { compileStack } from "./platform-engine";
-import { getPhase } from "./phases";
-import { CompiledStack, WorkspaceData } from "./types";
+import { compileStack, CAPABILITY_OPTIONS, SURFACE_OPTIONS } from "./platform-engine";
+import { BUILD_STEPS, ChecklistStep } from "./phases";
+import { BrandDNA, Capability, CompiledStack, IdeaData, Surface, WorkspaceData } from "./types";
 
 export const NX_ROOT = ".nx";
 
@@ -107,7 +107,16 @@ must use the primary color for primary actions and the defined radius and font.
     },
     {
       path: `${NX_ROOT}/decisions/db-schema.md`,
-      content: `# Data Model
+      content: data.schemaDraft?.dbSchema
+        ? `# Data Model
+
+Database: **${stack?.database ?? "TBD"}**
+
+${data.schemaDraft.dbSchema}
+
+This is a starting design, not final DDL — adjust it as real features demand.
+`
+        : `# Data Model
 
 Database: **${stack?.database ?? "TBD"}**
 
@@ -117,7 +126,16 @@ version control. ${data.tech.capabilities.includes("auth") ? "Include a users ta
     },
     {
       path: `${NX_ROOT}/specs/api-routes.md`,
-      content: `# API Surface
+      content: data.schemaDraft?.apiRoutes
+        ? `# API Surface
+
+Backend: **${stack?.backend ?? "TBD"}**
+
+${data.schemaDraft.apiRoutes}
+
+This is a starting design, not a final contract — adjust it as real features demand.
+`
+        : `# API Surface
 
 Backend: **${stack?.backend ?? "TBD"}**
 
@@ -136,6 +154,28 @@ Configure CI/CD to deploy on push to \`main\`. Add preview deployments for PRs.
     { path: `${NX_ROOT}/checklist.md`, content: compileChecklistDoc(data) },
   ];
 
+  if (data.briefInsights) {
+    const { sharpenedProblem, riskiestAssumptions, stackConcerns } = data.briefInsights;
+    files.push({
+      path: `${NX_ROOT}/risks.md`,
+      content: `# Risks & Assumptions — ${name}
+
+An AI pressure-test of this brief, accepted by the founder. Defend against these
+while building — don't just implement the happy path.
+
+## Sharpened problem
+${sharpenedProblem}
+
+## Riskiest assumptions
+${riskiestAssumptions.map((a) => `- ${a}`).join("\n")}
+${
+  stackConcerns.length
+    ? `\n## Stack concerns\n${stackConcerns.map((c) => `- ${c}`).join("\n")}\n`
+    : ""
+}`,
+    });
+  }
+
   if (data.customStages && data.customStages.length > 0) {
     files.push({
       path: `${NX_ROOT}/custom-workflow.md`,
@@ -153,65 +193,45 @@ ${data.customStages
     });
   }
 
-  // Pre-configured IDE agent rule files — unzipping configures Claude Code, Cursor, & Windsurf automatically
+  // AGENTS.md — the open cross-tool standard (Linux Foundation; read natively
+  // by Cursor, Windsurf/Devin Desktop, Zed, Aider, Antigravity, GitHub
+  // Copilot, and most other agentic coding tools as of 2026) replaces what
+  // used to be five separate, near-duplicate proprietary rule files.
+  //
+  // Each tool below still gets its own native file, but as a one-line pointer
+  // rather than duplicated instructions. Claude Code's `@AGENTS.md` is an
+  // officially documented import; Cursor has no such import *syntax*, but its
+  // .mdc files are just prose an LLM agent reads and acts on — "read
+  // AGENTS.md first" works as a plain instruction whether or not the tool
+  // has a formal import mechanism for it. Only emitted for the founder's
+  // selected agentTarget (see renderNxFileBlocks in prompts-server.ts) — no
+  // point shipping five near-empty pointer files either.
   files.push(
     {
-      path: ".claude/CLAUDE.md",
-      content: `# Claude Code Instructions — ${name}
+      path: "AGENTS.md",
+      content: `# Agent Instructions — ${name}
 
 When the user says "Start" or initiates a build:
-1. Read \`.nx/memory.json\` and \`.nx/ui/brand-guide.md\` to load the stack, brand tokens, and architecture specs.
+1. Read \`.nx/memory.json\` and the rest of \`.nx/\` (idea, tech stack, brand guide, data model, API surface, risks) to load the full architecture and constraints.
 2. Scaffold the project and build the foundation in one continuous agent run.
 `,
     },
+    { path: ".claude/CLAUDE.md", content: `@AGENTS.md\n` },
     {
       path: ".cursor/rules/nx.mdc",
       content: `---
-description: Read .nx/ architecture memory on build start
-globs: *
+alwaysApply: true
 ---
-# Cursor Agent Rule — ${name}
-
-When the user says "Start" or initiates a build:
-- Read \`.nx/memory.json\` and \`.nx/\` files for tech stack, brand tokens, and architecture specs.
-- Scaffold the project and build the foundation end-to-end.
+Read \`AGENTS.md\` at the repo root first — it has the full architecture, brand, and build instructions.
 `,
     },
     {
+      // Legacy root file — still read by both Windsurf and its Devin Desktop
+      // successor (Cognition's rebrand, June 2026); .devin/rules/ and
+      // .windsurf/rules/ take precedence if the founder's own setup has them,
+      // this is just the reliable fallback.
       path: ".windsurfrules",
-      content: `# Windsurf Cascade Rule — ${name}
-
-When the user says "Start" or initiates a build:
-- Read \`.nx/\` directory files to load architecture memory, brand tokens, and build order.
-- Scaffold the project and build the foundation end-to-end.
-`,
-    },
-    {
-      path: ".antigravity/instructions.md",
-      content: `# Google Antigravity Instructions — ${name}
-
-When the user says "Start" or initiates a build:
-1. Read \`.nx/memory.json\` and \`.nx/ui/brand-guide.md\` to load the stack, brand tokens, and architecture specs.
-2. Scaffold the project and build the foundation in one continuous run.
-`,
-    },
-    {
-      path: ".zed/prompts/build.md",
-      content: `# Zed AI Instructions — ${name}
-
-When the user says "Start" or initiates a build:
-- Read \`.nx/memory.json\` and \`.nx/\` files for tech stack, brand tokens, and architecture specs.
-- Scaffold the project and build the foundation end-to-end.
-`,
-    },
-    {
-      path: "CONVENTIONS.md",
-      content: `# Aider & Universal Conventions — ${name}
-
-When starting a build:
-- Read \`.nx/\` directory files for tech stack, brand tokens, and architecture specs.
-- Scaffold the project and build the foundation end-to-end.
-`,
+      content: `Read AGENTS.md at the repo root first — it has the full architecture, brand, and build instructions.\n`,
     }
   );
 
@@ -224,18 +244,29 @@ When starting a build:
  * a straight content diff (see diffNx) is enough to tell whether the studio's
  * checklist has moved ahead of what's committed to the repo.
  */
-export function compileChecklistDoc(data: WorkspaceData): string {
-  const defaultSteps = getPhase("checklist")?.steps ?? [];
+/** Every fixed/custom checklist step that can render as a checkbox in checklist.md. */
+function allChecklistSteps(data: WorkspaceData): ChecklistStep[] {
   const customSteps = data.customStages.find((s) => s.id === "checklist")?.steps ?? [];
-  const steps = [...defaultSteps, ...customSteps];
+  return [...BUILD_STEPS, ...(customSteps as ChecklistStep[])];
+}
+
+export function compileChecklistDoc(data: WorkspaceData): string {
+  const steps = allChecklistSteps(data);
   const done = (id: string) =>
     (data.checklist["checklist"] ?? []).includes(id) || (data.checklist["build"] ?? []).includes(id);
 
   const lines = steps.map((s) => `- [${done(s.id) ? "x" : " "}] ${s.label}`);
+  // Iterations are the post-launch changelog (see IterationEntry in types.ts) —
+  // each feature/fix requested after the initial build gets its own line here,
+  // so the checklist keeps growing instead of staying fixed at the 3 build steps.
+  const iterationLines = data.iterations.map(
+    (it) => `- [${it.status === "shipped" ? "x" : " "}] ${it.title}`
+  );
+  const allLines = [...lines, ...iterationLines];
 
   return `# Deliverables Checklist
 
-${lines.length ? lines.join("\n") : "_No deliverables yet._"}
+${allLines.length ? allLines.join("\n") : "_No deliverables yet._"}
 
 Keep this in sync as work lands — check items off, or add new ones, as you go.
 `;
@@ -267,7 +298,10 @@ export interface NxMemory {
   project?: string;
   problem?: string;
   target_users?: string;
-  stack?: Record<string, string> | string;
+  solutions?: string;
+  differentiation?: string;
+  stack?: { surfaces?: string; [key: string]: unknown } | string;
+  capabilities?: string[];
   brand?: Record<string, string>;
   phases?: Record<string, string>;
 }
@@ -374,4 +408,263 @@ export function diffNx(repoDocs: Record<string, string>, data: WorkspaceData): N
     if (!seen.has(path)) out.push({ path, status: "extra" });
   }
   return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* MERGE — reconcile repo-authored .nx/ content back into WorkspaceData */
+/*                                                                      */
+/* The read side above (parseNx/diffNx) only ever fed a diff display —  */
+/* sync was one-directional. These reverse-parsers are the other half:  */
+/* each is the inverse of one compileNxFiles() template, best-effort   */
+/* (a doc that doesn't parse is left alone, never guessed at).          */
+/* ------------------------------------------------------------------ */
+
+/** Extract one `## Heading` section's body from a doc built by compileNxFiles. */
+function mdSection(content: string, heading: string): string | null {
+  const m = content.match(new RegExp(`## ${heading}\\n([\\s\\S]*?)(?:\\n## |$)`));
+  if (!m) return null;
+  const text = m[1].trim();
+  return text && text !== "_Not yet defined._" ? text : "";
+}
+
+/** Bullet list items (`- item`) inside one already-extracted section body. */
+function mdBullets(section: string): string[] {
+  return section
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith("- "))
+    .map((l) => l.slice(2).trim());
+}
+
+function parseIdeaMd(content: string): Partial<IdeaData> | null {
+  const problem = mdSection(content, "Problem");
+  const targetUsers = mdSection(content, "Target Users");
+  const currentSolutions = mdSection(content, "How they solve it today");
+  const differentiation = mdSection(content, "Our differentiation");
+  if (problem === null && targetUsers === null && currentSolutions === null && differentiation === null) {
+    return null;
+  }
+  const out: Partial<IdeaData> = {};
+  if (problem !== null) out.problem = problem;
+  if (targetUsers !== null) out.targetUsers = targetUsers;
+  if (currentSolutions !== null) out.currentSolutions = currentSolutions;
+  if (differentiation !== null) out.differentiation = differentiation;
+  return out;
+}
+
+interface ParsedRisks {
+  sharpenedProblem: string;
+  riskiestAssumptions: string[];
+  stackConcerns: string[];
+}
+
+function parseRisksMd(content: string): ParsedRisks | null {
+  const sharpenedProblem = mdSection(content, "Sharpened problem");
+  const riskSection = mdSection(content, "Riskiest assumptions");
+  if (!sharpenedProblem || riskSection === null) return null;
+  const riskiestAssumptions = mdBullets(riskSection);
+  if (riskiestAssumptions.length === 0) return null;
+  const concernSection = mdSection(content, "Stack concerns");
+  const stackConcerns = concernSection ? mdBullets(concernSection) : [];
+  return { sharpenedProblem, riskiestAssumptions, stackConcerns };
+}
+
+function parseBrandGuideMd(content: string): Partial<BrandDNA> | null {
+  const field = (label: string) => {
+    const m = content.match(new RegExp(`\\*\\*${label}:\\*\\* (.+)`));
+    return m ? m[1].trim() : null;
+  };
+  const vibe = field("Vibe");
+  const primaryColor = field("Primary Color");
+  const radius = field("Border Radius");
+  const font = field("Font");
+  if (!vibe && !primaryColor && !radius && !font) return null;
+  const out: Partial<BrandDNA> = {};
+  if (vibe) out.vibe = vibe;
+  if (primaryColor) out.primaryColor = primaryColor;
+  if (radius) out.radius = radius;
+  if (font) out.font = font;
+  return out;
+}
+
+const SURFACE_NAME_TO_ID: Record<string, Surface> = Object.fromEntries(
+  SURFACE_OPTIONS.map((o) => [o.label, o.id])
+);
+
+/** Reverse of surfaceLabel() in platform-engine.ts — "Web + iOS" back to ["web","ios"]. */
+function parseTechStackSurfaces(content: string): Surface[] | null {
+  const m = content.match(/\|\s*Surfaces\s*\|\s*(.+?)\s*\|/);
+  if (!m || m[1].trim() === "—") return null;
+  const surfaces = m[1]
+    .split("+")
+    .map((s) => SURFACE_NAME_TO_ID[s.trim()])
+    .filter((s): s is Surface => !!s);
+  return surfaces.length ? surfaces : null;
+}
+
+/**
+ * Unwrap the free-text body compileNxFiles wraps db-schema.md/api-routes.md
+ * content in. Only the header line (title + Database/Backend label) is
+ * required to match — the trailing auto-generated sentence is stripped if
+ * still present, but isn't required, since a build agent told to "keep this
+ * doc updated as the schema evolves" will often rewrite or drop it. Requiring
+ * that exact sentence would silently lose real edits instead of just losing
+ * the boilerplate.
+ */
+function unwrapDoc(content: string, header: RegExp, footers: RegExp[]): string | null {
+  const m = content.match(header);
+  if (!m) return null;
+  let body = m[1];
+  for (const footer of footers) body = body.replace(footer, "");
+  body = body.trim();
+  return body || null;
+}
+
+function parseDbSchemaMd(content: string): string | null {
+  return unwrapDoc(content, /# Data Model\n\nDatabase: \*\*.*?\*\*\n\n([\s\S]*)$/, [
+    /\n*This is a starting design,[^\n]*$/i,
+    /\n*Define tables\/collections here[\s\S]*$/i,
+  ]);
+}
+
+function parseApiRoutesMd(content: string): string | null {
+  return unwrapDoc(content, /# API Surface\n\nBackend: \*\*.*?\*\*\n\n([\s\S]*)$/, [
+    /\n*This is a starting design,[^\n]*$/i,
+    /\n*Document each endpoint[\s\S]*$/i,
+  ]);
+}
+
+function parseChecklistDone(content: string): Set<string> {
+  const done = new Set<string>();
+  for (const line of content.split("\n")) {
+    const m = line.match(/^- \[x\] (.+)$/i);
+    if (m) done.add(m[1].trim());
+  }
+  return done;
+}
+
+const CAPABILITY_IDS = new Set(CAPABILITY_OPTIONS.map((o) => o.id));
+
+/**
+ * Full auto-merge: reconcile repo-authored `.nx/` content back into
+ * WorkspaceData. Only acts on files diffNx marks "drifted" — "missing"
+ * (studio has more than the repo) and "unchanged"/"extra" need no
+ * reconciliation. Repo wins on drift: whatever the agent committed is
+ * treated as the founder's current intent. Returns only the fields that
+ * actually changed, ready to pass straight to patchData/applyWorkspacePatch.
+ */
+export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Partial<WorkspaceData> {
+  const drift = diffNx(parsed.docs, data);
+  const drifted = new Set(drift.filter((d) => d.status === "drifted").map((d) => d.path));
+
+  const memoryPath = `${NX_ROOT}/memory.json`;
+  const ideaPath = `${NX_ROOT}/idea.md`;
+  const risksPath = `${NX_ROOT}/risks.md`;
+  const checklistPath = `${NX_ROOT}/checklist.md`;
+  const brandPath = `${NX_ROOT}/ui/brand-guide.md`;
+  const techStackPath = `${NX_ROOT}/decisions/tech-stack.md`;
+  const dbSchemaPath = `${NX_ROOT}/decisions/db-schema.md`;
+  const apiRoutesPath = `${NX_ROOT}/specs/api-routes.md`;
+
+  let idea = data.idea;
+  let brand = data.brand;
+  let tech = data.tech;
+
+  if (drifted.has(memoryPath) && parsed.memory) {
+    const m = parsed.memory;
+    const fromMemory: Partial<IdeaData> = {};
+    if (typeof m.problem === "string") fromMemory.problem = m.problem;
+    if (typeof m.target_users === "string") fromMemory.targetUsers = m.target_users;
+    if (typeof m.solutions === "string") fromMemory.currentSolutions = m.solutions;
+    if (typeof m.differentiation === "string") fromMemory.differentiation = m.differentiation;
+    if (Object.keys(fromMemory).length) idea = { ...idea, ...fromMemory };
+    if (m.brand) {
+      const b: Partial<BrandDNA> = {};
+      if (m.brand.vibe) b.vibe = m.brand.vibe;
+      if (m.brand.primary_color) b.primaryColor = m.brand.primary_color;
+      if (m.brand.radius) b.radius = m.brand.radius;
+      if (m.brand.font) b.font = m.brand.font;
+      if (Object.keys(b).length) brand = { ...brand, ...b };
+    }
+    if (Array.isArray(m.capabilities)) {
+      const caps = m.capabilities.filter((c): c is Capability => CAPABILITY_IDS.has(c as Capability));
+      if (caps.length) tech = { ...tech, capabilities: caps };
+    }
+  }
+
+  if (drifted.has(ideaPath)) {
+    const doc = parsed.docs[ideaPath];
+    const parsedIdea = doc ? parseIdeaMd(doc) : null;
+    if (parsedIdea) idea = { ...idea, ...parsedIdea };
+  }
+
+  if (drifted.has(brandPath)) {
+    const doc = parsed.docs[brandPath];
+    const parsedBrand = doc ? parseBrandGuideMd(doc) : null;
+    if (parsedBrand) brand = { ...brand, ...parsedBrand };
+  }
+
+  if (drifted.has(techStackPath)) {
+    const doc = parsed.docs[techStackPath];
+    const surfaces = doc ? parseTechStackSurfaces(doc) : null;
+    if (surfaces) tech = { ...tech, surfaces };
+  }
+
+  const patch: Partial<WorkspaceData> = {};
+  if (idea !== data.idea) patch.idea = idea;
+  if (brand !== data.brand) patch.brand = brand;
+  if (tech !== data.tech) patch.tech = tech;
+
+  if (drifted.has(risksPath)) {
+    const doc = parsed.docs[risksPath];
+    const parsedRisks = doc ? parseRisksMd(doc) : null;
+    if (parsedRisks) {
+      patch.briefInsights = {
+        ...parsedRisks,
+        sourceIdea: patch.idea ?? data.idea,
+        sourceCapabilities: (patch.tech ?? data.tech).capabilities,
+        sourceSurfaces: (patch.tech ?? data.tech).surfaces,
+      };
+    }
+  }
+
+  if (drifted.has(dbSchemaPath) || drifted.has(apiRoutesPath)) {
+    const dbDoc = parsed.docs[dbSchemaPath];
+    const apiDoc = parsed.docs[apiRoutesPath];
+    const dbSchema = drifted.has(dbSchemaPath) && dbDoc ? parseDbSchemaMd(dbDoc) : null;
+    const apiRoutes = drifted.has(apiRoutesPath) && apiDoc ? parseApiRoutesMd(apiDoc) : null;
+    if (dbSchema || apiRoutes) {
+      patch.schemaDraft = {
+        dbSchema: dbSchema ?? data.schemaDraft?.dbSchema ?? "",
+        apiRoutes: apiRoutes ?? data.schemaDraft?.apiRoutes ?? "",
+      };
+    }
+  }
+
+  if (drifted.has(checklistPath)) {
+    const doc = parsed.docs[checklistPath];
+    if (doc) {
+      const doneLabels = parseChecklistDone(doc);
+      const steps = allChecklistSteps(data);
+      const nextDone = new Set(data.checklist["checklist"] ?? []);
+      let changed = false;
+      for (const step of steps) {
+        if (doneLabels.has(step.label) && !nextDone.has(step.id)) {
+          nextDone.add(step.id);
+          changed = true;
+        }
+      }
+      const nextIterations = data.iterations.map((it) => {
+        if (it.status === "shipped" || !doneLabels.has(it.title)) return it;
+        changed = true;
+        return { ...it, status: "shipped" as const };
+      });
+      if (changed) {
+        patch.checklist = { ...data.checklist, checklist: [...nextDone] };
+        patch.iterations = nextIterations;
+      }
+    }
+  }
+
+  return patch;
 }
