@@ -30,6 +30,61 @@ export async function getUser(token: string): Promise<GhUser | null> {
   return (await res.json()) as GhUser;
 }
 
+async function fetchOne(token: string, encOwner: string, encName: string, encBranch: string, path: string): Promise<string | null> {
+  const encPath = path.split("/").map(encodeURIComponent).join("/");
+  const res = await gh(token, `/repos/${encOwner}/${encName}/contents/${encPath}?ref=${encBranch}`);
+  if (!res.ok) return null;
+  const blob = (await res.json()) as { content?: string; encoding?: string };
+  return blob.content ? Buffer.from(blob.content, "base64").toString("utf-8") : null;
+}
+
+/**
+ * Fetch live content for a specific, known set of `.nx/` paths — no tree
+ * walk. Used by the scoped-iteration flow (see /api/context/scope-change)
+ * to pull just the files a change request was scoped to, instead of the
+ * whole `.nx/` bundle syncRepo() reads for the drift view.
+ */
+export async function fetchNxPaths(
+  token: string,
+  repo: string,
+  branch: string,
+  paths: string[]
+): Promise<Record<string, string>> {
+  const [owner, name] = repo.split("/");
+  if (!owner || !name) return {};
+  const encOwner = encodeURIComponent(owner);
+  const encName = encodeURIComponent(name);
+  const encBranch = encodeURIComponent(branch);
+
+  const files: Record<string, string> = {};
+  await Promise.all(
+    paths.map(async (p) => {
+      const content = await fetchOne(token, encOwner, encName, encBranch, p);
+      if (content != null) files[p] = content;
+    })
+  );
+  return files;
+}
+
+/** Close a GitHub issue — used when a founder marks an iteration as shipped. */
+export async function closeIssue(token: string, repo: string, issueNumber: number): Promise<boolean> {
+  const [owner, name] = repo.split("/");
+  if (!owner || !name) return false;
+  const encOwner = encodeURIComponent(owner);
+  const encName = encodeURIComponent(name);
+  const res = await fetch(`${API}/repos/${encOwner}/${encName}/issues/${issueNumber}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ state: "closed" }),
+  });
+  return res.ok;
+}
+
 /** Read the .nx/ tree + recent commits + open issues for a repo. */
 export async function syncRepo(
   token: string,
@@ -68,20 +123,8 @@ export async function syncRepo(
   ].slice(0, MAX_NX_FILES);
   await Promise.all(
     toFetch.map(async (p) => {
-      // Split path to encode segments separately (or use as is if encoding p breaks deep paths).
-      // GitHub contents API expects the path itself, not fully url-encoded if it has slashes.
-      // E.g. "foo/bar.txt" should be "foo/bar.txt" in the URL or "foo%2Fbar.txt" depending on API.
-      // The path variable `p` here comes from the GitHub API itself (tree response)
-      // but to be safe we'll use encOwner and encName, and keep p as is because p is typically
-      // safely formed from the API (and we checked it starts with NX_ROOT).
-      // However, `p` can contain spaces or specials, so `encodeURIComponent` on each part:
-      const encPath = p.split("/").map(encodeURIComponent).join("/");
-      const c = await gh(token, `/repos/${encOwner}/${encName}/contents/${encPath}?ref=${encBranch}`);
-      if (!c.ok) return;
-      const blob = (await c.json()) as { content?: string; encoding?: string };
-      if (blob.content) {
-        files[p] = Buffer.from(blob.content, "base64").toString("utf-8");
-      }
+      const content = await fetchOne(token, encOwner, encName, encBranch, p);
+      if (content != null) files[p] = content;
     })
   );
   const context = parseNx(files);

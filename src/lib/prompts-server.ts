@@ -13,7 +13,14 @@ import { AgentTarget, WorkspaceData } from "./types";
  * non-secret (it's the user's input), so those helpers stay shared.
  */
 
-export type PromptCategory = "visual" | "security" | "qa" | "performance" | "deploy" | "general";
+export type PromptCategory =
+  | "visual"
+  | "security"
+  | "qa"
+  | "performance"
+  | "deploy"
+  | "growth"
+  | "general";
 
 export interface CompiledPrompt {
   id: string;
@@ -68,13 +75,21 @@ This is your single source of truth — re-read it before each step and follow i
 
 {{nxFileBlocks}}
 
-## Step 1 — Build the foundation, end to end
-Do NOT stop between steps. Work through them in order, verifying as you go:
+## Step 1 — Build as a dependency graph, not a checklist
+The branches below don't depend on each other — run them in parallel (as
+concurrent tool calls, if you're able to) rather than working strictly
+top-to-bottom. The join step waits on both branches finishing.
 
 {{buildSteps}}
 
-After each feature, run the project's checks before moving on. When the foundation
-is complete, commit it and summarise what was built and what remains.`,
+## Step 2 — Verify against the risks, not just the happy path
+Re-read \`{{nxRoot}}/risks.md\` if it exists and check what you built against
+every riskiest assumption listed there — don't stop at the happy path.
+
+## Step 3 — Mark it complete
+Check off what you built in \`{{nxRoot}}/checklist.md\` (add a line for
+anything you built that isn't already listed there). Commit, then summarise
+what was built, what you verified against risks.md, and what remains.`,
     sort: 0,
   },
   {
@@ -155,6 +170,167 @@ analytics/telemetry (structured logging + page/event tracking), and a post-deplo
 smoke test. Write the runbook into \`{{nxRoot}}/hosting.md\`.`,
     sort: 6,
   },
+  {
+    id: "payments",
+    title: "Payments & billing",
+    description: "Subscription billing, checkout, webhooks, and a billing portal.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a payments engineer for "{{name}}". Integrate subscription billing end
+to end: pricing/plan selection, checkout, webhooks for payment success,
+failure, and cancellation, a customer billing portal, and dunning for failed
+renewals. Match the provider to the stack already chosen in
+\`{{nxRoot}}/decisions/tech-stack.md\`. Store only what you must — tokenize
+card data via the provider, never handle raw card numbers yourself.`,
+    sort: 8,
+  },
+  {
+    id: "telemetry",
+    title: "Product analytics & telemetry",
+    description: "Instrument the events that matter and build one dashboard.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a growth engineer for "{{name}}". Instrument the events that actually
+matter: signup, activation (first real use of the core flow), the core action
+itself, and return visits. Wire them to a product analytics tool, add
+structured error logging, and build one dashboard answering: how many people
+signed up, how many activated, and how many came back. Respect whatever
+privacy/consent requirements apply — don't track before consent if the
+product has EU/UK users.`,
+    sort: 9,
+  },
+  {
+    id: "onboarding",
+    title: "Onboarding & activation",
+    description: "Get a new user to their first real \"aha moment\" fast.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a growth PM for "{{name}}". Design and build the first-run experience:
+get a brand-new user from signup to their first real "aha moment" in the core
+flow as fast as possible. Add a lightweight progress checklist or empty-state
+guidance, and a welcome email that reinforces what to do next. Cut anything
+in the current signup flow that delays that first moment without earning its
+keep.`,
+    sort: 10,
+  },
+  {
+    id: "marketing-site",
+    title: "Marketing site & SEO",
+    description: "Tighten the public site: hero, pricing, and SEO basics.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a growth marketer for "{{name}}". Build or tighten the public
+marketing site: a hero that states the problem/solution in one line, social
+proof once there is any, a pricing page if payments are wired up, and the SEO
+basics — meta tags, OG images, sitemap, semantic headings. Keep it fast: this
+page is the first thing a cold visitor sees.`,
+    sort: 11,
+  },
+  {
+    id: "support",
+    title: "Customer support setup",
+    description: "A real way for users to reach you, plus a starter FAQ.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a support-ops engineer for "{{name}}". Add a way for users to actually
+reach you — a support widget, help email, or in-app feedback form — and a
+starter FAQ/help doc covering the core flow's most likely points of
+confusion. Route incoming messages somewhere you'll actually see them.`,
+    sort: 12,
+  },
+  {
+    id: "referrals",
+    title: "Referral & growth loops",
+    description: "One sharing loop that fits the product, instrumented.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a growth engineer for "{{name}}". Design one referral or sharing loop
+that fits the product naturally — invite links, shareable output, or a
+waitlist-skip mechanic — instrumented so you can measure who invited whom and
+whether it actually drives signups. Don't bolt on generic "refer a friend"
+mechanics if nothing in the product is inherently shareable; say so instead.`,
+    sort: 13,
+  },
+  {
+    id: "legal",
+    title: "Legal & compliance basics",
+    description: "ToS, privacy policy, consent, and data-deletion — real pages.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a legal-ops-minded engineer for "{{name}}" — flag anything that needs
+a real lawyer rather than guessing. Draft a Terms of Service and Privacy
+Policy that actually match what the product does (check
+\`{{nxRoot}}/memory.json\` for capabilities — payments, storage, and AI
+features each need their own disclosures), add a cookie/consent banner if
+there's tracking, and a data-deletion request flow if there's stored
+personal data. Ship these as real pages, not placeholders.`,
+    sort: 14,
+  },
+  {
+    id: "pitch",
+    title: "Investor pitch narrative",
+    description: "A 10-12 slide outline drawn from what's actually true so far.",
+    category: "growth",
+    body: `{{ctx}}
+
+Act as a seed-stage startup advisor for "{{name}}", not an engineer — this
+output is prose and slide structure, not code. Draft a 10-12 slide pitch deck
+outline: problem, solution, why now, market size, product (leave room for
+screenshots), traction so far, business model, competition/differentiation,
+team, and the ask. Keep every claim traceable to what's actually in
+\`{{nxRoot}}/\` — don't invent traction numbers that aren't there. Flag which
+slides need a human to fill in real data (metrics, funding ask, team bios).`,
+    sort: 15,
+  },
+  {
+    id: "consistency",
+    title: "Data consistency & sync audit",
+    description: "Find derived or cached state that can silently go stale, and fix it.",
+    category: "qa",
+    body: `{{ctx}}
+
+Act as a systems reviewer for "{{name}}". Find every place this app derives, caches,
+or mirrors data from another source — AI-generated output, data synced from an
+external service, computed summaries, a local draft of something remote. For each
+one: does editing the source invalidate or flag the derived copy? Does any "sync"
+actually flow both ways, or does it only render a diff? Fix what's cheap to fix
+directly in the code; for anything structural, write up the risk and a recommended
+fix instead of a partial patch.`,
+    sort: 7,
+  },
+  {
+    // Compiled by compileIteratePrompt(), never surfaced in the generic depth
+    // gallery (see the id !== "iterate" filter below) — {{changeDescription}}
+    // and {{nxFileBlocks}} are only ever filled in there, from a real change
+    // request and a scoped subset of .nx/, not the full bundle.
+    id: "iterate",
+    title: "Scoped change prompt",
+    description: "A small, targeted prompt for one feature or fix.",
+    category: "general",
+    body: `You are continuing work on "{{name}}", an existing product — not scaffolding from scratch.
+
+## The change requested
+{{changeDescription}}
+
+## Relevant context (scoped to what this change touches)
+Re-read these before you start — verify against what's actually there, don't assume:
+
+{{nxFileBlocks}}
+
+## What to do
+1. Implement the change against the current codebase, matching its existing patterns and the brand/stack decisions above.
+2. Update whichever of the files above changed as a result (e.g. a new table in \`{{nxRoot}}/decisions/db-schema.md\`, a new route in \`{{nxRoot}}/specs/api-routes.md\`) so \`.nx/\` keeps describing the real system.
+3. Check off or add a line in \`{{nxRoot}}/checklist.md\` for this change.
+4. Commit with a message describing what shipped.`,
+    sort: 100,
+  },
 ];
 
 async function loadTemplates(): Promise<Map<string, TemplateRow>> {
@@ -185,9 +361,29 @@ function fill(body: string, vars: Record<string, string>): string {
   return body.replace(/\{\{(\w+)\}\}/g, (_, key: string) => (key in vars ? vars[key] : ""));
 }
 
-/** Render the .nx/ files as fenced blocks — identical to the old prompts.ts helper. */
-function renderNxFileBlocks(data: WorkspaceData): string {
+/** Which one-line pointer file (all always emitted by compileNxFiles, so
+ *  `.nx Context` drift-tracking sees all of them regardless of target)
+ *  actually matches the founder's chosen agent — everyone else already reads
+ *  AGENTS.md natively with no pointer needed. */
+const AGENT_POINTER_FILE: Partial<Record<AgentTarget, string>> = {
+  claude: ".claude/CLAUDE.md",
+  cursor: ".cursor/rules/nx.mdc",
+  windsurf: ".windsurfrules",
+};
+
+/**
+ * Embeds every `.nx/` file. AGENTS.md (the cross-tool standard) is always
+ * included — it's read natively by Cursor, Windsurf, Zed, Aider, Antigravity,
+ * and most other agentic tools, so it costs nothing to include even when the
+ * founder hasn't picked a target. Each tool's one-line pointer file is only
+ * worth its few tokens when that tool is the actual target.
+ */
+function renderNxFileBlocks(data: WorkspaceData, agentTarget: AgentTarget): string {
+  const keepPointer = AGENT_POINTER_FILE[agentTarget];
+  const pointerFiles = new Set(Object.values(AGENT_POINTER_FILE));
+
   return compileNxFiles(data)
+    .filter((f) => !pointerFiles.has(f.path) || f.path === keepPointer)
     .map((f) => {
       const lang = f.path.endsWith(".json") ? "json" : "markdown";
       return `### \`${f.path}\`\n\`\`\`${lang}\n${f.content}\`\`\``;
@@ -219,19 +415,17 @@ export async function compilePromptsForProject(
   const name = data.productName || "the product";
   const host = stack?.hosting ?? "the chosen host";
 
+  // AGENTS.md is read natively by Zed, Aider, Antigravity, and generic/other
+  // tools with no pointer file needed. Claude/Cursor/Windsurf each get a
+  // one-line pointer file (see AGENT_POINTER_FILE in renderNxFileBlocks) and
+  // a matching mention here; v0 doesn't read repo rule files at all.
   let ctxPrefix = "";
   if (agentTarget === "claude") {
-    ctxPrefix = "[Agent Target: Claude Code]\nWrite project guidelines to `.claude/CLAUDE.md`. ";
+    ctxPrefix = "[Agent Target: Claude Code]\n`.claude/CLAUDE.md` imports `AGENTS.md` — read both. ";
   } else if (agentTarget === "cursor") {
-    ctxPrefix = "[Agent Target: Cursor]\nCreate `.cursor/rules/nx.mdc` for context rules and use `@` file references. ";
+    ctxPrefix = "[Agent Target: Cursor]\n`.cursor/rules/nx.mdc` points to `AGENTS.md` — read both. ";
   } else if (agentTarget === "windsurf") {
-    ctxPrefix = "[Agent Target: Windsurf Cascade]\nWrite rules into `.windsurfrules`. ";
-  } else if (agentTarget === "antigravity") {
-    ctxPrefix = "[Agent Target: Google Antigravity]\nRead `.antigravity/instructions.md` for execution rules. ";
-  } else if (agentTarget === "zed") {
-    ctxPrefix = "[Agent Target: Zed AI]\nRead `.zed/prompts/build.md` for workspace context. ";
-  } else if (agentTarget === "aider") {
-    ctxPrefix = "[Agent Target: Aider]\nFollow conventions in `CONVENTIONS.md`. ";
+    ctxPrefix = "[Agent Target: Windsurf / Devin Desktop]\n`.windsurfrules` points to `AGENTS.md` — read both. ";
   } else if (agentTarget === "v0") {
     ctxPrefix = "[Agent Target: v0]\nBuild responsive React + Tailwind components. ";
   }
@@ -248,43 +442,53 @@ export async function compilePromptsForProject(
     differentiation: data.idea.differentiation || "(not provided)",
   });
 
-  // Master
+  // Master — expressed as a small dependency graph (scaffold → two parallel
+  // branches → join), not one strict numbered list, so an agent capable of
+  // concurrent tool calls can actually build the independent parts at once.
   const fe = stack?.frontend ?? "the chosen framework";
   const lang = stack?.language ?? "the chosen language";
   const problem = data.idea.problem || "the core product experience";
-  const steps: string[] = [
-    `1. Scaffold ${fe} per \`${NX_ROOT}/decisions/tech-stack.md\`.`,
-    `2. Apply the brand tokens from \`${NX_ROOT}/ui/brand-guide.md\` (color, radius, font) as the theme.`,
-    `3. Build the atomic UI components (Button, Card, Input, etc.) on those tokens.`,
-    `4. Lay out the folder structure and shared utilities; propose it, then proceed.`,
+
+  const numbered = (items: string[]) => items.map((s, i) => `${i + 1}. ${s}`).join("\n");
+
+  const frontendBranch: string[] = [
+    `Apply the brand tokens from \`${NX_ROOT}/ui/brand-guide.md\` (color, radius, font) as the theme.`,
+    `Build the atomic UI components (Button, Card, Input, etc.) on those tokens.`,
   ];
-
-  let stepIdx = 5;
-  if (!stack || stack.backend.startsWith("None")) {
-    steps.push(`${stepIdx++}. No backend — keep everything client-side and persist locally.`);
-  } else {
-    steps.push(
-      `${stepIdx++}. Stand up ${stack.backend} and wire the capabilities in \`${NX_ROOT}/memory.json\` (auth, database, realtime as listed).`
-    );
-  }
-
-  if (stack && stack.libraries.length) {
-    steps.push(`${stepIdx++}. Integrate required libraries: ${stack.libraries.join(", ")}.`);
-  }
-
   if (data.designNotes && data.designNotes.trim()) {
-    steps.push(`${stepIdx++}. Apply Studio Design Directives: ${data.designNotes.trim()}`);
+    frontendBranch.push(`Apply Studio Design Directives: ${data.designNotes.trim()}`);
   }
 
-  if (data.customStages && data.customStages.length > 0) {
-    steps.push(
-      `${stepIdx++}. Follow custom product workflow stages defined in \`${NX_ROOT}/custom-workflow.md\`.`
+  const backendBranch: string[] = [];
+  if (!stack || stack.backend.startsWith("None")) {
+    backendBranch.push(`No backend — keep everything client-side and persist locally.`);
+  } else {
+    backendBranch.push(
+      `Stand up ${stack.backend} and wire the capabilities in \`${NX_ROOT}/memory.json\` (auth, database, realtime as listed).`
     );
   }
+  if (stack && stack.libraries.length) {
+    backendBranch.push(`Integrate required libraries: ${stack.libraries.join(", ")}.`);
+  }
 
-  steps.push(`${stepIdx++}. Implement the core product flow that solves: ${problem}.`);
+  const joinSteps: string[] = [];
+  if (data.customStages && data.customStages.length > 0) {
+    joinSteps.push(`Follow custom product workflow stages defined in \`${NX_ROOT}/custom-workflow.md\`.`);
+  }
+  joinSteps.push(`Implement the core product flow that solves: ${problem}.`);
 
-  const buildSteps = steps.join("\n");
+  const buildSteps = [
+    `0. Scaffold ${fe} per \`${NX_ROOT}/decisions/tech-stack.md\` and lay out the folder structure and shared utilities.`,
+    ``,
+    `**Branch A — frontend** (parallel with Branch B):`,
+    numbered(frontendBranch),
+    ``,
+    `**Branch B — backend** (parallel with Branch A):`,
+    numbered(backendBranch),
+    ``,
+    `**Join** — after both branches finish:`,
+    numbered(joinSteps),
+  ].join("\n");
 
   const vars = {
     name,
@@ -301,7 +505,7 @@ export async function compilePromptsForProject(
     designNotes: data.designNotes || "",
     buildSteps,
     nxRoot: NX_ROOT,
-    nxFileBlocks: renderNxFileBlocks(data),
+    nxFileBlocks: renderNxFileBlocks(data, agentTarget),
     host,
     ctx,
   };
@@ -309,11 +513,44 @@ export async function compilePromptsForProject(
   const masterTpl = t.get("master") ?? DEFAULT_TEMPLATES[1];
   const master = toCompiled(masterTpl, vars);
 
-  // Depth — every template that isn't idea/master, in sort order.
+  // Depth — every template that isn't idea/master/iterate, in sort order.
+  // "iterate" is excluded here because it needs a real change description +
+  // scoped file blocks filled in by compileIteratePrompt(), not the generic
+  // `vars` every other depth prompt shares — showing it in this gallery
+  // would render with those placeholders empty.
   const depth = [...t.values()]
-    .filter((row) => row.id !== "idea" && row.id !== "master")
+    .filter((row) => row.id !== "idea" && row.id !== "master" && row.id !== "iterate")
     .sort((a, b) => a.sort - b.sort)
     .map((row) => toCompiled(row, vars));
 
   return { idea, master, depth };
+}
+
+/**
+ * Compile a scoped change prompt for the post-launch iteration loop — only
+ * the `.nx/` files a change request was scoped to, plus the request itself.
+ * Deliberately not the master template: re-sending the whole `.nx/` bundle
+ * for a one-line fix is exactly the token-bloat the affected-files scoping
+ * exists to avoid (see /api/context/scope-change).
+ */
+export async function compileIteratePrompt(
+  data: WorkspaceData,
+  changeDescription: string,
+  affectedPaths: string[]
+): Promise<CompiledPrompt> {
+  const t = await loadTemplates();
+  const name = data.productName || "the product";
+
+  const scoped = compileNxFiles(data).filter((f) => affectedPaths.includes(f.path));
+  const nxFileBlocks = scoped.length
+    ? scoped
+        .map((f) => {
+          const lang = f.path.endsWith(".json") ? "json" : "markdown";
+          return `### \`${f.path}\`\n\`\`\`${lang}\n${f.content}\`\`\``;
+        })
+        .join("\n\n")
+    : "_No scoped `.nx/` context matched this change — work from the request and the existing codebase._";
+
+  const iterateTpl = t.get("iterate") ?? DEFAULT_TEMPLATES.find((d) => d.id === "iterate")!;
+  return toCompiled(iterateTpl, { name, nxRoot: NX_ROOT, changeDescription, nxFileBlocks });
 }

@@ -3,10 +3,16 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useWorkspace } from "@/lib/workspace-store";
+import { useWorkspace, useSync } from "@/lib/workspace-store";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
 import { CompiledPrompt, PromptCategory } from "@/lib/prompts-server";
 import { compileStack } from "@/lib/platform-engine";
+import { BUILD_STEPS } from "@/lib/phases";
+import { AgentTarget, IterationEntry, WorkspaceData } from "@/lib/types";
+import type { GhIssue } from "@/lib/github-types";
+import { closeGitHubIssue } from "@/lib/github";
+import { getStoredValue, setStoredValue } from "@/lib/storage";
+import { ClaudeMark, CursorMark, WindsurfMark, V0Mark } from "@/components/landing/brand-icons";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
@@ -23,7 +29,36 @@ import {
   LayersIcon,
   LoaderIcon,
   PlusIcon,
+  WrenchIcon,
+  GitBranchIcon,
+  CreditCardIcon,
+  ActivityIcon,
+  CompassIcon,
+  GlobeIcon,
+  MessageCircleIcon,
+  GemIcon,
+  ShieldCheckIcon,
+  TargetIcon,
 } from "@/components/icons";
+
+/**
+ * Only the tools whose compiled output actually differs get a dedicated
+ * option — Zed/Antigravity/Aider read AGENTS.md natively with no pointer file
+ * needed, so they collapse into one "Other IDE" choice rather than separate
+ * buttons. Claude Code, Cursor, and Windsurf/Devin Desktop each get their own
+ * one-line pointer file (see AGENT_POINTER_FILE in prompts-server.ts); v0
+ * gets different build instructions entirely since it doesn't read repo files.
+ * "Windsurf" is labeled "Devin Desktop" — Cognition's June 2026 rebrand —
+ * while keeping the underlying id/output ("windsurf") unchanged, since the
+ * legacy .windsurfrules pointer file still works under either name.
+ */
+const AGENT_OPTIONS: { id: AgentTarget; label: string; Mark: typeof ClaudeMark | null; color: string }[] = [
+  { id: "claude", label: "Claude Code", Mark: ClaudeMark, color: "text-[#D97757]" },
+  { id: "cursor", label: "Cursor", Mark: CursorMark, color: "text-foreground" },
+  { id: "windsurf", label: "Devin Desktop", Mark: WindsurfMark, color: "text-[#00D2FF]" },
+  { id: "v0", label: "v0", Mark: V0Mark, color: "text-foreground" },
+  { id: "generic", label: "Other IDE", Mark: null, color: "text-muted-foreground" },
+];
 
 const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
   apple_hig: WandIcon,
@@ -32,6 +67,15 @@ const DEPTH_ICONS: Record<string, typeof BadgeCheckIcon> = {
   security: LockIcon,
   performance: ZapIcon,
   deploy: RocketIcon,
+  consistency: WrenchIcon,
+  payments: CreditCardIcon,
+  telemetry: ActivityIcon,
+  onboarding: CompassIcon,
+  "marketing-site": GlobeIcon,
+  support: MessageCircleIcon,
+  referrals: GemIcon,
+  legal: ShieldCheckIcon,
+  pitch: TargetIcon,
 };
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
@@ -40,6 +84,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   qa: "from-emerald-500/20 via-teal-500/10 to-background/50",
   performance: "from-cyan-500/20 via-blue-500/10 to-background/50",
   deploy: "from-fuchsia-500/20 via-pink-500/10 to-background/50",
+  growth: "from-lime-500/20 via-green-500/10 to-background/50",
   general: "from-secondary/80 via-background to-background/50",
 };
 
@@ -50,12 +95,249 @@ const CATEGORY_TABS: { id: PromptCategory | "all"; label: string }[] = [
   { id: "qa", label: "QA & Testing" },
   { id: "performance", label: "Performance" },
   { id: "deploy", label: "Deploy & Ops" },
+  { id: "growth", label: "Growth" },
 ];
+
+interface ScopeChangeResponse {
+  prompt: CompiledPrompt;
+  affectedPaths: string[];
+  iteration: IterationEntry;
+  mergePatch: Partial<WorkspaceData>;
+}
+
+type ScopeState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "done"; result: ScopeChangeResponse };
+
+/**
+ * The post-launch loop. BuildPhase used to stop at "ship once" — three fixed
+ * checklist items, then six generic audit prompts. This is what happens
+ * after: a founder describes a feature or bug (or picks an open GitHub
+ * issue, already fetched by useSync but never rendered anywhere before this),
+ * and gets a small prompt scoped to just the .nx/ files that change touches —
+ * not the whole bundle — instead of leaving nx-studio entirely to keep going.
+ */
+function IterateSection() {
+  const { data, activeId, github, addIteration, markIterationShipped, applyWorkspacePatch } =
+    useWorkspace();
+  const { result: syncResult } = useSync();
+  const [changeText, setChangeText] = useState("");
+  const [selectedIssue, setSelectedIssue] = useState<GhIssue | null>(null);
+  const [state, setState] = useState<ScopeState>({ status: "idle" });
+  const [shipErrors, setShipErrors] = useState<Record<string, string>>({});
+
+  const issues = syncResult?.issues ?? [];
+  const canScope = (changeText.trim().length > 0 || !!selectedIssue) && state.status !== "loading";
+
+  const scope = async () => {
+    const description = selectedIssue
+      ? `${selectedIssue.title} (GitHub issue #${selectedIssue.number})`
+      : changeText.trim();
+    if (!description) return;
+
+    // Snapshot of what's sent, so the response's mergePatch only overwrites
+    // fields the founder hasn't touched locally while the request was in flight.
+    const requestSnapshot = data;
+
+    setState({ status: "loading" });
+    try {
+      const res = await fetch("/api/context/scope-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: activeId,
+          changeDescription: description,
+          data: requestSnapshot,
+          repo: github.repo,
+          branch: github.branch,
+          sourceIssue: selectedIssue
+            ? { number: selectedIssue.number, url: selectedIssue.url, title: selectedIssue.title }
+            : undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Scoping failed.");
+      const result = body as ScopeChangeResponse;
+      applyWorkspacePatch(result.mergePatch, requestSnapshot);
+      addIteration(result.iteration);
+      setState({ status: "done", result });
+      setChangeText("");
+      setSelectedIssue(null);
+    } catch (e) {
+      setState({ status: "error", message: e instanceof Error ? e.message : "Scoping failed." });
+    }
+  };
+
+  const shipIteration = async (it: IterationEntry) => {
+    setShipErrors((errs) => {
+      const { [it.id]: _removed, ...rest } = errs;
+      return rest;
+    });
+    markIterationShipped(it.id);
+    if (it.sourceIssue && github.repo) {
+      const closed = await closeGitHubIssue(github.repo, it.sourceIssue.number).catch(() => false);
+      if (!closed) {
+        setShipErrors((errs) => ({
+          ...errs,
+          [it.id]: `Couldn't close GitHub issue #${it.sourceIssue!.number} — close it manually.`,
+        }));
+      }
+    }
+  };
+
+  return (
+    <div className="mt-12">
+      <h2 className="text-xl font-bold tracking-tight">Iterate</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Ship one feature or fix at a time — scoped to just the{" "}
+        <span className="font-mono text-accent-foreground">.nx/</span> files it touches, not the
+        whole bundle.
+      </p>
+
+      {issues.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <GitBranchIcon className="h-3.5 w-3.5" /> Open GitHub issues
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {issues.map((iss) => (
+              <button
+                key={iss.number}
+                type="button"
+                onClick={() => {
+                  setSelectedIssue(iss);
+                  setChangeText("");
+                }}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedIssue?.number === iss.number
+                    ? "border-primary bg-primary/15 text-accent-foreground"
+                    : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                #{iss.number} {iss.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 rounded-xl glass p-5">
+        {selectedIssue ? (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/30 p-3 text-sm">
+            <span className="truncate">
+              Scoping issue #{selectedIssue.number} — {selectedIssue.title}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIssue(null)}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+          </div>
+        ) : (
+          <>
+            <label className="text-sm font-medium">Or describe a change</label>
+            <textarea
+              value={changeText}
+              onChange={(e) => setChangeText(e.target.value)}
+              placeholder="e.g. Add payments with Razorpay so users can subscribe monthly"
+              rows={2}
+              className="mt-2 w-full resize-none rounded-lg border border-border bg-secondary/30 p-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+            />
+          </>
+        )}
+
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={scope}
+            disabled={!canScope}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          >
+            {state.status === "loading" ? (
+              <LoaderIcon className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <WrenchIcon className="h-3.5 w-3.5" />
+            )}
+            {state.status === "loading" ? "Scoping…" : "Scope this change"}
+          </button>
+          {state.status === "error" && <span className="text-xs text-rose-400">{state.message}</span>}
+        </div>
+
+        {state.status === "done" && (
+          <div className="mt-4 space-y-3 border-t border-border pt-4">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {state.result.affectedPaths.map((p) => (
+                <span
+                  key={p}
+                  className="rounded-full border border-border bg-secondary/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+                >
+                  {p.replace(".nx/", "")}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium">Scoped prompt ready</span>
+              <CopyButton value={state.result.prompt.prompt} label="Copy prompt" variant="solid" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {data.iterations.length > 0 && (
+        <div className="mt-6">
+          <div className="text-xs font-medium text-muted-foreground">Changelog</div>
+          <div className="mt-2 space-y-2">
+            {[...data.iterations].reverse().map((it) => (
+              <div
+                key={it.id}
+                className="rounded-lg border border-border bg-secondary/20 px-4 py-2.5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">{it.title}</div>
+                    <div className="truncate text-xs text-muted-foreground">{it.description}</div>
+                  </div>
+                  {it.status === "shipped" ? (
+                    <span className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase text-emerald-400">
+                      Shipped
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void shipIteration(it)}
+                      className="shrink-0 rounded-lg border border-border bg-secondary/30 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      Mark shipped
+                    </button>
+                  )}
+                </div>
+                {shipErrors[it.id] && (
+                  <p className="mt-1.5 text-xs text-amber-400">{shipErrors[it.id]}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function BuildPhase() {
   const { data, isStepDone, toggleChecklist } = useWorkspace();
   const stack = compileStack(data.tech);
-  const { prompts, locked, loading, refresh } = useCompiledPrompts();
+  const [agentTarget, setAgentTargetState] = useState<AgentTarget>(() =>
+    getStoredValue("agentTarget", "generic")
+  );
+  const setAgentTarget = (target: AgentTarget) => {
+    setAgentTargetState(target);
+    setStoredValue("agentTarget", target);
+  };
+  const { prompts, locked, loading, refresh } = useCompiledPrompts(agentTarget);
 
   const [showMaster, setShowMaster] = useState(false);
   const [previewPrompt, setPreviewPrompt] = useState<CompiledPrompt | null>(null);
@@ -91,11 +373,11 @@ export function BuildPhase() {
         <div className="rounded-xl border border-dashed border-border p-8 text-center">
           <LayersIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
           <p className="mt-3 text-sm text-muted-foreground">
-            Pick your surfaces in the{" "}
-            <Link href="/canvas/tech-stack" className="text-accent-foreground hover:underline">
-              Tech Stack
+            Pick your surfaces in the Tech Stack section of the{" "}
+            <Link href="/canvas/idea" className="text-accent-foreground hover:underline">
+              Brief
             </Link>{" "}
-            phase first — the build prompt is generated from your derived stack.
+            first — the build prompt is generated from your derived stack.
           </p>
         </div>
       </>
@@ -104,14 +386,8 @@ export function BuildPhase() {
 
   const masterPrompt = prompts?.master.prompt ?? "";
 
-  const buildSteps = [
-    { id: "foundation", label: "Project Foundation & Setup", description: "Environment, workspace, shared utilities." },
-    { id: "core", label: "Core Features Implementation", description: "Data models, auth, main modules." },
-    { id: "polish", label: "Polish & Deployment", description: "Optimization and production pipeline." },
-  ];
-
-  const doneCount = buildSteps.filter((s) => isStepDone("build", s.id)).length;
-  const status = doneCount >= buildSteps.length ? "complete" : "in-progress";
+  const doneCount = BUILD_STEPS.filter((s) => isStepDone("build", s.id)).length;
+  const status = doneCount >= BUILD_STEPS.length ? "complete" : "in-progress";
 
   return (
     <>
@@ -128,7 +404,7 @@ export function BuildPhase() {
         </p>
 
         <div className="mt-4 space-y-2.5">
-          {buildSteps.map((step) => {
+          {BUILD_STEPS.map((step) => {
             const checked = isStepDone("build", step.id);
             return (
               <div
@@ -162,6 +438,30 @@ export function BuildPhase() {
 
       {/* The one build prompt — the hero */}
       <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6">
+        {/* IDE picker — determines which agent-rule file gets embedded (see AGENT_OPTIONS) */}
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Your IDE:</span>
+          {AGENT_OPTIONS.map((opt) => {
+            const active = agentTarget === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setAgentTarget(opt.id)}
+                aria-pressed={active}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  active
+                    ? "border-primary bg-primary/15 text-accent-foreground"
+                    : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.Mark && <opt.Mark className={`h-3.5 w-3.5 shrink-0 ${active ? opt.color : ""}`} />}
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-accent-foreground">
@@ -228,8 +528,12 @@ export function BuildPhase() {
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        Works in Cursor, Claude Code, or any agentic IDE. Let the run finish, then keep iterating in
-        the editor to get the details right.
+        Ships an <span className="font-mono text-accent-foreground">AGENTS.md</span> — the shared
+        standard read natively by Zed, Aider, Antigravity, and most agentic IDEs. Pick Claude Code,
+        Cursor, or Devin Desktop above and you also get that tool&apos;s own one-line pointer file, so
+        it finds <span className="font-mono text-accent-foreground">AGENTS.md</span> even without
+        relying on native auto-discovery. Let the run finish, then keep iterating in the editor to
+        get the details right.
       </p>
 
       {/* ── Refine after it's built (HIG Gallery Grid) ────────────────────────── */}
@@ -386,6 +690,8 @@ export function BuildPhase() {
           </div>
         )}
       </div>
+
+      <IterateSection />
 
       {/* HIG Prompt Preview Modal */}
       <AnimatePresence>
