@@ -126,6 +126,56 @@ export interface WorkspaceData {
    * the AI — "special notes" attached to the build context.
    */
   designNotes?: string;
+  /**
+   * AI-drafted data model + API surface, accepted by the founder from the
+   * Brief's analysis panel. Rendered verbatim into db-schema.md/api-routes.md
+   * (see nx-compiler.ts) in place of the empty placeholder text — still just
+   * a design for the build agent to implement, not compiled DDL.
+   */
+  schemaDraft?: { dbSchema: string; apiRoutes: string };
+  /**
+   * AI-identified risks, accepted by the founder from the Brief's analysis
+   * panel — the other half of that analysis's output (see schemaDraft for
+   * the first half). Rendered into risks.md (see nx-compiler.ts) so the
+   * build agent inherits what to defend against, not just what to build.
+   * `sourceIdea`/`sourceCapabilities`/`sourceSurfaces` snapshot what the
+   * analysis actually ran against, so staleness.ts can tell when the founder
+   * has since changed the idea or stack out from under an accepted analysis.
+   */
+  briefInsights?: {
+    sharpenedProblem: string;
+    riskiestAssumptions: string[];
+    stackConcerns: string[];
+    sourceIdea: IdeaData;
+    sourceCapabilities: Capability[];
+    sourceSurfaces: Surface[];
+  };
+  /**
+   * Post-launch changelog — one entry per feature/fix requested after the
+   * initial build, each scoped to the .nx/ files it touches (see
+   * /api/context/scope-change and prompts-server.ts::compileIteratePrompt).
+   * Rendered as extra checkboxes in checklist.md (see compileChecklistDoc)
+   * so the deliverables list keeps growing instead of staying fixed at the
+   * three initial build steps.
+   */
+  iterations: IterationEntry[];
+}
+
+/* ------------------------------------------------------------------ */
+/* Iterations — the post-launch loop (feature/fix requests over time) */
+/* ------------------------------------------------------------------ */
+
+export interface IterationEntry {
+  id: string;
+  title: string;
+  /** Founder's or GitHub issue's description of the requested change. */
+  description: string;
+  /** .nx/ paths this iteration was scoped to (see nx-compiler.ts::NX_STANDARD_PATHS). */
+  affectedPaths: string[];
+  /** Present when the iteration originated from an open GitHub issue. */
+  sourceIssue?: { number: number; url: string; title: string };
+  status: "planned" | "shipped";
+  createdAt: string;
 }
 
 export interface PhaseProgress {

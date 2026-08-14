@@ -12,7 +12,8 @@ type StorageKey =
   | "project"
   | "builder"
   | "protocols"
-  | "profile";
+  | "profile"
+  | "agentTarget";
 
 function getKey(key: StorageKey): string {
   return `${NAMESPACE}:${key}`;
