@@ -72,12 +72,17 @@ export function WorkspacesMenu() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
+        title="Switch workspace"
         className={cn(
-          "group flex shrink-0 items-center gap-1 truncate rounded-md px-1.5 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:text-foreground",
+          "group flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:text-foreground sm:h-auto sm:w-auto sm:gap-1 sm:px-1.5 sm:py-1",
         )}
         aria-label="Switch workspace"
       >
-        Workspaces
+        {/* Icon-only below sm — "Workspaces" is the least essential breadcrumb
+            segment on a phone, and the fixed-width label was starving the
+            product name and phase crumb of the space they actually need. */}
+        <FolderIcon className="h-4 w-4 shrink-0 sm:hidden" />
+        <span className="hidden sm:inline">Workspaces</span>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="max-h-[70vh] w-64 overflow-y-auto">

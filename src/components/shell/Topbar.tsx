@@ -49,9 +49,14 @@ export function Topbar() {
         <ProductNameCrumb isLast={crumbs.length === 1} />
 
         {crumbs.slice(1).map((c) => (
-          <span key={c.label} className="flex min-w-0 items-center gap-2.5">
+          // shrink-0: the current-page crumb is the most useful piece of context
+          // on a narrow screen — it should be the last thing to give up space,
+          // not the first. The product name crumb (default shrink) absorbs the
+          // squeeze instead; max-w/truncate here is just a safety net for an
+          // unusually long custom-stage label.
+          <span key={c.label} className="flex min-w-0 shrink-0 items-center gap-2.5">
             <span className="text-muted-foreground/40 font-light select-none">/</span>
-            <span className="truncate font-medium text-foreground">
+            <span className="max-w-[140px] truncate font-medium text-foreground sm:max-w-none">
               {c.label}
             </span>
           </span>
