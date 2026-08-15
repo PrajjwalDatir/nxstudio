@@ -125,7 +125,25 @@ export default function ProjectsPage() {
     [collections]
   );
   const known = useMemo(() => new Set(collections.map((c) => c.id)), [collections]);
-  const ungrouped = projects.filter((p) => !p.collectionId || !known.has(p.collectionId));
+
+  const { itemsByCollection, ungrouped } = useMemo(() => {
+    const byCollection = new Map<string, typeof projects>();
+    const ungroupedList: typeof projects = [];
+
+    for (const p of projects) {
+      if (p.collectionId && known.has(p.collectionId)) {
+        let list = byCollection.get(p.collectionId);
+        if (!list) {
+          list = [];
+          byCollection.set(p.collectionId, list);
+        }
+        list.push(p);
+      } else {
+        ungroupedList.push(p);
+      }
+    }
+    return { itemsByCollection: byCollection, ungrouped: ungroupedList };
+  }, [projects, known]);
 
   const ProjectCard = ({ p }: { p: Project }) => {
     const pct = overall(p.data);
@@ -298,7 +316,7 @@ export default function ProjectsPage() {
 
       {/* Collection groups */}
       {sortedCollections.map((c) => {
-        const items = projects.filter((p) => p.collectionId === c.id);
+        const items = itemsByCollection.get(c.id) || [];
         return (
           <section key={c.id} className="mt-10">
             <div className="flex items-center gap-2">
