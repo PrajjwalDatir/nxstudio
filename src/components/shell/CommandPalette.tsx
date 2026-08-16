@@ -136,7 +136,13 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
     const order = ["Pages", "Studio Modes", "Phases", "Projects"];
     const map = new Map<string, Item[]>();
     for (const it of filtered) {
-      map.set(it.group, [...(map.get(it.group) ?? []), it]);
+      // ⚡ Bolt: Replace O(N²) array spread inside loop with O(1) push for performance
+      const groupItems = map.get(it.group);
+      if (groupItems) {
+        groupItems.push(it);
+      } else {
+        map.set(it.group, [it]);
+      }
     }
     return order.filter((g) => map.has(g)).map((g) => ({ group: g, items: map.get(g)! }));
   }, [filtered]);

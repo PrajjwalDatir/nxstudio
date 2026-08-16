@@ -125,7 +125,26 @@ export default function ProjectsPage() {
     [collections]
   );
   const known = useMemo(() => new Set(collections.map((c) => c.id)), [collections]);
-  const ungrouped = projects.filter((p) => !p.collectionId || !known.has(p.collectionId));
+
+  // ⚡ Bolt: Use a single O(N) pass to group projects to avoid O(N*M) nested filter/map in render loop
+  const { itemsByCollection, ungrouped } = useMemo(() => {
+    const itemsMap = new Map<string, Project[]>();
+    const ungroupedList: Project[] = [];
+
+    for (const p of projects) {
+      if (p.collectionId && known.has(p.collectionId)) {
+        let groupItems = itemsMap.get(p.collectionId);
+        if (!groupItems) {
+          groupItems = [];
+          itemsMap.set(p.collectionId, groupItems);
+        }
+        groupItems.push(p);
+      } else {
+        ungroupedList.push(p);
+      }
+    }
+    return { itemsByCollection: itemsMap, ungrouped: ungroupedList };
+  }, [projects, known]);
 
   const ProjectCard = ({ p }: { p: Project }) => {
     const pct = overall(p.data);
@@ -298,7 +317,7 @@ export default function ProjectsPage() {
 
       {/* Collection groups */}
       {sortedCollections.map((c) => {
-        const items = projects.filter((p) => p.collectionId === c.id);
+        const items = itemsByCollection.get(c.id) || [];
         return (
           <section key={c.id} className="mt-10">
             <div className="flex items-center gap-2">

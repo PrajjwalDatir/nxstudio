@@ -4,3 +4,6 @@
 ## 2026-08-04 - P5.js Color Object Allocation Overhead
 **Learning:** Calling `p.color(string)` inside tight, high-frequency rendering loops (like drawing particle connections every frame) causes immense garbage collection pressure because it has to parse the color string and allocate a new object repeatedly.
 **Action:** Hoist the color object initialization outside the loop (e.g. `const ink = p.color(primary)`) and reuse the single object by updating its properties (e.g. `ink.setAlpha(alpha)`) inside the loop.
+## 2026-08-05 - Inefficient Array and Map Grouping Patterns
+**Learning:** Common codebase patterns for grouping components, like `projects.filter(...)` inside `collections.map(...)` and using array spreads (`[...prev, next]`) inside a loop over a `Map`, introduce accidental O(N*M) or O(N²) scaling behavior that drastically lowers React performance under high data loads.
+**Action:** Replace nested `.filter` operations inside render loops or maps with a single O(N) traversal populating a `Map`. Avoid spreading arrays in a loop; use O(1) `.push()` on properly initialized arrays instead.
