@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, LoaderIcon, CheckCircleIcon, WandIcon } from "@/components/icons";
 
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export function SubmitPromptDialog({ open, onClose }: Props) {
+  const formId = useId();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("visual");
   const [description, setDescription] = useState("");
@@ -71,6 +72,7 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             ✕
@@ -90,10 +92,11 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
             {error && <p className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">{error}</p>}
 
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
+              <label htmlFor={`${formId}-title`} className="block text-xs font-medium text-muted-foreground mb-1">
                 Prompt Title
               </label>
               <input
+                id={`${formId}-title`}
                 type="text"
                 required
                 placeholder="e.g. Apple Watch HIG Audit"
@@ -105,10 +108,11 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                <label htmlFor={`${formId}-category`} className="block text-xs font-medium text-muted-foreground mb-1">
                   Category
                 </label>
                 <select
+                  id={`${formId}-category`}
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -123,10 +127,11 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                <label htmlFor={`${formId}-description`} className="block text-xs font-medium text-muted-foreground mb-1">
                   Short Description
                 </label>
                 <input
+                  id={`${formId}-description`}
                   type="text"
                   required
                   placeholder="e.g. Audit touch bounds & motion"
@@ -139,12 +144,13 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-muted-foreground">
+                <label htmlFor={`${formId}-body`} className="block text-xs font-medium text-muted-foreground">
                   Prompt Prose Body
                 </label>
                 <span className="font-mono text-[10px] text-accent-foreground">Tokens: {"{{name}}"}, {"{{ctx}}"}, {"{{fe}}"}</span>
               </div>
               <textarea
+                id={`${formId}-body`}
                 required
                 rows={5}
                 placeholder={`{{ctx}}\n\nAct as a security auditor for "{{name}}". Audit auth handling, RLS policies, and secret leakage...`}
