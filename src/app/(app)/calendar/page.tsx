@@ -40,7 +40,13 @@ export default function CalendarPage() {
     const iso = dueDates[p.id];
     if (iso) {
       const key = iso.slice(0, 10);
-      byDay.set(key, [...(byDay.get(key) ?? []), p.label]);
+      let dayPhases = byDay.get(key);
+      if (!dayPhases) {
+        dayPhases = [];
+        byDay.set(key, dayPhases);
+      }
+      // Optimization: using .push() instead of array spread to avoid O(N^2) complexity
+      dayPhases.push(p.label);
     }
   }
 
