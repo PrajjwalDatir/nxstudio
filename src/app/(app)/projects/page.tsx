@@ -120,12 +120,30 @@ export default function ProjectsPage() {
   };
 
   // Group projects by collection; anything without a (known) collection is "Ungrouped".
-  const sortedCollections = useMemo(
-    () => [...collections].sort((a, b) => a.sort - b.sort),
-    [collections]
-  );
-  const known = useMemo(() => new Set(collections.map((c) => c.id)), [collections]);
-  const ungrouped = projects.filter((p) => !p.collectionId || !known.has(p.collectionId));
+  const { sortedCollections, groupedProjects, ungrouped } = useMemo(() => {
+    // ⚡ Bolt: Group projects by collectionId in a single O(N) pass
+    // to avoid O(N*M) nested filtering bottlenecks during re-renders
+    const groupedProjects = new Map<string, Project[]>();
+    const ungrouped: Project[] = [];
+    const known = new Set(collections.map((c) => c.id));
+
+    for (const p of projects) {
+      if (p.collectionId && known.has(p.collectionId)) {
+        let group = groupedProjects.get(p.collectionId);
+        if (!group) {
+          group = [];
+          groupedProjects.set(p.collectionId, group);
+        }
+        group.push(p);
+      } else {
+        ungrouped.push(p);
+      }
+    }
+
+    const sortedCollections = [...collections].sort((a, b) => a.sort - b.sort);
+
+    return { sortedCollections, groupedProjects, ungrouped };
+  }, [projects, collections]);
 
   const ProjectCard = ({ p }: { p: Project }) => {
     const pct = overall(p.data);
@@ -154,7 +172,7 @@ export default function ProjectsPage() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => assignToCollection(p.id, null)}>
                   <CheckIcon
-                    className={`h-4 w-4 ${!p.collectionId || !known.has(p.collectionId) ? "opacity-100" : "opacity-0"}`}
+                    className={`h-4 w-4 ${!p.collectionId || !sortedCollections.some((c) => c.id === p.collectionId) ? "opacity-100" : "opacity-0"}`}
                   />
                   Ungrouped
                 </DropdownMenuItem>
@@ -298,7 +316,7 @@ export default function ProjectsPage() {
 
       {/* Collection groups */}
       {sortedCollections.map((c) => {
-        const items = projects.filter((p) => p.collectionId === c.id);
+        const items = groupedProjects.get(c.id) || [];
         return (
           <section key={c.id} className="mt-10">
             <div className="flex items-center gap-2">
