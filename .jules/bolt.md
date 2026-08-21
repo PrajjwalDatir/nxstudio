@@ -7,3 +7,6 @@
 ## 2026-08-05 - Array Spread in Loops Overhead
 **Learning:** Using the array spread operator `[...prev, next]` inside loops (e.g. `map.set(key, [...(map.get(key) ?? []), item])`) leads to O(N^2) time complexity because a new array is allocated and all existing elements are copied on every iteration. This causes significant garbage collection pressure and can be a silent performance killer.
 **Action:** Always initialize an array once and use `.push()` to append items inside loops.
+## 2025-02-20 - Replace O(N*M) Map loop inside `useMemo`
+**Learning:** Found an $O(N \times M)$ operation (`projects.filter` inside `sortedCollections.map`) in `src/components/shell/WorkspacesMenu.tsx` which causes slow re-renders.
+**Action:** Replace nested loops like `.filter` inside `.map` with an $O(N)$ pass utilizing a `Map` or hash table for lookups to improve rendering performance.
