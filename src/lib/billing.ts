@@ -24,7 +24,7 @@ const RAZORPAY_ACTIVE = new Set(["active", "authenticated", "completed"]);
 
 export function deriveAccessState(row: SubscriptionRow | null, graceHours = 48, now: Date = new Date()): AccessState {
   if (!row) return "none";
-  if (row.provider === "crypto") {
+  if (row.provider === "crypto" || row.provider === "promo") {
     if (!row.current_period_end) return "none";
     const end = new Date(row.current_period_end).getTime();
     const nowMs = now.getTime();
