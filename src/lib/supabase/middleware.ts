@@ -72,8 +72,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Already authenticated but sitting on /login or the marketing page → the
-  // signed-in user wants the app, not the pitch.
-  if (user && (pathname === "/login" || pathname === "/")) {
+  // signed-in user wants the app, not the pitch. Exception: a failed
+  // GitHub-link attempt redirects an anonymous guest back to
+  // /login?error=... to explain what went wrong (e.g. that GitHub account
+  // is already linked to a different account) — anonymous sessions count as
+  // "authenticated" here too, so without this guard that error page gets
+  // bounced away before it can ever render, leaving the guest silently
+  // stuck anonymous with no explanation.
+  if (user && (pathname === "/login" || pathname === "/") && !request.nextUrl.searchParams.has("error")) {
     const url = request.nextUrl.clone();
     url.pathname = "/canvas";
     url.search = "";
