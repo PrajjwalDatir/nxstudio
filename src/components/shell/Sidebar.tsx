@@ -281,17 +281,33 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
       {/* Account + sign out */}
       <div className={cn("border-t border-sidebar-border", collapsed ? "p-2" : "p-3")}>
         {isAnonymous ? (
-          <Link href="/login" className="block w-full">
-            {collapsed ? (
-              <div
+          collapsed ? (
+            <div className="flex flex-col gap-1">
+              <Link
+                href="/login"
                 title="Guest User (Sign up to save)"
                 aria-label="Sign up to save"
-                className="flex h-9 w-full items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground cursor-pointer"
+                className="flex h-9 w-full items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
               >
                 <SaveIcon className="h-4 w-4" />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 p-1 -m-1 rounded-lg hover:bg-sidebar-accent/30 transition-colors cursor-pointer group">
+              </Link>
+              <form action="/auth/signout" method="post">
+                <button
+                  type="submit"
+                  title="Sign out"
+                  aria-label="Sign out"
+                  className="flex h-9 w-full items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                >
+                  <LogOutIcon className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="flex min-w-0 flex-1 items-center gap-2 p-1 -m-1 rounded-lg hover:bg-sidebar-accent/30 transition-colors cursor-pointer group"
+              >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold uppercase text-sidebar-accent-foreground">
                   <UserIcon className="h-4 w-4" />
                 </div>
@@ -299,16 +315,19 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
                   <span className="truncate text-xs font-medium text-sidebar-foreground">Guest User</span>
                   <span className="truncate text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">Sign up to save</span>
                 </div>
-                <div
-                  title="Save progress"
-                  aria-label="Save progress"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors group-hover:bg-sidebar-accent/50 group-hover:text-sidebar-foreground"
+              </Link>
+              <form action="/auth/signout" method="post">
+                <button
+                  type="submit"
+                  title="Sign out"
+                  aria-label="Sign out"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                 >
-                  <SaveIcon className="h-4 w-4" />
-                </div>
-              </div>
-            )}
-          </Link>
+                  <LogOutIcon className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          )
         ) : (
           <form action="/auth/signout" method="post">
             {collapsed ? (
