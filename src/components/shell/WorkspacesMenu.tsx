@@ -34,13 +34,26 @@ export function WorkspacesMenu() {
   const { groups, ungrouped } = useMemo(() => {
     const sortedCollections = [...collections].sort((a, b) => a.sort - b.sort);
     const known = new Set(collections.map((c) => c.id));
+
+    // Bolt: O(N) single-pass grouping to avoid O(N*M) bottleneck
+    const byCollection = new Map<string, Project[]>();
+    const ungrouped: Project[] = [];
+
+    for (const p of projects) {
+      if (!p.collectionId || !known.has(p.collectionId)) {
+        ungrouped.push(p);
+      } else {
+        const list = byCollection.get(p.collectionId) || [];
+        if (list.length === 0) byCollection.set(p.collectionId, list);
+        list.push(p);
+      }
+    }
+
     const groups = sortedCollections.map((c) => ({
       collection: c,
-      items: projects.filter((p) => p.collectionId === c.id),
+      items: byCollection.get(c.id) || [],
     }));
-    const ungrouped = projects.filter(
-      (p) => !p.collectionId || !known.has(p.collectionId),
-    );
+
     return { groups, ungrouped };
   }, [projects, collections]);
 
