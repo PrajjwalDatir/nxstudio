@@ -36,15 +36,21 @@ concrete, buildable spec and prompt without hand-writing the plan.
 
 ## Pricing
 
-- Free: $0 — visual canvas, brief, derived tech stack, and one compiled build prompt.
-- Pro: $50 per 28-day cycle — full server-side prompt compilation, unlimited
-  projects and custom stages. Paid in USDC/USDT on the Solana network and
-  verified on-chain (no card required).
+- Free: $0 forever — 1 product workspace with full access to everything
+  (visual canvas, brief, derived tech stack, and the full build prompt).
+- Pro: 10 USDT per 28-day cycle — unlimited product workspaces, project
+  collections, the prompt gallery, and agent-specific targets
+  (.cursor/rules, .claude, etc.). Card, UPI, and netbanking via Razorpay, or
+  USDC/USDT on Solana, verified on-chain.
 
 ## Links
 
 - Product / landing: https://nx.prajj.in
+- Pricing: https://nx.prajj.in/pricing
+- FAQ: https://nx.prajj.in/faq
+- About: https://nx.prajj.in/about
 - Sign in: https://nx.prajj.in/login
+- Contact: https://nx.prajj.in/contact
 - Privacy Policy: https://nx.prajj.in/privacy
 - Terms of Service: https://nx.prajj.in/terms
 - Refunds & Billing: https://nx.prajj.in/refund

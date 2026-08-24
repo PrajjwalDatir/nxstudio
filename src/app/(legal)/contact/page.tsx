@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { siteConfig } from "@/lib/site";
+import { siteConfig, pageMetadata } from "@/lib/site";
 import { MailIcon, GithubIcon, MapPinIcon } from "@/components/icons";
 import { XMark } from "@/components/landing/brand-icons";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/contact",
   title: "Contact Us",
-  alternates: { canonical: "/contact" },
-};
+  description: `Reach the ${siteConfig.name} team by email or X. Real people reply within 1 business day.`,
+});
 
 export default function ContactPage() {
   return (

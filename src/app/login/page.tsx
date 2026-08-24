@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowLeftIcon,
@@ -8,6 +9,14 @@ import {
 } from "@/components/icons";
 import { GitHubSignIn } from "./github-signin";
 import { CanvasPreview } from "@/components/landing/CanvasPreview";
+import { pageMetadata } from "@/lib/site";
+
+export const metadata: Metadata = pageMetadata({
+  path: "/login",
+  title: "Sign in",
+  description:
+    "Sign in with GitHub to turn your product brief into a derived tech stack and one production-ready build prompt. Free, no credit card required.",
+});
 
 const ERROR_MESSAGES: Record<string, string> = {
   auth: "Sign-in failed. Please try again.",

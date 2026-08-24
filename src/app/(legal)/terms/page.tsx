@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { siteConfig } from "@/lib/site";
+import { siteConfig, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/terms",
   title: "Terms of Service",
-  alternates: { canonical: "/terms" },
-};
+  description: `The terms governing your use of ${siteConfig.name}, its Free and Pro plans, and generated build prompts.`,
+});
 
 export default function TermsPage() {
   return (

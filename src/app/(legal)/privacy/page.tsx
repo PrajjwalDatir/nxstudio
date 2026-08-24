@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { siteConfig } from "@/lib/site";
+import { siteConfig, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/privacy",
   title: "Privacy Policy",
-  alternates: { canonical: "/privacy" },
-};
+  description: `How ${siteConfig.name} collects, stores, and protects your product briefs and account data.`,
+});
 
 export default function PrivacyPage() {
   return (
