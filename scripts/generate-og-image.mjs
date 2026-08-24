@@ -23,6 +23,12 @@ try {
   const page = await browser.newPage({
     viewport: { width: 1200, height: 630 },
     deviceScaleFactor: 1,
+    // The site is dark-first (colorScheme: "dark" in the root layout) and only
+    // switches to light when the OS reports a light preference. Playwright
+    // defaults to light, which made captures render in the untuned light
+    // theme (low-contrast badges, washed-out logos). Force dark so this
+    // matches the actual default experience most visitors see.
+    colorScheme: "dark",
   });
 
   // "networkidle" never resolves here — the site keeps background connections
