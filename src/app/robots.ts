@@ -14,12 +14,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: ["GPTBot", "Claude-Web", "anthropic-ai", "CCBot", "PerplexityBot", "Google-Extended"],
         allow: "/",
-        disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/canvas/"],
+        disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/studio", "/canvas/"],
       },
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/canvas/"],
+        disallow: ["/api/", "/auth/", "/canvas", "/settings", "/tasks", "/team", "/projects", "/calendar", "/studio", "/canvas/"],
       }
     ],
     sitemap: `${siteConfig.url}/sitemap.xml`,

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { siteConfig } from "@/lib/site";
+import { siteConfig, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/refund",
   title: "Refunds & Billing",
-  alternates: { canonical: "/refund" },
-};
+  description: `How billing, cancellations, and refunds work for ${siteConfig.name} Pro — card, UPI, and on-chain USDC/USDT.`,
+});
 
 export default function RefundPage() {
   return (

@@ -5,11 +5,13 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SectionKicker } from "@/components/landing/SectionKicker";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
 import { CheckIcon } from "@/components/icons";
+import { siteConfig, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/pricing",
   title: "Pricing",
-  description: "Start for free. Go Pro when you're ready to scale.",
-};
+  description: "Start for free. Go Pro when you're ready to scale. No hard limits, cancel anytime.",
+});
 
 const PLANS = [
   {
@@ -47,9 +49,45 @@ const PLANS = [
   },
 ];
 
+// Product/Offer JSON-LD for the two plans. priceCurrency uses "USD" (ISO
+// 4217, required for valid structured data) since the on-chain USDT/USDC
+// price is USD-pegged 1:1 — schema.org has no currency code for stablecoins.
+function PricingStructuredData() {
+  const graph = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    offers: PLANS.map((plan) => ({
+      "@type": "Offer",
+      name: plan.name,
+      description: plan.blurb,
+      price: plan.price.split(" ")[0],
+      priceCurrency: "USD",
+      url: `${siteConfig.url}/pricing`,
+      ...(plan.cadence !== "forever" && {
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: plan.price.split(" ")[0],
+          priceCurrency: "USD",
+          billingDuration: "P28D",
+        },
+      }),
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+    />
+  );
+}
+
 export default function PricingPage() {
   return (
     <AuthProvider>
+      <PricingStructuredData />
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <LandingNav />
         

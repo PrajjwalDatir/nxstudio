@@ -4,11 +4,14 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SectionKicker } from "@/components/landing/SectionKicker";
 import { AuthProvider } from "@/components/landing/AuthOverlay";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/faq",
   title: "FAQ",
-  description: "Questions you're probably asking.",
-};
+  description:
+    "Questions you're probably asking about context bundles, AI agent compatibility, privacy, and billing.",
+});
 
 const FAQ = [
   {
@@ -37,9 +40,35 @@ const FAQ = [
   },
 ];
 
+// FAQPage JSON-LD, generated straight from the FAQ array above so it can
+// never drift from the on-page copy. Feeds both classic FAQ rich results and
+// AI answer engines that lift Q/A pairs directly from structured data.
+function FaqStructuredData() {
+  const graph = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: a,
+      },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+    />
+  );
+}
+
 export default function FaqPage() {
   return (
     <AuthProvider>
+      <FaqStructuredData />
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <LandingNav />
         

@@ -33,7 +33,7 @@ export const siteConfig = {
   description:
     "Bring your product brief. We'll architect the right tech stack and generate a production-ready build prompt so your AI agents can ship it flawlessly.",
   url: resolveSiteUrl(),
-  ogImage: "/opengraph-image.png?v=20260807",
+  ogImage: "/opengraph-image.png?v=20260825",
   themeColor: "#08080A",
   brandColor: "#C4B5FD",
   locale: "en_US",
@@ -86,3 +86,40 @@ export const siteConfig = {
 } as const;
 
 export type SiteConfig = typeof siteConfig;
+
+/**
+ * Per-page metadata builder for every public route.
+ *
+ * The root layout's `openGraph`/`twitter` blocks only get deep-merged
+ * field-by-field with whatever a page defines — a page that sets just
+ * `title` (not `openGraph.title`) still shares the homepage's OG title and
+ * description when the link is posted on X/Slack/etc. This fills in the
+ * matching `openGraph`/`twitter` title + description (and a canonical) for
+ * every page so social shares and search snippets show that page's own
+ * copy, not the landing page's.
+ */
+export function pageMetadata({
+  path,
+  title,
+  description,
+}: {
+  /** Route path, e.g. "/pricing". Root layout's metadataBase resolves it to an absolute URL. */
+  path: string;
+  title: string;
+  description: string;
+}) {
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title,
+      description,
+      url: path,
+    },
+    twitter: {
+      title,
+      description,
+    },
+  };
+}
