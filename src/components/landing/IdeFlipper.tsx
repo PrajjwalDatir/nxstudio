@@ -115,6 +115,8 @@ const LAUNCHES = [
     lightImg: "https://launchstag.com/badge-light.svg",
     darkImg: "https://launchstag.com/badge-dark.svg",
     alt: "Featured on Launchstag",
+    width: 198,
+    height: 62,
   },
   {
     type: "custom",
@@ -123,6 +125,16 @@ const LAUNCHES = [
     Icon: ProductHuntMark,
     label: "Product Hunt",
     accent: "text-[#FF6154]",
+  },
+  {
+    type: "image",
+    name: "Launchpadly",
+    href: "https://launchpadly.co/startup/nxstudio?ref=badge",
+    lightImg: "https://launchpadly.co/embed/badges/startup/nxstudio.svg?variant=compact",
+    darkImg: "https://launchpadly.co/embed/badges/startup/nxstudio.svg?variant=compact",
+    alt: "nxstudio - Launchpadly Startup Directory",
+    width: 200,
+    height: 36,
   },
 ];
 
@@ -165,16 +177,16 @@ export function LaunchBadgeFlipper() {
               <img
                 src={current.lightImg}
                 alt={current.alt}
-                width={198}
-                height={62}
+                width={current.width}
+                height={current.height}
                 className="h-9 w-auto dark:hidden"
               />
               {/* Dark mode badge */}
               <img
                 src={current.darkImg}
                 alt={current.alt}
-                width={198}
-                height={62}
+                width={current.width}
+                height={current.height}
                 className="hidden h-9 w-auto dark:block"
               />
             </a>
