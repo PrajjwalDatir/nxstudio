@@ -56,7 +56,17 @@ export async function fetchFileCommits(path: string): Promise<TemporalCommit[]> 
 export async function fetchFileContentAtSha(sha: string, path: string): Promise<string | null> {
   try {
     const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${sha}/${cleanPath}`;
+
+    // Security: Reject path traversal payloads.
+    if (cleanPath.includes("..")) {
+      console.warn(`Attempted path traversal detected: ${cleanPath}`);
+      return null;
+    }
+
+    // Security: Prevent SSRF by encoding sha.
+    const encSha = encodeURIComponent(sha);
+    const encPath = cleanPath.split("/").map(encodeURIComponent).join("/");
+    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${encSha}/${encPath}`;
 
     const res = await fetch(rawUrl);
     if (!res.ok) return null;
