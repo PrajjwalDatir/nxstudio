@@ -153,6 +153,23 @@ export function LaunchBadgeFlipper() {
 
   return (
     <div className="relative inline-flex h-10 items-center justify-center min-w-[150px] [perspective:1000px]">
+      {/* Static, always-present copy for server-side badge verification (crawlers don't run the
+          rotation JS, so only LAUNCHES[0] would otherwise ever appear in the fetched HTML). */}
+      <a
+        href="https://launchpadly.co/startup/nxstudio?ref=badge"
+        data-launchpadly-badge="nxstudio"
+        data-launchpadly-badge-variant="compact"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="absolute h-0 w-0 overflow-hidden"
+      >
+        <img
+          src="https://launchpadly.co/embed/badges/startup/nxstudio.svg?variant=compact"
+          alt=""
+          width={200}
+          height={36}
+        />
+      </a>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={current.name}
