@@ -7,3 +7,6 @@
 ## 2026-08-05 - Array Spread in Loops Overhead
 **Learning:** Using the array spread operator `[...prev, next]` inside loops (e.g. `map.set(key, [...(map.get(key) ?? []), item])`) leads to O(N^2) time complexity because a new array is allocated and all existing elements are copied on every iteration. This causes significant garbage collection pressure and can be a silent performance killer.
 **Action:** Always initialize an array once and use `.push()` to append items inside loops.
+## 2026-08-06 - O(N*M) Map/Filter Iteration
+**Learning:** React component memoization hooks (useMemo) computing states from high-cardinality arrays (like workspaces and projects list menus) suffer from $O(N \times M)$ bottlenecks if they apply `.filter` iterations nested inside `.map` iteration blocks.
+**Action:** Extract nested matching logic when enumerating items in `useMemo` hooks. Perform an $O(N)$ sweep array pass to initialize a hash map mapping grouping IDs to elements, then render out group categories instantly via fast Hash Map `get` access points rather than sequentially filtering for elements matching a category inside nested loops.
