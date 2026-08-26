@@ -107,7 +107,27 @@ export function IdeBadgeFlipper() {
   );
 }
 
-const LAUNCHES = [
+type LaunchEntry =
+  | {
+      type: "image";
+      name: string;
+      href: string;
+      lightImg: string;
+      darkImg: string;
+      alt: string;
+      width?: number;
+      height?: number;
+    }
+  | {
+      type: "custom";
+      name: string;
+      href: string;
+      Icon: typeof ProductHuntMark;
+      label: string;
+      accent: string;
+    };
+
+const LAUNCHES: LaunchEntry[] = [
   {
     type: "image",
     name: "Launchstag",
@@ -135,6 +155,14 @@ const LAUNCHES = [
     alt: "nxstudio - Launchpadly Startup Directory",
     width: 200,
     height: 36,
+  },
+  {
+    type: "image",
+    name: "AI Launch",
+    href: "https://ailaun.ch/projects/nxstudio?utm_source=badge",
+    lightImg: "https://ailaun.ch/ailaunch/images/badges/featured-on-light.svg",
+    darkImg: "https://ailaun.ch/ailaunch/images/badges/featured-on-dark.svg",
+    alt: "Featured on AI Launch",
   },
 ];
 
@@ -168,6 +196,17 @@ export function LaunchBadgeFlipper() {
           alt=""
           width={200}
           height={36}
+        />
+      </a>
+      <a
+        href="https://ailaun.ch/projects/nxstudio?utm_source=badge"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="absolute h-0 w-0 overflow-hidden"
+      >
+        <img
+          src="https://ailaun.ch/ailaunch/images/badges/featured-on-light.svg"
+          alt=""
         />
       </a>
       <AnimatePresence mode="wait" initial={false}>
