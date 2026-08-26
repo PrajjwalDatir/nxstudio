@@ -74,6 +74,7 @@ export function NxContextDirectoryModal({
             <button
               onClick={onClose}
               className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              aria-label="Close"
             >
               ✕
             </button>

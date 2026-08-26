@@ -568,6 +568,7 @@ export function BuildPhase() {
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
                 ✕
               </button>
@@ -725,6 +726,7 @@ export function BuildPhase() {
                 <button
                   onClick={() => setPreviewPrompt(null)}
                   className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  aria-label="Close"
                 >
                   ✕
                 </button>
