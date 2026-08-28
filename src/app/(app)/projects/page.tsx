@@ -120,12 +120,36 @@ export default function ProjectsPage() {
   };
 
   // Group projects by collection; anything without a (known) collection is "Ungrouped".
-  const sortedCollections = useMemo(
-    () => [...collections].sort((a, b) => a.sort - b.sort),
-    [collections]
-  );
+  const { sortedCollections, ungrouped, groupedProjects } = useMemo(() => {
+    const sorted = [...collections].sort((a, b) => a.sort - b.sort);
+    const known = new Set(collections.map((c) => c.id));
+
+    // Performance optimization: Group items using a Map in O(N) pass
+    // instead of nested O(N*M) .filter() inside .map()
+    const byCollection = new Map<string, Project[]>();
+    const ungroupedList: Project[] = [];
+
+    for (const p of projects) {
+      if (!p.collectionId || !known.has(p.collectionId)) {
+        ungroupedList.push(p);
+      } else {
+        let list = byCollection.get(p.collectionId);
+        if (!list) {
+          list = [];
+          byCollection.set(p.collectionId, list);
+        }
+        list.push(p);
+      }
+    }
+
+    return {
+      sortedCollections: sorted,
+      ungrouped: ungroupedList,
+      groupedProjects: byCollection
+    };
+  }, [projects, collections]);
+
   const known = useMemo(() => new Set(collections.map((c) => c.id)), [collections]);
-  const ungrouped = projects.filter((p) => !p.collectionId || !known.has(p.collectionId));
 
   const ProjectCard = ({ p }: { p: Project }) => {
     const pct = overall(p.data);
@@ -298,7 +322,7 @@ export default function ProjectsPage() {
 
       {/* Collection groups */}
       {sortedCollections.map((c) => {
-        const items = projects.filter((p) => p.collectionId === c.id);
+        const items = groupedProjects.get(c.id) || [];
         return (
           <section key={c.id} className="mt-10">
             <div className="flex items-center gap-2">
