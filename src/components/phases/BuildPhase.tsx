@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWorkspace, useSync } from "@/lib/workspace-store";
@@ -130,6 +130,7 @@ function IterateSection() {
 
   const issues = syncResult?.issues ?? [];
   const canScope = (changeText.trim().length > 0 || !!selectedIssue) && state.status !== "loading";
+  const describeId = useId();
 
   const scope = async () => {
     const description = selectedIssue
@@ -239,8 +240,9 @@ function IterateSection() {
           </div>
         ) : (
           <>
-            <label className="text-sm font-medium">Or describe a change</label>
+            <label htmlFor={describeId} className="text-sm font-medium">Or describe a change</label>
             <textarea
+              id={describeId}
               value={changeText}
               onChange={(e) => setChangeText(e.target.value)}
               placeholder="e.g. Add payments with Razorpay so users can subscribe monthly"
