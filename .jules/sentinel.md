@@ -7,3 +7,8 @@
 **Vulnerability:** The application trusted Supabase's `user_metadata` object for authorization checks (specifically checking `user_metadata.role === "admin"` in `src/app/api/admin/prompts/route.ts`).
 **Learning:** The `user_metadata` object in Supabase is completely under user control and can be modified directly from the client via the Auth API (e.g. `supabase.auth.updateUser({ data: { role: 'admin' } })`). Trusting it for authorization creates an immediate privilege escalation and authorization bypass vulnerability.
 **Prevention:** Only use `app_metadata` (which requires a service role key to modify) or a secure backend database table for any authorization or security-critical user state.
+
+## 2025-08-31 - Open Redirect Bypass via Backslash Normalization
+**Vulnerability:** The open redirect prevention logic (`redirectTo.startsWith("/") && !redirectTo.startsWith("//")`) failed to account for paths starting with a backslash and slash (e.g., `/\evil.com`).
+**Learning:** Browsers normalize backslashes in URLs, meaning `/\evil.com` is interpreted as the protocol-relative URL `//evil.com`. If only `//` is checked, an attacker can bypass the check using `/\` and redirect users to malicious domains.
+**Prevention:** Always include `!path.startsWith("/\\")` alongside `!path.startsWith("//")` when validating that a URL is a relative local path.
