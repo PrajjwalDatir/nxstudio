@@ -30,8 +30,9 @@ export default async function LoginPage({
 }) {
   const { redirectTo, error } = await searchParams;
   // Guard against open redirects: only allow same-origin relative paths.
+  // We also block "/\" because browsers normalize it to "//", leading to protocol-relative bypasses.
   const safeRedirect =
-    redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+    redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") && !redirectTo.startsWith("/\\")
       ? redirectTo
       : "/canvas";
 
