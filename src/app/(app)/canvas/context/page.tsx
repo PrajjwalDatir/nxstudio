@@ -57,9 +57,17 @@ export default function ContextDirectoryPage() {
   const shortPath = (p: string) => p.replace(`${NX_ROOT}/`, "");
 
   const counts = useMemo(() => {
-    const drifted = allNxFiles.filter((f) => f.status === "drifted").length;
-    const extra = allNxFiles.filter((f) => f.status === "extra").length;
-    const synced = allNxFiles.filter((f) => f.status === "unchanged").length;
+    let drifted = 0;
+    let extra = 0;
+    let synced = 0;
+    // ⚡ Bolt: Replaced multiple O(N) array filter/length checks with a single O(N) loop
+    // to avoid traversing the array multiple times and creating unnecessary garbage.
+    for (let i = 0; i < allNxFiles.length; i++) {
+      const status = allNxFiles[i]!.status;
+      if (status === "drifted") drifted++;
+      else if (status === "extra") extra++;
+      else if (status === "unchanged") synced++;
+    }
     return { all: allNxFiles.length, drifted, extra, synced };
   }, [allNxFiles]);
 
