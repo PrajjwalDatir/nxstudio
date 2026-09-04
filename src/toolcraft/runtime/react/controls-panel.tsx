@@ -1243,8 +1243,14 @@ function isToggleParameterLayoutGroup(
   }
 
   const controls = layoutGroup.controls.map((controlId) => controlsById[controlId]);
-  const booleanControlCount = controls.filter((control) => isBooleanControl(control)).length;
-  const parameterControlCount = controls.filter((control) => !isBooleanControl(control)).length;
+  // ⚡ Bolt Performance Optimization:
+  // Replaced chained .filter().length calls with a single O(N) loop to eliminate unnecessary allocations and traversals.
+  let booleanControlCount = 0;
+  let parameterControlCount = 0;
+  for (const control of controls) {
+    if (isBooleanControl(control)) booleanControlCount++;
+    else parameterControlCount++;
+  }
 
   return booleanControlCount === 1 && parameterControlCount === 1;
 }
