@@ -5,3 +5,7 @@
 ## 2024-05-25 - Explicit Labeling via useId
 **Learning:** React 18's `useId` hook is a very clean and accessible way to generate unique IDs for dynamically rendered form fields.
 **Action:** When making forms, always generate a unique ID to couple labels to inputs explicitly unless the input is the only child of the label.
+
+## 2024-05-27 - Icon-only Buttons and ARIA labels
+**Learning:** Found multiple instances where simple character symbols (like '✕') were used as icon buttons for closing modals. These characters are not properly announced by screen readers, making it impossible for visually impaired users to understand their purpose without surrounding context.
+**Action:** Always add an explicit `aria-label` (e.g., `aria-label="Close modal"`) to buttons containing only text symbols or icons intended for interactive actions like closing, clearing, or deleting.
