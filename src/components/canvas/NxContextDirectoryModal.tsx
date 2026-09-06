@@ -27,9 +27,17 @@ export function NxContextDirectoryModal({
   const shortPath = (p: string) => p.replace(`${NX_ROOT}/`, "");
 
   const counts = useMemo(() => {
-    const drifted = files.filter((f) => f.status === "drifted").length;
-    const extra = files.filter((f) => f.status === "extra").length;
-    const synced = files.filter((f) => f.status === "unchanged").length;
+    // ⚡ Bolt: Single O(N) pass to avoid allocating unused temporary arrays
+    // and causing garbage collection pressure during frequent re-renders.
+    let drifted = 0;
+    let extra = 0;
+    let synced = 0;
+    for (let i = 0; i < files.length; i++) {
+      const status = files[i].status;
+      if (status === "drifted") drifted++;
+      else if (status === "extra") extra++;
+      else if (status === "unchanged") synced++;
+    }
     return { all: files.length, drifted, extra, synced };
   }, [files]);
 
