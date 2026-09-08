@@ -13,7 +13,11 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   // Only ever redirect to a same-origin relative path (open-redirect guard).
   const nextParam = searchParams.get("redirectTo") ?? "/canvas";
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/canvas";
+  // Block "//" and "/\" as browsers normalize the latter to the former.
+  const next =
+    nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.startsWith("/\\")
+      ? nextParam
+      : "/canvas";
 
   if (code) {
     const supabase = await createClient();

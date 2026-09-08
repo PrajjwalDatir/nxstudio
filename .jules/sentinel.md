@@ -7,3 +7,8 @@
 **Vulnerability:** The application trusted Supabase's `user_metadata` object for authorization checks (specifically checking `user_metadata.role === "admin"` in `src/app/api/admin/prompts/route.ts`).
 **Learning:** The `user_metadata` object in Supabase is completely under user control and can be modified directly from the client via the Auth API (e.g. `supabase.auth.updateUser({ data: { role: 'admin' } })`). Trusting it for authorization creates an immediate privilege escalation and authorization bypass vulnerability.
 **Prevention:** Only use `app_metadata` (which requires a service role key to modify) or a secure backend database table for any authorization or security-critical user state.
+
+## 2024-10-27 - Open Redirect Bypass via Protocol-Relative Normalization
+**Vulnerability:** The application checked for open redirects by verifying that paths started with `/` and not `//`. However, browsers normalize `/\` into `//`, creating a protocol-relative URL bypass (e.g., `/\attacker.com` redirects to `https://attacker.com`).
+**Learning:** URL sanitization needs to account for browser-specific normalization behaviors, particularly around path separators. A check for `//` is insufficient if the browser resolves `/\` to the same effect.
+**Prevention:** Always check and reject paths starting with `/\` (e.g., `!path.startsWith("/\\")`) in addition to checking `//` when validating relative paths.
