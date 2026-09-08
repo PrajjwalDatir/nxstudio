@@ -11,6 +11,7 @@ import {
   CheckIcon,
   CopyIcon,
   ExternalLinkIcon,
+  XIcon,
 } from "@/components/icons";
 
 export interface DriftDiffModalProps {
@@ -134,9 +135,10 @@ export function DriftDiffModal({
 
             <button
               onClick={onClose}
+              aria-label="Close"
               className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
-              ✕
+              <XIcon className="h-4 w-4" />
             </button>
           </div>
 

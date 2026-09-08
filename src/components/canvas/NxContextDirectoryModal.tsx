@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NxDrift, NxDriftStatus, NX_ROOT, compileNxFiles } from "@/lib/nx-compiler";
 import { useWorkspace } from "@/lib/workspace-store";
-import { FileTextIcon, GitBranchIcon, CheckIcon, PlusIcon, PencilLineIcon } from "@/components/icons";
+import { FileTextIcon, GitBranchIcon, CheckIcon, PlusIcon, PencilLineIcon, XIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export interface NxContextDirectoryModalProps {
@@ -73,9 +73,10 @@ export function NxContextDirectoryModal({
 
             <button
               onClick={onClose}
+              aria-label="Close"
               className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
-              ✕
+              <XIcon className="h-4 w-4" />
             </button>
           </div>
 
