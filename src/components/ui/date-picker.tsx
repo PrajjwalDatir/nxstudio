@@ -64,7 +64,10 @@ export function DatePicker({
             <XIcon className="h-3.5 w-3.5" />
           </Button>
         ) : null}
-        <Button className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring">
+        <Button
+          aria-label="Open calendar"
+          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
+        >
           <ChevronRightIcon className="h-3.5 w-3.5 rotate-90" />
         </Button>
       </Group>
