@@ -10,3 +10,9 @@
 ## 2026-08-06 - Nested Array Filter inside Map Overheads
 **Learning:** Using `.filter()` inside the callback of a `.map()` mapping over an array (e.g. `items.map(i => otherArray.filter(o => o.id === i.id))`) causes an O(N*M) runtime complexity. When performed inside a React `useMemo`, this can be a sneaky performance bottleneck blocking main thread renders as datasets grow.
 **Action:** Use a single O(N) pass to construct a `Map` that groups items by key (using `.push()` to an array for each key), then query the `Map` in O(1) time within the `.map()` loop.
+## 2026-08-07 - Array Filter Length Re-renders
+**Learning:** Using chained `.filter(condition).length` calls inside React `useMemo` hooks or high-frequency loops forces multiple  traversals over the same array and creates unused intermediate arrays, triggering unnecessary garbage collection pressure and layout jank.
+**Action:** When filtering counts or arrays, avoid `.filter` chains and use a single  `for` loop with counter variables instead.
+## 2026-08-07 - Array Filter Length Re-renders
+**Learning:** Using chained .filter(condition).length calls inside React useMemo hooks or high-frequency loops forces multiple O(N) traversals over the same array and creates unused intermediate arrays, triggering unnecessary garbage collection pressure and layout jank.
+**Action:** When filtering counts or arrays, avoid .filter chains and use a single O(N) for loop with counter variables instead.

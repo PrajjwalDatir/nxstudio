@@ -27,22 +27,40 @@ export function NxContextDirectoryModal({
   const shortPath = (p: string) => p.replace(`${NX_ROOT}/`, "");
 
   const counts = useMemo(() => {
-    const drifted = files.filter((f) => f.status === "drifted").length;
-    const extra = files.filter((f) => f.status === "extra").length;
-    const synced = files.filter((f) => f.status === "unchanged").length;
+    // ⚡ Bolt: Optimized from multiple O(N) .filter().length passes to a single O(N) loop.
+    // Reduces array allocations and garbage collection overhead.
+    let drifted = 0;
+    let extra = 0;
+    let synced = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      const status = files[i].status;
+      if (status === "drifted") drifted++;
+      else if (status === "extra") extra++;
+      else if (status === "unchanged") synced++;
+    }
+
     return { all: files.length, drifted, extra, synced };
   }, [files]);
 
   const filteredFiles = useMemo(() => {
-    let list = files;
-    if (filter !== "all") {
-      list = list.filter((f) => f.status === filter);
+    // ⚡ Bolt: Optimized from multiple chained .filter() passes into a single O(N) pass.
+    // Prevents intermediate array allocations and reduces garbage collection pressure.
+    const searchActive = search.trim().length > 0;
+    const q = searchActive ? search.toLowerCase().trim() : "";
+
+    if (filter === "all" && !searchActive) {
+      return files;
     }
-    if (search.trim()) {
-      const q = search.toLowerCase().trim();
-      list = list.filter((f) => f.path.toLowerCase().includes(q));
+
+    const result = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (filter !== "all" && f.status !== filter) continue;
+      if (searchActive && !f.path.toLowerCase().includes(q)) continue;
+      result.push(f);
     }
-    return list;
+    return result;
   }, [files, filter, search]);
 
   return (
