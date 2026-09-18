@@ -400,6 +400,10 @@ function BriefAnalysisPanel({
 }
 
 export function IdeaPhase() {
+  const primaryColorId = useId();
+  const typographyId = useId();
+  const radiusId = useId();
+
   const {
     data,
     updateIdea,
@@ -483,7 +487,7 @@ export function IdeaPhase() {
 
       {/* Brand DNA — locked into every generated prompt to prevent style drift */}
       <div className="mt-4 rounded-xl glass p-5">
-        <label className="font-medium">Brand DNA</label>
+        <h3 className="font-medium text-base">Brand DNA</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Locked into the build prompt so generated code stays visually consistent — shared live with Studio.
         </p>
@@ -491,7 +495,7 @@ export function IdeaPhase() {
         <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
           {/* Primary color — swatch picker + hex/name field */}
           <div>
-            <span className="text-sm text-muted-foreground">Primary color</span>
+            <label htmlFor={primaryColorId} className="text-sm text-muted-foreground block font-normal">Primary color</label>
             <div className="mt-1.5 flex items-center gap-2">
               <input
                 type="color"
@@ -501,6 +505,7 @@ export function IdeaPhase() {
                 className="h-9 w-10 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-1"
               />
               <input
+                id={primaryColorId}
                 value={data.brand.primaryColor}
                 onChange={(e) => updateBrand("primaryColor", e.target.value)}
                 placeholder="#6366F1 or indigo"
@@ -511,8 +516,9 @@ export function IdeaPhase() {
 
           {/* Typography */}
           <div>
-            <span className="text-sm text-muted-foreground">Typography</span>
+            <label htmlFor={typographyId} className="text-sm text-muted-foreground block font-normal">Typography</label>
             <select
+              id={typographyId}
               value={FONTS.includes(data.brand.font as (typeof FONTS)[number]) ? data.brand.font : ""}
               onChange={(e) => updateBrand("font", e.target.value)}
               className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none focus:border-ring"
@@ -553,10 +559,11 @@ export function IdeaPhase() {
           {/* Corner radius — slider, matches Studio */}
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Corner radius</span>
+              <label htmlFor={radiusId} className="text-sm text-muted-foreground block font-normal">Corner radius</label>
               <span className="text-sm font-medium">{radiusToNum(data.brand.radius)}px</span>
             </div>
             <input
+              id={radiusId}
               type="range"
               min={0}
               max={24}
