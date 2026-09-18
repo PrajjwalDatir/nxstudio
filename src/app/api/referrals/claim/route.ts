@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const result = await recordReferral(user.id, code.trim());
     return NextResponse.json(result);
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to record referral.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Error in POST /api/referrals/claim:", e);
+    return NextResponse.json({ error: "Failed to record referral." }, { status: 500 });
   }
 }

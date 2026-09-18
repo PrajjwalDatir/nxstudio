@@ -10,6 +10,7 @@ import {
 import { GitHubSignIn } from "./github-signin";
 import { CanvasPreview } from "@/components/landing/CanvasPreview";
 import { pageMetadata } from "@/lib/site";
+import { getSafeRedirectUrl } from "@/lib/security/redirect";
 
 export const metadata: Metadata = pageMetadata({
   path: "/login",
@@ -29,15 +30,8 @@ export default async function LoginPage({
   searchParams: Promise<{ redirectTo?: string; error?: string }>;
 }) {
   const { redirectTo, error } = await searchParams;
-  // Guard against open redirects: only allow same-origin relative paths.
-  // Also block "/\" as browsers normalize it to "//" (protocol-relative).
-  const safeRedirect =
-    redirectTo &&
-    redirectTo.startsWith("/") &&
-    !redirectTo.startsWith("//") &&
-    !redirectTo.startsWith("/\\")
-      ? redirectTo
-      : "/canvas";
+  // Guard against open redirects: only allow validated same-origin relative paths.
+  const safeRedirect = getSafeRedirectUrl(redirectTo, "/canvas");
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">

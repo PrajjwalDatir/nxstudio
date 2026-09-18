@@ -36,8 +36,8 @@ export function withAuthApiHandler<T = unknown>(handler: AuthenticatedApiHandler
 
       return await handler(req, user, body);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Internal Server Error";
-      return NextResponse.json({ error: message }, { status: 500 });
+      console.error("API handler execution error:", err);
+      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
   };
 }

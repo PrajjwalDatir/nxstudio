@@ -228,7 +228,7 @@ function SwingingLamp({
     swingVelocity.current *= 0.982;
     swingVelocity.current -= swingAngle.current * 0.024;
 
-    let totalZ = swingAngle.current + loadImpulse;
+    const totalZ = swingAngle.current + loadImpulse;
     const totalX = Math.sin(state.clock.getElapsedTime() * 1.2) * Math.abs(totalZ) * 0.2;
 
     if (lampRef.current) {

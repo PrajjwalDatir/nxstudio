@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { computeLineDiff } from "@/lib/nx-diff";
 import { fetchFileCommits, fetchFileContentAtSha, TemporalCommit } from "@/lib/github-temporal";
+import type { NxDriftStatus } from "@/lib/nx-compiler";
 import {
   FileTextIcon,
   GitBranchIcon,
@@ -15,14 +16,31 @@ import {
 } from "@/components/icons";
 
 export interface DriftDiffModalProps {
+  open?: boolean;
   path: string | null;
-  status: "drifted" | "extra" | "missing" | "unchanged";
+  status: NxDriftStatus;
   originalContent: string;
   currentContent: string;
   onClose: () => void;
 }
 
+function getStatusBadge(status: NxDriftStatus): { label: string; class: string } {
+  switch (status) {
+    case "drifted":
+      return { label: "Context Drifted", class: "border-primary/30 bg-primary/10 text-accent-foreground" };
+    case "extra":
+      return { label: "New File in Repo", class: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" };
+    case "unchanged":
+      return { label: "Synced", class: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" };
+    case "missing":
+      return { label: "Pending Sync", class: "border-muted/40 bg-muted/20 text-muted-foreground" };
+    default:
+      return { label: status, class: "border-border bg-secondary text-muted-foreground" };
+  }
+}
+
 export function DriftDiffModal({
+  open,
   path,
   status,
   originalContent,
@@ -47,11 +65,15 @@ export function DriftDiffModal({
 
   useEffect(() => {
     if (!path) return;
-    setLoadingCommits(true);
+    let active = true;
     fetchFileCommits(path).then((data) => {
+      if (!active) return;
       setCommits(data);
       setLoadingCommits(false);
     });
+    return () => {
+      active = false;
+    };
   }, [path]);
 
   const handleSelectCommit = async (commit: TemporalCommit) => {
@@ -64,24 +86,10 @@ export function DriftDiffModal({
     setActiveTab("diff"); // Jump to diff tab to inspect this historical revision!
   };
 
-  if (!path) return null;
+  if (!open || !path) return null;
 
   const shortPath = path.replace(/^\.nx\//, "");
-
-  const statusBadge = useMemo(() => {
-    switch (status) {
-      case "drifted":
-        return { label: "Context Drifted", class: "border-primary/30 bg-primary/10 text-accent-foreground" };
-      case "extra":
-        return { label: "New File in Repo", class: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" };
-      case "unchanged":
-        return { label: "Synced", class: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" };
-      case "missing":
-        return { label: "Pending Sync", class: "border-muted/40 bg-muted/20 text-muted-foreground" };
-      default:
-        return { label: status, class: "border-border bg-secondary text-muted-foreground" };
-    }
-  }, [status]);
+  const statusBadge = getStatusBadge(status);
 
   const copyDiffText = () => {
     const raw = diffResult.lines
@@ -238,7 +246,7 @@ export function DriftDiffModal({
                     Fetching commit history from GitHub API…
                   </div>
                 ) : commits.length > 0 ? (
-                  commits.map((c, idx) => {
+                  commits.map((c) => {
                     const isSelected = selectedCommit?.sha === c.sha;
                     return (
                       <div

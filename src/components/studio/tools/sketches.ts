@@ -114,13 +114,11 @@ const particles: SketchFactory = () => {
 
       p.strokeWeight(1.2);
       const lineInk = p.color(params.primary);
-      // Query adjacent grid cells: average O(N) instead of O(N^2)
+      // Query adjacent grid cells: average O(N) instead of O(N^2) with zero array allocations
       for (let i = 0; i < ps.length; i++) {
         const a = ps[i];
-        const nearby = spatialGrid.getNearby(a);
-        for (let j = 0; j < nearby.length; j++) {
-          const b = nearby[j];
-          if (a === b) continue;
+        spatialGrid.forEachNearby(a, (b) => {
+          if (a === b) return;
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const dSq = dx * dx + dy * dy;
@@ -131,7 +129,7 @@ const particles: SketchFactory = () => {
             p.stroke(lineInk);
             p.line(a.x, a.y, b.x, b.y);
           }
-        }
+        });
       }
 
       const nodeInk = p.color(params.primary);
@@ -266,11 +264,18 @@ const noise: SketchFactory = () => {
       const t = p.frameCount * 0.01 * params.speed;
       const from = p.color(params.background);
       const to = p.color(params.primary);
+      const r1 = p.red(from);
+      const g1 = p.green(from);
+      const b1 = p.blue(from);
+      const dr = p.red(to) - r1;
+      const dg = p.green(to) - g1;
+      const db = p.blue(to) - b1;
+
       p.noStroke();
       for (let y = 0; y < p.height; y += step) {
         for (let x = 0; x < p.width; x += step) {
           const n = p.noise(x * 0.003, y * 0.003, t);
-          p.fill(p.lerpColor(from, to, n));
+          p.fill(r1 + dr * n, g1 + dg * n, b1 + db * n);
           p.rect(x, y, step, step);
         }
       }

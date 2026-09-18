@@ -33,7 +33,8 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("DB error submitting prompt:", error.message);
+      return NextResponse.json({ error: "Failed to submit prompt. Please try again." }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -41,8 +42,9 @@ export async function POST(req: Request) {
       message: "Prompt submitted successfully! It is now pending admin review.",
     });
   } catch (e) {
+    console.error("Error in POST /api/prompts/submit:", e);
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Failed to submit prompt." },
+      { error: "Failed to submit prompt. Please try again." },
       { status: 500 }
     );
   }

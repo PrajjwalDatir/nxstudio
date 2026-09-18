@@ -38,7 +38,25 @@ export function AdminPromptsPanel() {
   };
 
   useEffect(() => {
-    fetchPrompts();
+    let active = true;
+    async function load() {
+      try {
+        const res = await fetch("/api/admin/prompts");
+        const data = await res.json();
+        if (!active) return;
+        if (!res.ok) throw new Error(data.error ?? "Failed to fetch prompts.");
+        setTemplates(data.templates ?? []);
+      } catch (e) {
+        if (!active) return;
+        setError(e instanceof Error ? e.message : "Failed to load admin prompts.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const updateStatus = async (id: string, newStatus: "approved" | "rejected" | "pending") => {

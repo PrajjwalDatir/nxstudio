@@ -11,6 +11,14 @@ import type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync } from "./githu
 export type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync };
 
 const API = "https://api.github.com";
+const REPO_REGEX = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
+
+function validateRepoAndBranch(repo: string, branch: string): { owner: string; name: string } | null {
+  if (!repo || !REPO_REGEX.test(repo)) return null;
+  if (!branch || branch.includes("..") || branch.includes("\0")) return null;
+  const [owner, name] = repo.split("/");
+  return { owner, name };
+}
 
 async function gh(token: string, path: string) {
   const res = await fetch(`${API}${path}`, {
@@ -31,6 +39,8 @@ export async function getUser(token: string): Promise<GhUser | null> {
 }
 
 async function fetchOne(token: string, encOwner: string, encName: string, encBranch: string, path: string): Promise<string | null> {
+  // Reject directory traversal
+  if (path.includes("..") || path.includes("\0")) return null;
   const encPath = path.split("/").map(encodeURIComponent).join("/");
   const res = await gh(token, `/repos/${encOwner}/${encName}/contents/${encPath}?ref=${encBranch}`);
   if (!res.ok) return null;
@@ -50,15 +60,21 @@ export async function fetchNxPaths(
   branch: string,
   paths: string[]
 ): Promise<Record<string, string>> {
-  const [owner, name] = repo.split("/");
-  if (!owner || !name) return {};
+  const parsed = validateRepoAndBranch(repo, branch);
+  if (!parsed) return {};
+  const { owner, name } = parsed;
   const encOwner = encodeURIComponent(owner);
   const encName = encodeURIComponent(name);
   const encBranch = encodeURIComponent(branch);
 
+  // Security: only fetch paths strictly inside .nx/ and without path traversal
+  const safePaths = paths.filter(
+    (p) => typeof p === "string" && p.startsWith(NX_ROOT) && !p.includes("..") && !p.includes("\0")
+  );
+
   const files: Record<string, string> = {};
   await Promise.all(
-    paths.map(async (p) => {
+    safePaths.map(async (p) => {
       const content = await fetchOne(token, encOwner, encName, encBranch, p);
       if (content != null) files[p] = content;
     })
@@ -68,8 +84,10 @@ export async function fetchNxPaths(
 
 /** Close a GitHub issue — used when a founder marks an iteration as shipped. */
 export async function closeIssue(token: string, repo: string, issueNumber: number): Promise<boolean> {
-  const [owner, name] = repo.split("/");
-  if (!owner || !name) return false;
+  if (!Number.isInteger(issueNumber) || issueNumber <= 0) return false;
+  const parsed = validateRepoAndBranch(repo, "main");
+  if (!parsed) return false;
+  const { owner, name } = parsed;
   const encOwner = encodeURIComponent(owner);
   const encName = encodeURIComponent(name);
   const res = await fetch(`${API}/repos/${encOwner}/${encName}/issues/${issueNumber}`, {
@@ -91,8 +109,9 @@ export async function syncRepo(
   repo: string,
   branch: string
 ): Promise<RepoSync | { error: string; status: number }> {
-  const [owner, name] = repo.split("/");
-  if (!owner || !name) return { error: "Invalid repo. Use owner/name.", status: 400 };
+  const parsed = validateRepoAndBranch(repo, branch);
+  if (!parsed) return { error: "Invalid repo or branch format. Use owner/name.", status: 400 };
+  const { owner, name } = parsed;
 
   const encOwner = encodeURIComponent(owner);
   const encName = encodeURIComponent(name);
