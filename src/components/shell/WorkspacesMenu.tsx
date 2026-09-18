@@ -26,6 +26,22 @@ import { cn } from "@/lib/utils";
  * between projects without a trip through /projects. Switching also routes to
  * /canvas so the newly-active product's board is what you land on.
  */
+const ProjectRow = ({ p, activeId, select }: { p: Project, activeId: string | null, select: (id: string) => void }) => {
+  const isActive = p.id === activeId;
+  return (
+    <DropdownMenuItem
+      onSelect={() => select(p.id)}
+      className={cn("gap-2", isActive && "text-foreground")}
+    >
+      <ProjectIcon className="h-4 w-4 shrink-0" />
+      <span className="min-w-0 flex-1 truncate">
+        {p.data.productName || "Untitled Project"}
+      </span>
+      {isActive && <CheckIcon className="h-4 w-4 shrink-0 text-foreground" />}
+    </DropdownMenuItem>
+  );
+};
+
 export function WorkspacesMenu() {
   const router = useRouter();
   const { projects, activeId, switchProject, collections } = useWorkspace();
@@ -69,23 +85,6 @@ export function WorkspacesMenu() {
     setOpen(false);
   };
 
-  const ProjectRow = ({ p }: { p: Project }) => {
-    const isActive = p.id === activeId;
-    return (
-      <DropdownMenuItem
-        key={p.id}
-        onSelect={() => select(p.id)}
-        className={cn("gap-2", isActive && "text-foreground")}
-      >
-        <ProjectIcon className="h-4 w-4 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">
-          {p.data.productName || "Untitled Project"}
-        </span>
-        {isActive && <CheckIcon className="h-4 w-4 shrink-0 text-foreground" />}
-      </DropdownMenuItem>
-    );
-  };
-
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
@@ -110,7 +109,7 @@ export function WorkspacesMenu() {
               {g.collection.name}
             </DropdownMenuLabel>
             {g.items.length ? (
-              g.items.map((p) => <ProjectRow key={p.id} p={p} />)
+              g.items.map((p) => <ProjectRow key={p.id} p={p} activeId={activeId} select={select} />)
             ) : (
               <div className="px-2 py-1.5 text-xs text-muted-foreground/70">
                 No products
@@ -127,7 +126,7 @@ export function WorkspacesMenu() {
               </DropdownMenuLabel>
             )}
             {ungrouped.map((p) => (
-              <ProjectRow key={p.id} p={p} />
+              <ProjectRow key={p.id} p={p} activeId={activeId} select={select} />
             ))}
           </>
         )}
