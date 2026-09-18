@@ -88,7 +88,8 @@ export async function POST(request: Request) {
           currentPeriodEnd: row?.current_period_end ?? null,
         });
       }
-      return NextResponse.json({ error: `DB error: ${insertErr.message}` }, { status: 500 });
+      console.error(`DB error saving crypto payment: ${insertErr.message}`);
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     // Extend from whichever is later: now, or the current period end (stacking renewals).
@@ -112,7 +113,8 @@ export async function POST(request: Request) {
       })
       .eq("user_id", user.id);
     if (updateErr) {
-      return NextResponse.json({ error: `DB error: ${updateErr.message}` }, { status: 500 });
+      console.error(`DB error updating subscription: ${updateErr.message}`);
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
     revalidateTag(`subscription:${user.id}`, { expire: 0 });
 
