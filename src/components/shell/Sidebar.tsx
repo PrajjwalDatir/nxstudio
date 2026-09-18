@@ -177,6 +177,7 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
               variant="outline"
               size="icon"
               title="New Project — upgrade to build more"
+              aria-label="New Project — upgrade to build more"
               className="w-full border-sidebar-border"
               onClick={() => setPayOpen(true)}
             >
@@ -200,6 +201,7 @@ export function Sidebar({ userEmail, isAnonymous = false }: { userEmail: string;
                 variant="outline"
                 size="icon"
                 title="New Project"
+                aria-label="New Project"
                 className="w-full border-sidebar-border"
               >
                 <PlusIcon className="h-4 w-4" />
