@@ -37,6 +37,22 @@ export class SpatialHashGrid {
     for (let i = 0; i < particles.length; i++) this.insert(particles[i]);
   }
 
+  forEachNearby(p: Particle2D, callback: (other: Particle2D) => void) {
+    const cx = Math.floor(p.x / this.cellSize);
+    const cy = Math.floor(p.y / this.cellSize);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const k = ((cx + dx) << 16) | ((cy + dy) & 0xFFFF);
+        const cell = this.grid.get(k);
+        if (cell) {
+          for (let i = 0; i < cell.length; i++) {
+            callback(cell[i]);
+          }
+        }
+      }
+    }
+  }
+
   getNearby(p: Particle2D): Particle2D[] {
     const cx = Math.floor(p.x / this.cellSize);
     const cy = Math.floor(p.y / this.cellSize);

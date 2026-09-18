@@ -103,13 +103,17 @@ export default function ContextDirectoryPage() {
 
   useEffect(() => {
     if (!activeFile?.path) return;
-    setSelectedCommit(null);
-    setRevisionContent(null);
-    setLoadingCommits(true);
+    let active = true;
     fetchFileCommits(activeFile.path).then((res) => {
+      if (!active) return;
+      setSelectedCommit(null);
+      setRevisionContent(null);
       setCommits(res);
       setLoadingCommits(false);
     });
+    return () => {
+      active = false;
+    };
   }, [activeFile?.path]);
 
   const handleSelectCommit = async (commit: TemporalCommit) => {

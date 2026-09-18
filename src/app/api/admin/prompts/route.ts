@@ -43,13 +43,15 @@ export async function GET() {
       .order("sort", { ascending: true });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("DB error loading prompt templates:", error.message);
+      return NextResponse.json({ error: "Failed to load templates." }, { status: 500 });
     }
 
     return NextResponse.json({ templates: data });
   } catch (e) {
+    console.error("Error in GET /api/admin/prompts:", e);
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Failed to load templates." },
+      { error: "Failed to load templates." },
       { status: 500 }
     );
   }
@@ -75,13 +77,15 @@ export async function PATCH(req: Request) {
       .eq("id", id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("DB error updating prompt template:", error.message);
+      return NextResponse.json({ error: "Failed to update status." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (e) {
+    console.error("Error in PATCH /api/admin/prompts:", e);
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Failed to update status." },
+      { error: "Failed to update status." },
       { status: 500 }
     );
   }

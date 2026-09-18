@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { track } from "@vercel/analytics/server";
 import { createClient } from "@/lib/supabase/server";
 
+import { getSafeRedirectUrl } from "@/lib/security/redirect";
+
 /**
  * PKCE callback: Supabase redirects here (after OAuth, magic link, or email
  * confirmation) with a `code` that we exchange for a session cookie. This is
@@ -11,13 +13,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  // Only ever redirect to a same-origin relative path (open-redirect guard).
-  const nextParam = searchParams.get("redirectTo") ?? "/canvas";
-  // Block "//" and "/\" as browsers normalize the latter to the former.
-  const next =
-    nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.startsWith("/\\")
-      ? nextParam
-      : "/canvas";
+  // Only ever redirect to a validated, safe same-origin relative path (open-redirect guard).
+  const next = getSafeRedirectUrl(searchParams.get("redirectTo"), "/canvas");
 
   if (code) {
     const supabase = await createClient();

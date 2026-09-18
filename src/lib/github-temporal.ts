@@ -40,7 +40,22 @@ export async function fetchFileCommits(path: string): Promise<TemporalCommit[]> 
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
-    return data.map((item: any) => ({
+    interface RawGitHubCommitItem {
+      sha?: string;
+      commit?: {
+        message?: string;
+        author?: {
+          name?: string;
+          date?: string;
+        };
+      };
+      author?: {
+        login?: string;
+      };
+      html_url?: string;
+    }
+
+    return (data as RawGitHubCommitItem[]).map((item) => ({
       sha: item.sha?.slice(0, 7) || "unknown",
       message: item.commit?.message?.split("\n")[0] || "Update file",
       author: item.commit?.author?.name || item.author?.login || "AI Agent",
