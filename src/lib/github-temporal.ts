@@ -19,6 +19,9 @@ const REPO_NAME = "nxstudio";
  * Fetch commit history for a specific file in the repository.
  */
 export async function fetchFileCommits(path: string): Promise<TemporalCommit[]> {
+  // Security: Prevent path traversal
+  if (path.includes("..")) return [];
+
   try {
     const cleanPath = path.startsWith("/") ? path.slice(1) : path;
     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits?path=${encodeURIComponent(cleanPath)}&per_page=10`;
@@ -54,9 +57,14 @@ export async function fetchFileCommits(path: string): Promise<TemporalCommit[]> 
  * Fetch historical file content at a specific commit SHA from raw.githubusercontent.com.
  */
 export async function fetchFileContentAtSha(sha: string, path: string): Promise<string | null> {
+  // Security: Prevent path traversal and properly URL-encode segments
+  if (sha.includes("..") || path.includes("..")) return null;
+
   try {
     const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${sha}/${cleanPath}`;
+    const encSha = encodeURIComponent(sha);
+    const encPath = cleanPath.split("/").map(encodeURIComponent).join("/");
+    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${encSha}/${encPath}`;
 
     const res = await fetch(rawUrl);
     if (!res.ok) return null;
