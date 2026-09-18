@@ -2,7 +2,7 @@
 
 import { useState, useId } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, LoaderIcon, CheckCircleIcon, WandIcon } from "@/components/icons";
+import { PlusIcon, LoaderIcon, CheckCircleIcon, WandIcon, XIcon } from "@/components/icons";
 
 interface Props {
   open: boolean;
@@ -75,7 +75,7 @@ export function SubmitPromptDialog({ open, onClose }: Props) {
             aria-label="Close"
             className="rounded-lg p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
-            ✕
+            <XIcon className="h-4 w-4" />
           </button>
         </div>
 
