@@ -10,7 +10,7 @@
  * on change and re-seeded on seed change, without tearing down the instance.
  * p5 touches `window`, so it's imported dynamically on the client.
  */
-import { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import type P5 from "p5";
 import { useToolcraftEvaluatedValues } from "@/toolcraft/runtime/react";
 import { GEN_TARGETS, BRAND_TARGETS } from "@/lib/studio/schema";
@@ -30,7 +30,7 @@ function parseColor(v: unknown, fallback: string): string {
   return fallback;
 }
 
-export function GenerativeRenderer() {
+export const GenerativeRenderer = React.memo(function GenerativeRenderer() {
   const values = useToolcraftEvaluatedValues();
   const sketchId = str(values[GEN_TARGETS.sketch], "flow") as SketchId;
 
@@ -115,4 +115,4 @@ export function GenerativeRenderer() {
   }, [params.primary, params.background, params.count, params.particleSize, params.connectionDist, params.speed, params.seed]);
 
   return <div ref={containerRef} className="h-full w-full" data-slot="generative-canvas" />;
-}
+});
