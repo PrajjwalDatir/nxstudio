@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import { getStoredValue, setStoredValue } from "./storage";
 import { createClient } from "@/lib/supabase/client";
-import { CustomStage, IdeaData, IterationEntry, TechStackInput, WorkspaceData } from "./types";
+import { CustomStage, IdeaData, IterationEntry, ProductSchema, TechStackInput, WorkspaceData } from "./types";
 import { mergeNxIntoWorkspace } from "./nx-compiler";
 import { isBriefInsightsStale } from "./staleness";
 import {
@@ -98,6 +98,8 @@ interface WorkspaceContextType {
    * made locally while the request was in flight doesn't get silently reverted.
    */
   applyWorkspacePatch: (patch: Partial<WorkspaceData>, base?: WorkspaceData) => void;
+  updateSchema: (schema: ProductSchema) => void;
+  updateMcpServers: (servers: string[]) => void;
   updateTech: <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) => void;
   toggleChecklist: (phaseId: string, stepId: string) => void;
   isStepDone: (phaseId: string, stepId: string) => boolean;
@@ -466,6 +468,16 @@ export function WorkspaceProvider({
     [patchData]
   );
 
+  const updateSchema = useCallback(
+    (schema: ProductSchema) => patchData((d) => ({ ...d, schema })),
+    [patchData]
+  );
+
+  const updateMcpServers = useCallback(
+    (servers: string[]) => patchData((d) => ({ ...d, selectedMcpServers: servers })),
+    [patchData]
+  );
+
   const updateTech = useCallback(
     <K extends keyof TechStackInput>(field: K, value: TechStackInput[K]) =>
       patchData((d) => ({ ...d, tech: { ...d.tech, [field]: value } })),
@@ -711,6 +723,8 @@ export function WorkspaceProvider({
         addIteration,
         markIterationShipped,
         applyWorkspacePatch,
+        updateSchema,
+        updateMcpServers,
         updateTech,
         toggleChecklist,
         isStepDone,
