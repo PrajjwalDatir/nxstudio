@@ -17,8 +17,11 @@ import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
 import { SubmitPromptDialog } from "@/components/prompts/SubmitPromptDialog";
+import { McpFleetSelector } from "@/components/mcp/McpFleetSelector";
+import { PhaseSectionNav, PhaseSectionFooter, type PhaseSectionItem } from "./PhaseSectionNav";
 import {
   BadgeCheckIcon,
+  ListChecksIcon,
   LockIcon,
   ZapIcon,
   UsersIcon,
@@ -392,6 +395,55 @@ export function BuildPhase() {
   const doneCount = BUILD_STEPS.filter((s) => isStepDone("build", s.id)).length;
   const status = doneCount >= BUILD_STEPS.length ? "complete" : "in-progress";
 
+  const [activeSection, setActiveSection] = useState<string>("checklist");
+
+  const BUILD_SECTIONS: PhaseSectionItem[] = [
+    {
+      id: "checklist",
+      label: "Deliverables Checklist",
+      shortLabel: "Checklist",
+      description: "Track build progress step-by-step",
+      icon: ListChecksIcon,
+      isDone: doneCount >= BUILD_STEPS.length,
+    },
+    {
+      id: "scaffold",
+      label: "Scaffold & Prompt",
+      shortLabel: "Scaffold",
+      description: "Master prompt, IDE rules & .nx/ bundle",
+      icon: WandIcon,
+      isDone: Boolean(masterPrompt),
+    },
+    {
+      id: "mcp",
+      label: "MCP Fleet",
+      shortLabel: "MCP",
+      description: "Native protocol server & tool registry",
+      icon: ZapIcon,
+      isDone: Boolean(data.selectedMcpServers && data.selectedMcpServers.length > 0),
+    },
+    {
+      id: "refine",
+      label: "Refine & Audit",
+      shortLabel: "Refine",
+      description: "Apple HIG prompt gallery for security & perf",
+      icon: ShieldCheckIcon,
+      isDone: false,
+    },
+    {
+      id: "iterate",
+      label: "Iterate & Ship",
+      shortLabel: "Iterate",
+      description: "Scope changes and issue closure",
+      icon: GitBranchIcon,
+      isDone: (data.iterations || []).some((it) => it.status === "shipped"),
+    },
+  ];
+
+  const currentIdx = BUILD_SECTIONS.findIndex((s) => s.id === activeSection);
+  const prevSection = currentIdx > 0 ? BUILD_SECTIONS[currentIdx - 1] : null;
+  const nextSection = currentIdx < BUILD_SECTIONS.length - 1 ? BUILD_SECTIONS[currentIdx + 1] : null;
+
   return (
     <>
       <PhaseHeader title="Build" status={status} phaseId="build" />
@@ -399,303 +451,346 @@ export function BuildPhase() {
       <PremiumDialog open={payOpen} onClose={() => setPayOpen(false)} onActivated={() => { setPayOpen(false); refresh(); }} />
       <SubmitPromptDialog open={submitOpen} onClose={() => setSubmitOpen(false)} />
 
-      {/* Interactive Task Checklist */}
-      <div className="mb-8 rounded-2xl border border-border bg-card p-6">
-        <h2 className="text-lg font-semibold">Deliverables Checklist</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Track implementation progress as your AI agent executes each step.
-        </p>
+      {/* Top Section Navigation with Progress Bar */}
+      <PhaseSectionNav
+        sections={BUILD_SECTIONS}
+        activeId={activeSection}
+        onSelect={setActiveSection}
+        phaseLabel="Build"
+      />
 
-        <div className="mt-4 space-y-2.5">
-          {BUILD_STEPS.map((step) => {
-            const checked = isStepDone("build", step.id);
-            return (
-              <div
-                key={step.id}
-                onClick={() => {
-                  toggleChecklist("build", step.id);
-                  toggleChecklist("checklist", step.id);
-                }}
-                className="flex cursor-pointer items-center gap-3.5 rounded-xl border border-border bg-secondary/20 px-4 py-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
-              >
-                <div
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-                    checked
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border hover:border-primary/60"
-                  }`}
-                >
-                  {checked && <BadgeCheckIcon className="h-3.5 w-3.5" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className={`text-sm font-medium ${checked ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                    {step.label}
+      {/* ── SECTION 1: DELIVERABLES CHECKLIST ────────────────────────── */}
+      {activeSection === "checklist" && (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Deliverables Checklist</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Track implementation progress as your AI agent executes each step.
+                </p>
+              </div>
+              <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full border border-primary/30 bg-primary/10 text-accent-foreground">
+                {doneCount} / {BUILD_STEPS.length} Completed
+              </span>
+            </div>
+
+            <div className="mt-6 space-y-2.5">
+              {BUILD_STEPS.map((step) => {
+                const checked = isStepDone("build", step.id);
+                return (
+                  <div
+                    key={step.id}
+                    onClick={() => {
+                      toggleChecklist("build", step.id);
+                      toggleChecklist("checklist", step.id);
+                    }}
+                    className="flex cursor-pointer items-center gap-3.5 rounded-xl border border-border bg-secondary/20 px-4 py-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
+                  >
+                    <div
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                        checked
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:border-primary/60"
+                      }`}
+                    >
+                      {checked && <BadgeCheckIcon className="h-3.5 w-3.5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-medium ${checked ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                        {step.label}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{step.description}</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">{step.description}</div>
+                );
+              })}
+            </div>
+          </div>
+
+          <PhaseSectionFooter next={nextSection} onNavigate={setActiveSection} />
+        </div>
+      )}
+
+      {/* ── SECTION 2: SCAFFOLD & PROMPT ─────────────────────────────── */}
+      {activeSection === "scaffold" && (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6 shadow-sm">
+            {/* IDE picker */}
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Target Agent Environment:</span>
+              {AGENT_OPTIONS.map((opt) => {
+                const active = agentTarget === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setAgentTarget(opt.id)}
+                    aria-pressed={active}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                      active
+                        ? "border-primary bg-primary/15 text-accent-foreground font-semibold"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.Mark && <opt.Mark className={`h-3.5 w-3.5 shrink-0 ${active ? opt.color : ""}`} />}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-accent-foreground">
+                  <WandIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">Zip only. Say &quot;Start&quot;.</h2>
+                  <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+                    Download your <span className="font-mono text-accent-foreground">.nx/</span> context bundle into your repo root.
+                    Your AI agent reads disk directly — you only need to say &quot;Start&quot;.
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
+              {locked ? (
+                <CopyButton value="" label="Unlock" variant="solid" className="shrink-0" locked onLockedClick={openPaywall} />
+              ) : (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={async () => {
+                      const { exportNxZip } = await import("@/lib/nx-exporter");
+                      await exportNxZip(data);
+                    }}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
+                  >
+                    <LayersIcon className="h-4 w-4" />
+                    Download .nx/ ZIP
+                  </button>
+                  <CopyButton
+                    value="Start"
+                    label="Copy 'Start'"
+                    variant="ghost"
+                  />
+                </div>
+              )}
+            </div>
 
-      {/* The one build prompt — the hero */}
-      <div className="rounded-2xl border border-primary/30 bg-accent/20 p-6">
-        {/* IDE picker — determines which agent-rule file gets embedded (see AGENT_OPTIONS) */}
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Your IDE:</span>
-          {AGENT_OPTIONS.map((opt) => {
-            const active = agentTarget === opt.id;
-            return (
+            {locked ? (
               <button
-                key={opt.id}
-                type="button"
-                onClick={() => setAgentTarget(opt.id)}
-                aria-pressed={active}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  active
-                    ? "border-primary bg-primary/15 text-accent-foreground"
-                    : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={openPaywall}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-background/60 p-6 text-sm text-muted-foreground hover:text-foreground"
               >
-                {opt.Mark && <opt.Mark className={`h-3.5 w-3.5 shrink-0 ${active ? opt.color : ""}`} />}
-                {opt.label}
+                <LockIcon className="h-4 w-4" />
+                Premium unlocks your full build prompt — tap to subscribe.
               </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-accent-foreground">
-              <WandIcon className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">Zip only. Say &quot;Start&quot;.</h2>
-              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Download your <span className="font-mono text-accent-foreground">.nx/</span> context bundle into your repo root.
-                Your AI agent reads disk directly — you only need to say &quot;Start&quot;.
-              </p>
-            </div>
-          </div>
-          {locked ? (
-            <CopyButton value="" label="Unlock" variant="solid" className="shrink-0" locked onLockedClick={openPaywall} />
-          ) : (
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={async () => {
-                  const { exportNxZip } = await import("@/lib/nx-exporter");
-                  await exportNxZip(data);
-                }}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
-              >
-                <LayersIcon className="h-4 w-4" />
-                Download .nx/ ZIP
-              </button>
-              <CopyButton
-                value="Start"
-                label="Copy 'Start'"
-                variant="ghost"
-              />
-            </div>
-          )}
-        </div>
-
-        {locked ? (
-          <button
-            onClick={openPaywall}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-background/60 p-6 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <LockIcon className="h-4 w-4" />
-            Premium unlocks your full build prompt — tap to subscribe.
-          </button>
-        ) : (
-          <>
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <button
-                onClick={() => setShowMaster((v) => !v)}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-              >
-                {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-                {showMaster ? "Hide" : "Preview"} the full prompt
-              </button>
-              <CopyButton value={masterPrompt} label="Copy full prompt" variant="ghost" />
-            </div>
-            {showMaster && (
-              <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                {loading && !masterPrompt ? "Compiling…" : masterPrompt}
-              </pre>
+            ) : (
+              <>
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/40 pt-3">
+                  <button
+                    onClick={() => setShowMaster((v) => !v)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {showMaster ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                    {showMaster ? "Hide" : "Preview"} the full prompt
+                  </button>
+                  <CopyButton value={masterPrompt} label="Copy full prompt" variant="ghost" />
+                </div>
+                {showMaster && (
+                  <pre className="mt-3 max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                    {loading && !masterPrompt ? "Compiling…" : masterPrompt}
+                  </pre>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
 
-      <p className="mt-3 text-xs text-muted-foreground">
-        Ships an <span className="font-mono text-accent-foreground">AGENTS.md</span> — the shared
-        standard read natively by Zed, Aider, Antigravity, and most agentic IDEs. Pick Claude Code,
-        Cursor, or Devin Desktop above and you also get that tool&apos;s own one-line pointer file, so
-        it finds <span className="font-mono text-accent-foreground">AGENTS.md</span> even without
-        relying on native auto-discovery. Let the run finish, then keep iterating in the editor to
-        get the details right.
-      </p>
+          <div className="rounded-xl border border-border bg-card/40 p-4 text-xs text-muted-foreground">
+            Ships an <span className="font-mono text-accent-foreground">AGENTS.md</span> — the shared
+            standard read natively by Zed, Aider, Antigravity, and most agentic IDEs. Pick Claude Code,
+            Cursor, or Devin Desktop above and you also get that tool&apos;s own one-line pointer file, so
+            it finds <span className="font-mono text-accent-foreground">AGENTS.md</span> even without
+            relying on native auto-discovery.
+          </div>
 
-      {/* ── Refine after it's built (HIG Gallery Grid) ────────────────────────── */}
-      <div className="mt-12">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
+        </div>
+      )}
+
+      {/* ── SECTION 3: MCP FLEET CONFIGURATION ───────────────────────── */}
+      {activeSection === "mcp" && (
+        <div className="space-y-6">
+          <McpFleetSelector />
+          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
+        </div>
+      )}
+
+      {/* ── SECTION 4: REFINE AFTER IT'S BUILT ───────────────────────── */}
+      {activeSection === "refine" && (
+        <div className="space-y-6">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold tracking-tight">Refine after it&apos;s built</h2>
-              <button
-                onClick={() => setSubmitOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-accent-foreground transition-all hover:bg-primary/20 hover:-translate-y-0.5"
-              >
-                <PlusIcon className="h-3.5 w-3.5" /> Submit Prompt
-              </button>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Optional. Paste any of these into your project once it exists — each reads your{" "}
-              <span className="font-mono text-accent-foreground">.nx/</span> context and reviews one dimension in depth.
-            </p>
-          </div>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold tracking-tight">Refine after it&apos;s built</h2>
+                  <button
+                    onClick={() => setSubmitOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-accent-foreground transition-all hover:bg-primary/20 hover:-translate-y-0.5"
+                  >
+                    <PlusIcon className="h-3.5 w-3.5" /> Submit Prompt
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Paste any of these into your project once it exists — each reads your{" "}
+                  <span className="font-mono text-accent-foreground">.nx/</span> context and reviews one dimension in depth.
+                </p>
+              </div>
 
-          {/* Quick Keyword Search Filter */}
-          <div className="relative shrink-0 w-full lg:w-64">
-            <input
-              type="text"
-              placeholder="Search prompts…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <XIcon className="h-4 w-4" />
-              </button>
+              {/* Quick Keyword Search Filter */}
+              <div className="relative shrink-0 w-full lg:w-64">
+                <input
+                  type="text"
+                  placeholder="Search prompts…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Apple HIG Segmented Pill Controls */}
+            <div className="mt-6 flex overflow-x-auto pb-1 scrollbar-none">
+              <div className="relative inline-flex items-center gap-1 rounded-full border border-border bg-card p-1.5 shadow-sm">
+                {CATEGORY_TABS.map((tab) => {
+                  const active = selectedCategory === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setSelectedCategory(tab.id)}
+                      className={`relative z-10 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+                        active ? "text-background font-semibold" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {active && (
+                        <motion.div
+                          layoutId="gallery-category-pill"
+                          className="absolute inset-0 z-[-1] rounded-full bg-foreground shadow-sm"
+                          transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                        />
+                      )}
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Gallery Grid */}
+            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {depthPrompts.map((p) => {
+                const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
+                const gradient = CATEGORY_GRADIENTS[p.category] ?? CATEGORY_GRADIENTS.general;
+                const wordCount = p.prompt ? p.prompt.split(/\s+/).length : 0;
+
+                return (
+                  <motion.div
+                    key={p.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-xl"
+                  >
+                    {/* Visual Header */}
+                    <div
+                      onClick={() => setPreviewPrompt(p)}
+                      className={`relative flex h-36 w-full cursor-pointer flex-col justify-between border-b border-border bg-gradient-to-br ${gradient} p-3.5 transition-all group-hover:brightness-105`}
+                    >
+                      {p.category && (
+                        <div className="flex items-center justify-end">
+                          <span className="rounded-full border border-primary/25 bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-foreground uppercase shadow-xs backdrop-blur-md">
+                            {p.category}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background/90 text-accent-foreground shadow-md backdrop-blur-md transition-transform group-hover:scale-110">
+                        <Icon className="h-6 w-6" />
+                      </div>
+
+                      <div className="flex items-center justify-between font-mono text-[9px] text-muted-foreground/60 opacity-60">
+                        <span>.nx/context.md</span>
+                        <span>~{wordCount} words</span>
+                      </div>
+                    </div>
+
+                    {/* Card Content Area */}
+                    <div className="flex flex-1 flex-col justify-between p-4">
+                      <div>
+                        <h3
+                          onClick={() => setPreviewPrompt(p)}
+                          className="cursor-pointer text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-accent-foreground"
+                        >
+                          {p.title}
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {p.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
+                        <button
+                          onClick={() => setPreviewPrompt(p)}
+                          className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          <ChevronRightIcon className="h-3.5 w-3.5 text-accent-foreground" /> Preview
+                        </button>
+                        {locked ? (
+                          <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
+                        ) : (
+                          <CopyButton value={p.prompt} label="Copy" />
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {depthPrompts.length === 0 && (
+              <div className="mt-6 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+                No refinement prompts found matching your search filter.
+              </div>
+            )}
+
+            {loading && !prompts && (
+              <div className="mt-6 flex items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
+                <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
+              </div>
             )}
           </div>
+
+          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
+      )}
 
-        {/* Apple HIG Segmented Pill Controls (Fluid Animated Layout) */}
-        <div className="mt-6 flex overflow-x-auto pb-1 scrollbar-none">
-          <div className="relative inline-flex items-center gap-1 rounded-full border border-border bg-card p-1.5 shadow-sm">
-            {CATEGORY_TABS.map((tab) => {
-              const active = selectedCategory === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setSelectedCategory(tab.id)}
-                  className={`relative z-10 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                    active ? "text-background font-semibold" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="gallery-category-pill"
-                      className="absolute inset-0 z-[-1] rounded-full bg-foreground shadow-sm"
-                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                    />
-                  )}
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+      {/* ── SECTION 5: ITERATE & SHIP ────────────────────────────────── */}
+      {activeSection === "iterate" && (
+        <div className="space-y-6">
+          <IterateSection />
+          <PhaseSectionFooter prev={prevSection} onNavigate={setActiveSection} />
         </div>
-
-        {/* Gallery Grid (Responsive 1/2/3 Column Grid matching reference UI) */}
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {depthPrompts.map((p) => {
-            const Icon = DEPTH_ICONS[p.id] ?? BadgeCheckIcon;
-            const gradient = CATEGORY_GRADIENTS[p.category] ?? CATEGORY_GRADIENTS.general;
-            const wordCount = p.prompt ? p.prompt.split(/\s+/).length : 0;
-
-            return (
-              <motion.div
-                key={p.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-xl"
-              >
-                {/* Visual Header / Gallery Card Window Cover Frame */}
-                <div
-                  onClick={() => setPreviewPrompt(p)}
-                  className={`relative flex h-36 w-full cursor-pointer flex-col justify-between border-b border-border bg-gradient-to-br ${gradient} p-3.5 transition-all group-hover:brightness-105`}
-                >
-                  {p.category && (
-                    <div className="flex items-center justify-end">
-                      <span className="rounded-full border border-primary/25 bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-foreground uppercase shadow-xs backdrop-blur-md">
-                        {p.category}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Luminous Center Emblem Badge */}
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border/80 bg-background/90 text-accent-foreground shadow-md backdrop-blur-md transition-transform group-hover:scale-110">
-                    <Icon className="h-6 w-6" />
-                  </div>
-
-                  {/* Simulated Architecture Snippet */}
-                  <div className="flex items-center justify-between font-mono text-[9px] text-muted-foreground/60 opacity-60">
-                    <span>.nx/context.md</span>
-                    <span>~{wordCount} words</span>
-                  </div>
-                </div>
-
-                {/* Card Content Area */}
-                <div className="flex flex-1 flex-col justify-between p-4">
-                  <div>
-                    <h3
-                      onClick={() => setPreviewPrompt(p)}
-                      className="cursor-pointer text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-accent-foreground"
-                    >
-                      {p.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                      {p.description}
-                    </p>
-                  </div>
-
-                  {/* Footer Action Bar */}
-                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
-                    <button
-                      onClick={() => setPreviewPrompt(p)}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      <ChevronRightIcon className="h-3.5 w-3.5 text-accent-foreground" /> Preview
-                    </button>
-                    {locked ? (
-                      <CopyButton value="" label="Unlock" locked onLockedClick={openPaywall} />
-                    ) : (
-                      <CopyButton value={p.prompt} label="Copy" />
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {depthPrompts.length === 0 && (
-          <div className="mt-6 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            No refinement prompts found matching your search filter.
-          </div>
-        )}
-
-        {loading && !prompts && (
-          <div className="mt-6 flex items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
-            <LoaderIcon className="h-4 w-4 animate-spin" /> Compiling prompts…
-          </div>
-        )}
-      </div>
-
-      <IterateSection />
+      )}
 
       {/* HIG Prompt Preview Modal */}
       <AnimatePresence>

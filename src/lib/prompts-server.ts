@@ -385,7 +385,15 @@ function renderNxFileBlocks(data: WorkspaceData, agentTarget: AgentTarget): stri
   return compileNxFiles(data)
     .filter((f) => !pointerFiles.has(f.path) || f.path === keepPointer)
     .map((f) => {
-      const lang = f.path.endsWith(".json") ? "json" : "markdown";
+      const lang = f.path.endsWith(".json")
+        ? "json"
+        : f.path.endsWith(".svg")
+        ? "xml"
+        : f.path.endsWith(".sql")
+        ? "sql"
+        : f.path.endsWith(".prisma")
+        ? "prisma"
+        : "markdown";
       return `### \`${f.path}\`\n\`\`\`${lang}\n${f.content}\`\`\``;
     })
     .join("\n\n");

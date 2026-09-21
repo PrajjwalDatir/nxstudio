@@ -11,8 +11,6 @@ import {
   FileTextIcon,
   GitBranchIcon,
   CheckIcon,
-  PlusIcon,
-  PencilLineIcon,
   CopyIcon,
   ExternalLinkIcon,
   ArrowLeftIcon,
@@ -139,9 +137,18 @@ export default function ContextDirectoryPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const statusBadge = (s: NxDriftStatus) => {
+  const statusBadge = (s: NxDriftStatus, kind?: string) => {
     switch (s) {
       case "drifted":
+        if (kind === "progress") {
+          return { label: "Progress", class: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" };
+        }
+        if (kind === "refinement") {
+          return { label: "Refined", class: "border-cyan-500/40 bg-cyan-500/10 text-cyan-400" };
+        }
+        if (kind === "divergence") {
+          return { label: "Diverged", class: "border-amber-500/40 bg-amber-500/10 text-amber-400" };
+        }
         return { label: "Drifted", class: "border-primary/40 bg-primary/10 text-accent-foreground" };
       case "extra":
         return { label: "New file", class: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" };
@@ -248,7 +255,7 @@ export default function ContextDirectoryPage() {
           <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
             {filteredFiles.map((f) => {
               const isSelected = activeFile?.path === f.path;
-              const badge = statusBadge(f.status);
+              const badge = statusBadge(f.status, f.kind);
 
               return (
                 <button
@@ -297,9 +304,14 @@ export default function ContextDirectoryPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="font-mono text-base font-bold text-foreground">.nx/{shortPath(activeFile.path)}</h2>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase ${statusBadge(activeFile.status).class}`}>
-                      {statusBadge(activeFile.status).label}
+                    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase ${statusBadge(activeFile.status, activeFile.kind).class}`}>
+                      {statusBadge(activeFile.status, activeFile.kind).label}
                     </span>
+                    {activeFile.summary && (
+                      <span className="hidden sm:inline-flex rounded-full border border-border bg-secondary/50 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                        {activeFile.summary}
+                      </span>
+                    )}
                     {selectedCommit && (
                       <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[10px] text-amber-400">
                         SHA: {selectedCommit.sha}

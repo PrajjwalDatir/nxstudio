@@ -68,12 +68,14 @@ export function TechStackPhase() {
   const setCapabilities = (c: Capability) => updateTech("capabilities", toggle(capabilities, c));
 
   return (
-    <section className="mt-10 border-t border-border pt-8">
-      <h2 className="text-xl font-semibold">Tech Stack</h2>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Pick what you&apos;re shipping and what it needs to do. nx derives the framework, backend,
-        and libraries — you never choose them by hand.
-      </p>
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Tech Stack & Architecture</h2>
+        <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+          Pick what you&apos;re shipping and what it needs to do. nx derives the framework, backend,
+          and libraries — you never choose them by hand.
+        </p>
+      </div>
 
       {/* Surfaces */}
       <section className="mt-6">
