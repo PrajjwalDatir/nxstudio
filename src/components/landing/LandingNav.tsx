@@ -43,8 +43,10 @@ export function ThemeToggle() {
       localStorage.setItem("theme", next);
       if (next === "light") {
         root.classList.add("light");
+        root.classList.remove("dark");
       } else {
         root.classList.remove("light");
+        root.classList.add("dark");
       }
     };
 
