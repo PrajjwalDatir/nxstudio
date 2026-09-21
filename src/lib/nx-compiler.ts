@@ -10,7 +10,17 @@
 
 import { compileStack, CAPABILITY_OPTIONS, SURFACE_OPTIONS } from "./platform-engine";
 import { BUILD_STEPS, ChecklistStep } from "./phases";
-import { BrandDNA, Capability, CompiledStack, IdeaData, Surface, WorkspaceData } from "./types";
+import {
+  BrandDNA,
+  Capability,
+  CompiledStack,
+  IdeaData,
+  Surface,
+  WorkspaceData,
+  DagNode,
+  WorkflowDag,
+  NxDriftKind,
+} from "./types";
 
 export const NX_ROOT = ".nx";
 
@@ -20,8 +30,430 @@ export interface NxFile {
 }
 
 /* ------------------------------------------------------------------ */
-/* WRITE side — content the scaffold prompt tells the IDE to create   */
+/* WRITE side — Universal Language-Independent Compilers               */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Universal W3C Design Tokens Community Group (DTCG) specification.
+ * Fully language-independent: consumable by Flutter ThemeData, SwiftUI ShapeStyle,
+ * Jetpack Compose MaterialTheme, or Web Tailwind/CSS without platform bias.
+ */
+export function compileDesignTokens(data: WorkspaceData): string {
+  const primary = data.brand.primaryColor || "#8B5CF6";
+  const radius = data.brand.radius || "10px";
+  const font = data.brand.font || "Inter";
+  const vibe = data.brand.vibe || "minimal";
+
+  const tokens = {
+    $schema: "https://design-tokens.github.io/community-group/format/",
+    meta: {
+      product: data.productName || "Product",
+      vibe,
+      generatedBy: "Nx Studio Compiler",
+    },
+    color: {
+      primary: {
+        $value: primary,
+        $type: "color",
+        $description: "Primary accent color for interactive elements and brand recognition",
+      },
+      surface: {
+        $value: "#09090B",
+        $type: "color",
+        $description: "Baseline canvas surface color",
+      },
+      surface_raised: {
+        $value: "#18181B",
+        $type: "color",
+        $description: "Elevated containers, cards, and modal surfaces",
+      },
+      on_surface: {
+        $value: "#FAFAFA",
+        $type: "color",
+        $description: "High-contrast text on base surfaces",
+      },
+      on_surface_muted: {
+        $value: "#A1A1AA",
+        $type: "color",
+        $description: "Subtle supporting metadata and labels",
+      },
+      border: {
+        $value: "#27272A",
+        $type: "color",
+        $description: "Structural boundary stroke",
+      },
+    },
+    radius: {
+      base: {
+        $value: radius,
+        $type: "dimension",
+        $description: "Standard corner radius for interactive buttons and inputs",
+      },
+      card: {
+        $value: radius.endsWith("px")
+          ? `${Math.max(4, parseInt(radius, 10) + 4)}px`
+          : "14px",
+        $type: "dimension",
+        $description: "Corner radius for containers and cards",
+      },
+      sm: {
+        $value: radius.endsWith("px")
+          ? `${Math.max(2, Math.round(parseInt(radius, 10) / 2))}px`
+          : "4px",
+        $type: "dimension",
+      },
+    },
+    typography: {
+      font_family: {
+        $value: font,
+        $type: "fontFamily",
+        $description: "Primary application typeface",
+      },
+    },
+  };
+
+  return JSON.stringify(tokens, null, 2);
+}
+
+/**
+ * Mathematical motion kinematics derived from Studio presets.
+ * Framework-agnostic: specifies spring physics, duration, and easing curves.
+ */
+export function compileMotionSpec(data: WorkspaceData): string {
+  const preset = data.brand.motionPreset || "none";
+  const speed = parseFloat(data.brand.motionSpeed || "1") || 1;
+
+  let spring = { stiffness: 100, damping: 14, mass: 1.0 };
+  let curve = "cubic-bezier(0.16, 1, 0.3, 1)";
+  let durationMs = Math.round(600 / speed);
+
+  if (preset === "elastic") {
+    spring = { stiffness: 180, damping: 9, mass: 1.0 };
+    curve = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+    durationMs = Math.round(800 / speed);
+  } else if (preset === "pulse") {
+    spring = { stiffness: 120, damping: 20, mass: 1.0 };
+    curve = "cubic-bezier(0.4, 0, 0.2, 1)";
+    durationMs = Math.round(500 / speed);
+  } else if (preset === "float") {
+    spring = { stiffness: 70, damping: 12, mass: 1.2 };
+    curve = "cubic-bezier(0.25, 0.8, 0.25, 1)";
+    durationMs = Math.round(750 / speed);
+  } else if (preset === "orbit" || preset === "spiral") {
+    spring = { stiffness: 90, damping: 15, mass: 1.0 };
+    curve = "linear";
+    durationMs = Math.round(1200 / speed);
+  }
+
+  const spec = {
+    $schema: "https://nxstudio.dev/schemas/motion.v1.json",
+    preset,
+    speed,
+    kinematics: {
+      spring,
+      curve,
+      durationMs,
+    },
+    frameworkGuidance: {
+      flutter: "Translate kinematics into CurvedAnimation or SpringSimulation.",
+      swift: "Translate kinematics into withAnimation(.spring(response:dampingRatio:)).",
+      web: "Map curve to CSS transition-timing-function or spring to Framer Motion / GSAP.",
+      android: "Map kinematics to Jetpack Compose SpringSpec or tween.",
+    },
+  };
+
+  return JSON.stringify(spec, null, 2);
+}
+
+/**
+ * Universal SVG Wireframe layout blueprint exported for multimodal agent perception.
+ */
+export function compileWireframeSvg(data: WorkspaceData): string {
+  const primary = data.brand.primaryColor || "#8B5CF6";
+  const name = data.productName || "Application";
+  const font = data.brand.font || "sans-serif";
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #09090B; }
+      .surface { fill: #18181B; stroke: #27272A; stroke-width: 1.5; rx: 8px; }
+      .header { fill: #121215; stroke: #27272A; stroke-width: 1; }
+      .accent { fill: ${primary}; rx: 6px; }
+      .text-title { fill: #FAFAFA; font-family: ${font}; font-size: 16px; font-weight: 600; }
+      .text-muted { fill: #71717A; font-family: ${font}; font-size: 12px; }
+      .element { fill: #27272A; rx: 4px; }
+    </style>
+  </defs>
+  <rect width="800" height="600" class="bg" />
+  <rect x="0" y="0" width="800" height="54" class="header" />
+  <rect x="24" y="16" width="120" height="22" class="accent" />
+  <text x="32" y="32" fill="#FFFFFF" font-family="${font}" font-size="12px" font-weight="bold">${name.slice(0, 16)}</text>
+  <rect x="680" y="14" width="96" height="26" class="accent" />
+  
+  <!-- Navigation Sidebar Rail -->
+  <rect x="24" y="78" width="180" height="498" class="surface" />
+  <rect x="44" y="104" width="140" height="14" class="element" />
+  <rect x="44" y="132" width="110" height="14" class="element" />
+  <rect x="44" y="160" width="130" height="14" class="element" />
+
+  <!-- Main Viewport Canvas -->
+  <rect x="224" y="78" width="552" height="498" class="surface" />
+  <text x="254" y="120" class="text-title">${name} — Primary Viewport</text>
+  <text x="254" y="142" class="text-muted">Universal Wireframe Blueprint (derived from Nx Studio canvas)</text>
+  
+  <rect x="254" y="170" width="492" height="180" class="element" fill-opacity="0.4" />
+  <rect x="254" y="370" width="236" height="176" class="element" fill-opacity="0.4" />
+  <rect x="510" y="370" width="236" height="176" class="element" fill-opacity="0.4" />
+</svg>`;
+}
+
+/**
+ * Emits .nx/db/schema.sql from the visual schema tables and relations.
+ */
+export function compileSqlSchema(data: WorkspaceData): string {
+  const schema = data.schema;
+  if (!schema || !schema.tables || schema.tables.length === 0) {
+    return `-- .nx/db/schema.sql\n-- No visual schema tables defined yet.\n`;
+  }
+
+  const lines: string[] = [
+    `-- .nx/db/schema.sql`,
+    `-- Product: ${data.productName || "Product"}`,
+    `-- Compiled from nxstudio Visual Schema Designer`,
+    ``,
+  ];
+
+  for (const table of schema.tables) {
+    lines.push(`CREATE TABLE IF NOT EXISTS "${table.name}" (`);
+    const colDefs: string[] = [];
+
+    for (const field of table.fields) {
+      let sqlType = "TEXT";
+      if (field.type === "uuid") sqlType = "UUID";
+      else if (field.type === "int") sqlType = "INTEGER";
+      else if (field.type === "float") sqlType = "DOUBLE PRECISION";
+      else if (field.type === "boolean") sqlType = "BOOLEAN";
+      else if (field.type === "datetime") sqlType = "TIMESTAMPTZ DEFAULT NOW()";
+      else if (field.type === "json") sqlType = "JSONB";
+      else if (field.type === "text") sqlType = "TEXT";
+      else sqlType = "VARCHAR(255)";
+
+      let col = `  "${field.name}" ${sqlType}`;
+      if (field.isPrimary) col += " PRIMARY KEY";
+      if (!field.isNullable && !field.isPrimary) col += " NOT NULL";
+      if (field.isUnique && !field.isPrimary) col += " UNIQUE";
+      colDefs.push(col);
+    }
+
+    const tableRelations = (schema.relations || []).filter((r) => r.sourceTableId === table.id);
+    for (const rel of tableRelations) {
+      const targetTable = schema.tables.find((t) => t.id === rel.targetTableId);
+      const sourceField = table.fields.find((f) => f.id === rel.sourceFieldId);
+      const targetField = targetTable?.fields.find((f) => f.id === rel.targetFieldId);
+      if (targetTable && sourceField && targetField) {
+        colDefs.push(
+          `  CONSTRAINT "fk_${table.name}_${sourceField.name}" FOREIGN KEY ("${sourceField.name}") REFERENCES "${targetTable.name}"("${targetField.name}") ON DELETE CASCADE`
+        );
+      }
+    }
+
+    lines.push(colDefs.join(",\n"));
+    lines.push(`);`);
+    lines.push(``);
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Emits .nx/db/schema.prisma with typed models and relations.
+ */
+export function compilePrismaSchema(data: WorkspaceData): string {
+  const schema = data.schema;
+  if (!schema || !schema.tables || schema.tables.length === 0) {
+    return `// .nx/db/schema.prisma\n// No visual schema tables defined yet.\n`;
+  }
+
+  const lines: string[] = [
+    `// .nx/db/schema.prisma`,
+    `// Product: ${data.productName || "Product"}`,
+    `// Compiled from nxstudio Visual Schema Designer`,
+    ``,
+    `datasource db {`,
+    `  provider = "postgresql"`,
+    `  url      = env("DATABASE_URL")`,
+    `}`,
+    ``,
+    `generator client {`,
+    `  provider = "prisma-client-js"`,
+    `}`,
+    ``,
+  ];
+
+  for (const table of schema.tables) {
+    const modelName = table.name.charAt(0).toUpperCase() + table.name.slice(1);
+    lines.push(`model ${modelName} {`);
+
+    for (const field of table.fields) {
+      let pType = "String";
+      let attrs = "";
+      if (field.type === "uuid") {
+        pType = "String";
+        if (field.isPrimary) attrs += " @id @default(uuid())";
+      } else if (field.type === "int") {
+        pType = "Int";
+        if (field.isPrimary) attrs += " @id @default(autoincrement())";
+      } else if (field.type === "float") {
+        pType = "Float";
+      } else if (field.type === "boolean") {
+        pType = "Boolean";
+      } else if (field.type === "datetime") {
+        pType = "DateTime";
+        attrs += " @default(now())";
+      } else if (field.type === "json") {
+        pType = "Json";
+      } else if (field.type === "text") {
+        pType = "String";
+      }
+
+      if (field.isPrimary && !attrs.includes("@id")) attrs += " @id";
+      if (field.isNullable) pType += "?";
+      if (field.isUnique) attrs += " @unique";
+
+      lines.push(`  ${field.name.padEnd(16)} ${pType}${attrs}`);
+    }
+
+    lines.push(`}`);
+    lines.push(``);
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Topological Dependency DAG (Directed Acyclic Graph) for build task orchestration.
+ * Assigns multi-agent specialist roles and enforces prerequisite-gated stages.
+ */
+export function compileDag(data: WorkspaceData): WorkflowDag {
+  const hasVisualSchema = Boolean(data.schema?.tables && data.schema.tables.length > 0);
+  const dataModelContracts = [`${NX_ROOT}/decisions/db-schema.md`];
+  if (hasVisualSchema) {
+    dataModelContracts.push(`${NX_ROOT}/db/schema.sql`, `${NX_ROOT}/db/schema.prisma`);
+  }
+
+  const nodes: DagNode[] = [
+    {
+      id: "task-0-scaffold",
+      name: "Project Foundation & Scaffolding",
+      description: "Initialize target repository, tooling, base dependencies, and verification scripts.",
+      stage: 0,
+      role: "devops-engineer",
+      deps: [],
+      contracts: [`${NX_ROOT}/memory.json`, `${NX_ROOT}/decisions/tech-stack.md`],
+      verification: "Execute native project build (e.g. npm run build, flutter analyze, cargo check)",
+    },
+    {
+      id: "task-1-data-model",
+      name: "Data Modeling & Storage Contracts",
+      description: "Define database schemas, migration stubs, and storage client configuration.",
+      stage: 1,
+      role: "database-architect",
+      deps: ["task-0-scaffold"],
+      contracts: dataModelContracts,
+    },
+    {
+      id: "task-2-design-system",
+      name: "Design Tokens & Theme Foundation",
+      description: "Map universal design tokens and motion kinematics to target framework native theme.",
+      stage: 1,
+      role: "design-systems-engineer",
+      deps: ["task-0-scaffold"],
+      contracts: [`${NX_ROOT}/ui/design-tokens.json`, `${NX_ROOT}/ui/motion.json`],
+    },
+  ];
+
+  const serviceDeps: string[] = ["task-1-data-model"];
+
+  if (data.tech.capabilities.includes("auth")) {
+    nodes.push({
+      id: "task-3-auth",
+      name: "Authentication & Identity Management",
+      description: "Configure user authentication flows, session handling, and route/view access guards.",
+      stage: 2,
+      role: "backend-engineer",
+      deps: ["task-1-data-model"],
+    });
+    serviceDeps.push("task-3-auth");
+  }
+
+  if (data.tech.capabilities.includes("payments")) {
+    nodes.push({
+      id: "task-3-payments",
+      name: "Payments & Subscription Billing",
+      description: "Implement payment processing, webhook listeners, and customer entitlement guards.",
+      stage: 2,
+      role: "backend-engineer",
+      deps: ["task-1-data-model"],
+    });
+    serviceDeps.push("task-3-payments");
+  }
+
+  nodes.push({
+    id: "task-3-api",
+    name: "API Surface & Service Layer",
+    description: "Implement endpoint handlers, business logic controllers, and service contracts.",
+    stage: 2,
+    role: "backend-engineer",
+    deps: ["task-1-data-model"],
+    contracts: [`${NX_ROOT}/specs/api-routes.md`],
+  });
+  serviceDeps.push("task-3-api");
+
+  // Custom workflow stages inserted as intermediate DAG tasks if defined
+  let lastCustomDeps = serviceDeps;
+  if (data.customStages && data.customStages.length > 0) {
+    data.customStages.forEach((stage) => {
+      const taskId = `task-custom-${stage.id}`;
+      nodes.push({
+        id: taskId,
+        name: stage.label,
+        description: stage.description,
+        stage: 3,
+        role: "fullstack-developer",
+        deps: lastCustomDeps,
+        verification: stage.steps.map((s) => s.label).join("; "),
+      });
+      lastCustomDeps = [taskId];
+    });
+  }
+
+  nodes.push({
+    id: "task-4-views",
+    name: "Core Views & User Interfaces",
+    description: "Construct interactive views, connecting UI components to services and design system.",
+    stage: 4,
+    role: "frontend-specialist",
+    deps: [...new Set([...lastCustomDeps, "task-2-design-system"])],
+  });
+
+  nodes.push({
+    id: "task-5-verification",
+    name: "Deterministic Verification & Polish",
+    description: "Run test suites, defend against risks in risks.md, and finalize production deploy pipeline.",
+    stage: 5,
+    role: "qa-auditor",
+    deps: ["task-4-views"],
+    contracts: data.briefInsights ? [`${NX_ROOT}/risks.md`] : [],
+    verification: "Verify against riskiest assumptions and checklist deliverables",
+  });
+
+  return {
+    version: "1.0",
+    project: data.productName || "Product",
+    nodes,
+  };
+}
 
 export function compileNxFiles(data: WorkspaceData): NxFile[] {
   const stack = compileStack(data.tech);
@@ -50,6 +482,8 @@ export function compileNxFiles(data: WorkspaceData): NxFile[] {
       primary_color: data.brand.primaryColor,
       radius: data.brand.radius,
       font: data.brand.font,
+      motion_preset: data.brand.motionPreset || "none",
+      motion_speed: data.brand.motionSpeed || "1",
     },
     design_notes: data.designNotes || null,
     custom_stages: data.customStages?.length
@@ -64,6 +498,10 @@ export function compileNxFiles(data: WorkspaceData): NxFile[] {
 
   const files: NxFile[] = [
     { path: `${NX_ROOT}/memory.json`, content: JSON.stringify(memory, null, 2) },
+    { path: `${NX_ROOT}/workflow.dag.json`, content: JSON.stringify(compileDag(data), null, 2) },
+    { path: `${NX_ROOT}/ui/design-tokens.json`, content: compileDesignTokens(data) },
+    { path: `${NX_ROOT}/ui/motion.json`, content: compileMotionSpec(data) },
+    { path: `${NX_ROOT}/ui/wireframe.svg`, content: compileWireframeSvg(data) },
     {
       path: `${NX_ROOT}/idea.md`,
       content: `# Product Idea — ${name}
@@ -91,18 +529,24 @@ ${data.idea.differentiation || "_Not yet defined._"}
       path: `${NX_ROOT}/ui/brand-guide.md`,
       content: `# Brand Guide — ${name}
 
+## Universal Design Tokens
+For language-independent design tokens, inspect \`.nx/ui/design-tokens.json\` (W3C standard format).
+For motion presets and animation curves, inspect \`.nx/ui/motion.json\`.
+For layout wireframe hierarchy, inspect \`.nx/ui/wireframe.svg\`.
+
+## Brand DNA
 - **Vibe:** ${data.brand.vibe}
 - **Primary Color:** ${data.brand.primaryColor}
 - **Border Radius:** ${data.brand.radius}
 - **Font:** ${data.brand.font}
-
+${data.brand.motionPreset ? `- **Motion Preset:** ${data.brand.motionPreset}\n` : ""}
 ${
   data.designNotes
     ? `## Studio Design Notes & Canvas Annotations\n${data.designNotes}\n`
     : ""
 }
-These values are NON-NEGOTIABLE for visual consistency. Every component
-must use the primary color for primary actions and the defined radius and font.
+## Implementation Rule
+Map these design tokens to your target framework's native styling/theme system (e.g. Flutter ThemeData, SwiftUI ShapeStyle / Assets, Jetpack Compose MaterialTheme, or Web theme tokens). These visual tokens are NON-NEGOTIABLE for visual consistency.
 `,
     },
     {
@@ -211,9 +655,13 @@ ${data.customStages
       path: "AGENTS.md",
       content: `# Agent Instructions — ${name}
 
-When the user says "Start" or initiates a build:
-1. Read \`.nx/memory.json\` and the rest of \`.nx/\` (idea, tech stack, brand guide, data model, API surface, risks) to load the full architecture and constraints.
-2. Scaffold the project and build the foundation in one continuous agent run.
+When initiating or executing a build:
+1. Read \`.nx/memory.json\`, \`.nx/workflow.dag.json\`, and the \`.nx/\` specifications to load the full architecture and execution graph.
+2. Follow the Topological Dependency DAG in \`.nx/workflow.dag.json\`:
+   - Respect dependency edges: Do not build downstream views or services before prerequisite contracts and models exist.
+   - Independent branches (e.g. Design Tokens/UI theme vs Backend service routes) can be scaffolded in parallel.
+3. Consult \`.nx/ui/design-tokens.json\` (W3C standard) and \`.nx/ui/motion.json\` to map design tokens into your target platform's native theme.
+4. Mark completed deliverables in \`.nx/checklist.md\` as each task is implemented and verified.
 `,
     },
     { path: ".claude/CLAUDE.md", content: `@AGENTS.md\n` },
@@ -234,6 +682,13 @@ Read \`AGENTS.md\` at the repo root first — it has the full architecture, bran
       content: `Read AGENTS.md at the repo root first — it has the full architecture, brand, and build instructions.\n`,
     }
   );
+
+  if (data.schema?.tables && data.schema.tables.length > 0) {
+    files.push(
+      { path: `${NX_ROOT}/db/schema.sql`, content: compileSqlSchema(data) },
+      { path: `${NX_ROOT}/db/schema.prisma`, content: compilePrismaSchema(data) }
+    );
+  }
 
   return files;
 }
@@ -322,10 +777,16 @@ export interface ParsedNx {
 /** The standard paths we look for when syncing a repo. */
 export const NX_STANDARD_PATHS = [
   `${NX_ROOT}/memory.json`,
+  `${NX_ROOT}/workflow.dag.json`,
+  `${NX_ROOT}/ui/design-tokens.json`,
+  `${NX_ROOT}/ui/motion.json`,
+  `${NX_ROOT}/ui/wireframe.svg`,
   `${NX_ROOT}/idea.md`,
   `${NX_ROOT}/decisions/tech-stack.md`,
   `${NX_ROOT}/ui/brand-guide.md`,
   `${NX_ROOT}/decisions/db-schema.md`,
+  `${NX_ROOT}/db/schema.sql`,
+  `${NX_ROOT}/db/schema.prisma`,
   `${NX_ROOT}/specs/api-routes.md`,
   `${NX_ROOT}/hosting.md`,
   `${NX_ROOT}/checklist.md`,
@@ -367,7 +828,7 @@ export function parseNx(files: Record<string, string>): ParsedNx {
 }
 
 /* ------------------------------------------------------------------ */
-/* DRIFT — how the loop "grows": compare committed .nx/ to fresh emit  */
+/* DRIFT — Semantic diffing and categorization                         */
 /* ------------------------------------------------------------------ */
 
 export type NxDriftStatus =
@@ -379,17 +840,109 @@ export type NxDriftStatus =
 export interface NxDrift {
   path: string;
   status: NxDriftStatus;
+  kind?: NxDriftKind;
+  summary?: string;
 }
 
-function normalizeContent(s: string): string {
-  return s.replace(/\r\n/g, "\n").trimEnd();
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== "object" || a === null || typeof b !== "object" || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((val, idx) => deepEqual(val, b[idx]));
+  }
+  const keysA = Object.keys(a as Record<string, unknown>);
+  const keysB = Object.keys(b as Record<string, unknown>);
+  if (keysA.length !== keysB.length) return false;
+  for (const k of keysA) {
+    if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+    if (!deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])) return false;
+  }
+  return true;
+}
+
+function normalizeDoc(s: string): string {
+  return s
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function areContentsEquivalent(path: string, contentA: string, contentB: string): boolean {
+  if (normalizeDoc(contentA) === normalizeDoc(contentB)) return true;
+  if (path.endsWith(".json")) {
+    try {
+      const objA = JSON.parse(contentA);
+      const objB = JSON.parse(contentB);
+      return deepEqual(objA, objB);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+function classifyDrift(
+  path: string,
+  repoContent: string,
+  emittedContent: string,
+  data: WorkspaceData
+): { kind: NxDriftKind; summary?: string } {
+  if (path.endsWith("checklist.md")) {
+    const repoDone = parseChecklistDone(repoContent);
+    const emittedDone = parseChecklistDone(emittedContent);
+    if (repoDone.size > emittedDone.size) {
+      return {
+        kind: "progress",
+        summary: `${repoDone.size - emittedDone.size} additional task(s) completed in repo`,
+      };
+    }
+    return { kind: "content", summary: "Checklist updated in repo" };
+  }
+
+  if (path.endsWith("workflow.dag.json")) {
+    return { kind: "progress", summary: "Workflow execution graph updated in repo" };
+  }
+
+  if (path.endsWith("db-schema.md")) {
+    const schema = parseDbSchemaMd(repoContent);
+    if (schema && (!data.schemaDraft?.dbSchema || schema.length > data.schemaDraft.dbSchema.length)) {
+      return { kind: "refinement", summary: "Data model extended by agent" };
+    }
+    return { kind: "refinement", summary: "Database schema modified" };
+  }
+
+  if (path.endsWith("api-routes.md")) {
+    return { kind: "refinement", summary: "API surface modified by agent" };
+  }
+
+  if (path.endsWith("tech-stack.md")) {
+    const repoSurfaces = parseTechStackSurfaces(repoContent);
+    if (repoSurfaces && repoSurfaces.sort().join(",") !== data.tech.surfaces.sort().join(",")) {
+      return { kind: "divergence", summary: "Target surfaces altered from brief" };
+    }
+    return { kind: "divergence", summary: "Tech stack specifications modified" };
+  }
+
+  if (path.endsWith("risks.md")) {
+    return { kind: "refinement", summary: "Risk analysis updated" };
+  }
+
+  if (path.endsWith("design-tokens.json") || path.endsWith("brand-guide.md") || path.endsWith("motion.json")) {
+    return { kind: "refinement", summary: "Visual tokens or kinematics updated" };
+  }
+
+  return { kind: "content", summary: "Content modified in repository" };
 }
 
 /**
  * Diff the .nx/ docs committed in the repo against what nxstudio would emit from
- * the current workspace. This is the read side of the loop: after a build, the
- * AI edits the .nx/ files, and this surfaces where the repo has moved past — or
- * away from — the studio's last-known intent, so the next compile can reconcile.
+ * the current workspace. Compares semantically to prevent false positives on
+ * whitespace, and classifies drift as progress, refinement, divergence, or content.
  */
 export function diffNx(repoDocs: Record<string, string>, data: WorkspaceData): NxDrift[] {
   const emitted = compileNxFiles(data);
@@ -399,41 +952,52 @@ export function diffNx(repoDocs: Record<string, string>, data: WorkspaceData): N
   for (const f of emitted) {
     seen.add(f.path);
     const repo = repoDocs[f.path];
-    if (repo == null) out.push({ path: f.path, status: "missing" });
-    else if (normalizeContent(repo) !== normalizeContent(f.content))
-      out.push({ path: f.path, status: "drifted" });
-    else out.push({ path: f.path, status: "unchanged" });
+    if (repo == null) {
+      out.push({ path: f.path, status: "missing", kind: "missing" });
+    } else if (!areContentsEquivalent(f.path, repo, f.content)) {
+      const { kind, summary } = classifyDrift(f.path, repo, f.content, data);
+      out.push({ path: f.path, status: "drifted", kind, summary });
+    } else {
+      out.push({ path: f.path, status: "unchanged", kind: "unchanged" });
+    }
   }
   for (const path of Object.keys(repoDocs)) {
-    if (!seen.has(path)) out.push({ path, status: "extra" });
+    if (!seen.has(path)) {
+      out.push({ path, status: "extra", kind: "extra", summary: "Added by agent" });
+    }
   }
   return out;
 }
 
 /* ------------------------------------------------------------------ */
-/* MERGE — reconcile repo-authored .nx/ content back into WorkspaceData */
-/*                                                                      */
-/* The read side above (parseNx/diffNx) only ever fed a diff display —  */
-/* sync was one-directional. These reverse-parsers are the other half:  */
-/* each is the inverse of one compileNxFiles() template, best-effort   */
-/* (a doc that doesn't parse is left alone, never guessed at).          */
+/* MERGE — Resilient reverse-parsing and bidirectional reconciliation  */
 /* ------------------------------------------------------------------ */
 
-/** Extract one `## Heading` section's body from a doc built by compileNxFiles. */
-function mdSection(content: string, heading: string): string | null {
-  const m = content.match(new RegExp(`## ${heading}\\n([\\s\\S]*?)(?:\\n## |$)`));
+/**
+ * Extract one section's body from markdown with resilient, heading-tolerant matching.
+ * Tolerates heading level differences (# vs ## vs ###), numbered prefixes (e.g. "1. Problem"),
+ * trailing colons/dashes, bold wrappers, and case differences.
+ */
+export function mdSection(content: string, heading: string): string | null {
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(
+    `(?:^|\\n)#{1,4}\\s*(?:\\d+[.:]\\s*)?(?:\\*\\*)?${escaped}(?:\\*\\*)?(?:\\s*[:—–-]\\s*|\\s+Statement\\b|\\s*\\n)([\\s\\S]*?)(?=(?:\\n#{1,4}\\s|$))`,
+    "i"
+  );
+  const m = content.match(pattern);
   if (!m) return null;
   const text = m[1].trim();
   return text && text !== "_Not yet defined._" ? text : "";
 }
 
-/** Bullet list items (`- item`) inside one already-extracted section body. */
-function mdBullets(section: string): string[] {
+/** Resilient bullet list items supporting `-`, `*`, `+`, and numbered items (`1.`). */
+export function mdBullets(section: string): string[] {
   return section
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l.startsWith("- "))
-    .map((l) => l.slice(2).trim());
+    .filter((l) => /^(?:[-*+]|\d+[.)])\s+/.test(l))
+    .map((l) => l.replace(/^(?:[-*+]|\d+[.)])\s+/, "").trim())
+    .filter(Boolean);
 }
 
 function parseIdeaMd(content: string): Partial<IdeaData> | null {
@@ -471,46 +1035,52 @@ function parseRisksMd(content: string): ParsedRisks | null {
 
 function parseBrandGuideMd(content: string): Partial<BrandDNA> | null {
   const field = (label: string) => {
-    const m = content.match(new RegExp(`\\*\\*${label}:\\*\\* (.+)`));
-    return m ? m[1].trim() : null;
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = content.match(
+      new RegExp(`(?:^|[\\n\\r])\\s*[-*+]?\\s*(?:\\*\\*)?${escaped}(?:\\*\\*)?\\s*[:=]\\s*([^\\n\\r]+)`, "i")
+    );
+    return m ? m[1].trim().replace(/^[`"']|[`"']$/g, "") : null;
   };
   const vibe = field("Vibe");
-  const primaryColor = field("Primary Color");
-  const radius = field("Border Radius");
-  const font = field("Font");
-  if (!vibe && !primaryColor && !radius && !font) return null;
+  const primaryColor = field("Primary Color") || field("Primary");
+  const radius = field("Border Radius") || field("Radius");
+  const font = field("Font") || field("Typography");
+  const motionPreset = field("Motion Preset") || field("Motion");
+  const motionSpeed = field("Motion Speed");
+
+  if (!vibe && !primaryColor && !radius && !font && !motionPreset && !motionSpeed) return null;
   const out: Partial<BrandDNA> = {};
   if (vibe) out.vibe = vibe;
   if (primaryColor) out.primaryColor = primaryColor;
   if (radius) out.radius = radius;
   if (font) out.font = font;
+  if (motionPreset) out.motionPreset = motionPreset;
+  if (motionSpeed) out.motionSpeed = motionSpeed;
   return out;
 }
 
 const SURFACE_NAME_TO_ID: Record<string, Surface> = Object.fromEntries(
-  SURFACE_OPTIONS.map((o) => [o.label, o.id])
+  SURFACE_OPTIONS.map((o) => [o.label.toLowerCase(), o.id])
 );
 
 /** Reverse of surfaceLabel() in platform-engine.ts — "Web + iOS" back to ["web","ios"]. */
 function parseTechStackSurfaces(content: string): Surface[] | null {
-  const m = content.match(/\|\s*Surfaces\s*\|\s*(.+?)\s*\|/);
+  const m = content.match(/\|\s*Surfaces\s*\|\s*(.+?)\s*\|/i);
   if (!m || m[1].trim() === "—") return null;
   const surfaces = m[1]
-    .split("+")
-    .map((s) => SURFACE_NAME_TO_ID[s.trim()])
+    .split(/[+,/]/)
+    .map((s) => s.trim().toLowerCase())
+    .map((s) => {
+      if (SURFACE_NAME_TO_ID[s]) return SURFACE_NAME_TO_ID[s];
+      for (const opt of SURFACE_OPTIONS) {
+        if (opt.id.toLowerCase() === s || opt.label.toLowerCase() === s) return opt.id;
+      }
+      return null;
+    })
     .filter((s): s is Surface => !!s);
   return surfaces.length ? surfaces : null;
 }
 
-/**
- * Unwrap the free-text body compileNxFiles wraps db-schema.md/api-routes.md
- * content in. Only the header line (title + Database/Backend label) is
- * required to match — the trailing auto-generated sentence is stripped if
- * still present, but isn't required, since a build agent told to "keep this
- * doc updated as the schema evolves" will often rewrite or drop it. Requiring
- * that exact sentence would silently lose real edits instead of just losing
- * the boilerplate.
- */
 function unwrapDoc(content: string, header: RegExp, footers: RegExp[]): string | null {
   const m = content.match(header);
   if (!m) return null;
@@ -521,14 +1091,14 @@ function unwrapDoc(content: string, header: RegExp, footers: RegExp[]): string |
 }
 
 function parseDbSchemaMd(content: string): string | null {
-  return unwrapDoc(content, /# Data Model\n\nDatabase: \*\*.*?\*\*\n\n([\s\S]*)$/, [
+  return unwrapDoc(content, /# Data Model\s*\n+Database:\s*\*\*.*?\*\*\s*\n+([\s\S]*)$/i, [
     /\n*This is a starting design,[^\n]*$/i,
     /\n*Define tables\/collections here[\s\S]*$/i,
   ]);
 }
 
 function parseApiRoutesMd(content: string): string | null {
-  return unwrapDoc(content, /# API Surface\n\nBackend: \*\*.*?\*\*\n\n([\s\S]*)$/, [
+  return unwrapDoc(content, /# API Surface\s*\n+Backend:\s*\*\*.*?\*\*\s*\n+([\s\S]*)$/i, [
     /\n*This is a starting design,[^\n]*$/i,
     /\n*Document each endpoint[\s\S]*$/i,
   ]);
@@ -537,7 +1107,7 @@ function parseApiRoutesMd(content: string): string | null {
 function parseChecklistDone(content: string): Set<string> {
   const done = new Set<string>();
   for (const line of content.split("\n")) {
-    const m = line.match(/^- \[x\] (.+)$/i);
+    const m = line.match(/^\s*[-*+]?\s*\[[xX]\]\s*(.+)$/);
     if (m) done.add(m[1].trim());
   }
   return done;
@@ -550,8 +1120,7 @@ const CAPABILITY_IDS = new Set(CAPABILITY_OPTIONS.map((o) => o.id));
  * WorkspaceData. Only acts on files diffNx marks "drifted" — "missing"
  * (studio has more than the repo) and "unchanged"/"extra" need no
  * reconciliation. Repo wins on drift: whatever the agent committed is
- * treated as the founder's current intent. Returns only the fields that
- * actually changed, ready to pass straight to patchData/applyWorkspacePatch.
+ * treated as the founder's current intent.
  */
 export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Partial<WorkspaceData> {
   const drift = diffNx(parsed.docs, data);
@@ -562,6 +1131,8 @@ export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Par
   const risksPath = `${NX_ROOT}/risks.md`;
   const checklistPath = `${NX_ROOT}/checklist.md`;
   const brandPath = `${NX_ROOT}/ui/brand-guide.md`;
+  const tokensPath = `${NX_ROOT}/ui/design-tokens.json`;
+  const motionPath = `${NX_ROOT}/ui/motion.json`;
   const techStackPath = `${NX_ROOT}/decisions/tech-stack.md`;
   const dbSchemaPath = `${NX_ROOT}/decisions/db-schema.md`;
   const apiRoutesPath = `${NX_ROOT}/specs/api-routes.md`;
@@ -584,6 +1155,8 @@ export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Par
       if (m.brand.primary_color) b.primaryColor = m.brand.primary_color;
       if (m.brand.radius) b.radius = m.brand.radius;
       if (m.brand.font) b.font = m.brand.font;
+      if (m.brand.motion_preset) b.motionPreset = m.brand.motion_preset;
+      if (m.brand.motion_speed) b.motionSpeed = m.brand.motion_speed;
       if (Object.keys(b).length) brand = { ...brand, ...b };
     }
     if (Array.isArray(m.capabilities)) {
@@ -602,6 +1175,40 @@ export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Par
     const doc = parsed.docs[brandPath];
     const parsedBrand = doc ? parseBrandGuideMd(doc) : null;
     if (parsedBrand) brand = { ...brand, ...parsedBrand };
+  }
+
+  // Reverse-parse W3C design tokens if edited by agent in repo
+  if (drifted.has(tokensPath)) {
+    const doc = parsed.docs[tokensPath];
+    if (doc) {
+      try {
+        const tokens = JSON.parse(doc);
+        const b: Partial<BrandDNA> = {};
+        if (tokens.color?.primary?.$value) b.primaryColor = tokens.color.primary.$value;
+        if (tokens.radius?.base?.$value) b.radius = tokens.radius.base.$value;
+        if (tokens.typography?.font_family?.$value) b.font = tokens.typography.font_family.$value;
+        if (tokens.meta?.vibe) b.vibe = tokens.meta.vibe;
+        if (Object.keys(b).length) brand = { ...brand, ...b };
+      } catch {
+        /* Ignore malformed JSON */
+      }
+    }
+  }
+
+  // Reverse-parse motion spec if edited by agent in repo
+  if (drifted.has(motionPath)) {
+    const doc = parsed.docs[motionPath];
+    if (doc) {
+      try {
+        const spec = JSON.parse(doc);
+        const b: Partial<BrandDNA> = {};
+        if (spec.preset) b.motionPreset = spec.preset;
+        if (spec.speed != null) b.motionSpeed = String(spec.speed);
+        if (Object.keys(b).length) brand = { ...brand, ...b };
+      } catch {
+        /* Ignore malformed JSON */
+      }
+    }
   }
 
   if (drifted.has(techStackPath)) {
@@ -668,3 +1275,4 @@ export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Par
 
   return patch;
 }
+

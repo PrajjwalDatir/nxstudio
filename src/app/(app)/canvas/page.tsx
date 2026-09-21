@@ -7,6 +7,7 @@ import { PHASES, customStageToPhase, getPhaseProgress, getPhaseStatus } from "@/
 import { diffNx, NX_ROOT } from "@/lib/nx-compiler";
 import { useCommand } from "@/components/shell/CommandPalette";
 import { PhaseCard } from "@/components/canvas/PhaseCard";
+import { ImportProjectDialog } from "@/components/canvas/ImportProjectDialog";
 import {
   NxLogo,
   ArrowUpIcon,
@@ -81,36 +82,39 @@ export default function CanvasPage() {
             <span className="text-accent-foreground font-medium">{data.productName}</span>.
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors outline-none",
-              filter === "all"
-                ? "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
-                : "border-primary/40 bg-primary/10 text-accent-foreground"
-            )}
+        <div className="flex items-center gap-2">
+          <ImportProjectDialog />
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors outline-none",
+                filter === "all"
+                  ? "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
+                  : "border-primary/40 bg-primary/10 text-accent-foreground"
+              )}
+            >
+              <FilterIcon className="h-4 w-4" />
+              {filter === "all" ? "Filter" : FILTERS.find((f) => f.value === filter)?.label}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {FILTERS.map((f) => (
+                <DropdownMenuItem key={f.value} onClick={() => setFilter(f.value)}>
+                  <CheckIcon className={cn("h-4 w-4", filter === f.value ? "opacity-100" : "opacity-0")} />
+                  {f.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Link
+            href="/studio"
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-transform hover:-translate-y-0.5"
           >
-            <FilterIcon className="h-4 w-4" />
-            {filter === "all" ? "Filter" : FILTERS.find((f) => f.value === filter)?.label}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {FILTERS.map((f) => (
-              <DropdownMenuItem key={f.value} onClick={() => setFilter(f.value)}>
-                <CheckIcon className={cn("h-4 w-4", filter === f.value ? "opacity-100" : "opacity-0")} />
-                {f.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Link
-          href="/studio"
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-transform hover:-translate-y-0.5"
-        >
-          <PaletteIcon className="h-4 w-4" />
-          Open Studio
-        </Link>
+            <PaletteIcon className="h-4 w-4" />
+            Open Studio
+          </Link>
+        </div>
       </div>
 
       {/* Command bar */}

@@ -11,6 +11,8 @@ import { EXAMPLE_BRIEFS, type ExampleBrief } from "@/lib/example-briefs";
 import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { TechStackPhase } from "./TechStackPhase";
+import { SchemaVisualizer } from "@/components/schema/SchemaVisualizer";
+import { PhaseSectionNav, PhaseSectionFooter, type PhaseSectionItem } from "./PhaseSectionNav";
 import Link from "next/link";
 import {
   PaperclipIcon,
@@ -20,6 +22,10 @@ import {
   SparklesIcon,
   LoaderIcon,
   AlertTriangleIcon,
+  LightbulbIcon,
+  PaletteIcon,
+  LayersIcon,
+  DatabaseIcon,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -409,6 +415,7 @@ export function IdeaPhase() {
     updateIdea,
     updateBrand,
     updateTech,
+    updateSchema,
     updateSchemaDraft,
     updateBriefInsights,
     briefInsightsStale,
@@ -418,6 +425,7 @@ export function IdeaPhase() {
   } = useWorkspace();
   const { prompts } = useCompiledPrompts();
   const [selectedExample, setSelectedExample] = useState<ExampleBrief | null>(null);
+  const [activeSection, setActiveSection] = useState<string>("vision");
 
   const answered = QUESTIONS.filter((q) => data.idea[q.field].trim().length > 0).length;
   const percent = Math.round((answered / QUESTIONS.length) * 100);
@@ -435,232 +443,358 @@ export function IdeaPhase() {
     setSelectedExample(ex);
   };
 
+  const SECTIONS: PhaseSectionItem[] = [
+    {
+      id: "vision",
+      label: "Vision & Idea",
+      shortLabel: "Vision",
+      description: "Define the core problem and differentiation",
+      icon: LightbulbIcon,
+      isDone: answered === QUESTIONS.length,
+    },
+    {
+      id: "brand",
+      label: "Brand DNA",
+      shortLabel: "Brand",
+      description: "Color, typography, radius and vibe tokens",
+      icon: PaletteIcon,
+      isDone: Boolean(data.brand.primaryColor && data.brand.font && data.brand.vibe),
+    },
+    {
+      id: "stack",
+      label: "Tech Stack",
+      shortLabel: "Stack",
+      description: "Surfaces, capabilities and architecture",
+      icon: LayersIcon,
+      isDone: data.tech.surfaces.length > 0,
+    },
+    {
+      id: "schema",
+      label: "Data Schema",
+      shortLabel: "Schema",
+      description: "Visual ERD, relational tables and DDL",
+      icon: DatabaseIcon,
+      isDone: Boolean(data.schema?.tables && data.schema.tables.length > 0),
+    },
+    {
+      id: "review",
+      label: "AI Review",
+      shortLabel: "Review",
+      description: "Pressure-test risks and finalize brief",
+      icon: SparklesIcon,
+      isDone: Boolean(data.briefInsights),
+    },
+  ];
+
+  const currentIdx = SECTIONS.findIndex((s) => s.id === activeSection);
+  const prevSection = currentIdx > 0 ? SECTIONS[currentIdx - 1] : null;
+  const nextSection = currentIdx < SECTIONS.length - 1 ? SECTIONS[currentIdx + 1] : null;
+
+  const continueButton = stack && answered === QUESTIONS.length ? (
+    <Link
+      href="/canvas/build"
+      onClick={confirmStack}
+      className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:opacity-95"
+    >
+      Continue to Build
+      <ChevronRightIcon className="h-4 w-4" />
+    </Link>
+  ) : stack ? (
+    <p className="text-right text-xs text-muted-foreground">
+      Answer the {QUESTIONS.length - answered} remaining question
+      {QUESTIONS.length - answered === 1 ? "" : "s"} in Vision to continue to Build.
+    </p>
+  ) : null;
+
   return (
     <>
       <PhaseHeader title="Brief" status="in-progress" phaseId="idea" showTeam />
 
-      {/* Try an example — only while the brief is still empty, so it can't clobber real work */}
-      {data.idea.problem.trim().length === 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border p-3">
-          <span className="text-xs text-muted-foreground">New here? Try an example —</span>
-          {EXAMPLE_BRIEFS.map((ex) => (
-            <button
-              key={ex.id}
-              type="button"
-              onClick={() => applyExample(ex)}
-              className="rounded-lg border border-border bg-secondary/40 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary"
-            >
-              {ex.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Top Section Navigation with Progress Bar */}
+      <PhaseSectionNav
+        sections={SECTIONS}
+        activeId={activeSection}
+        onSelect={setActiveSection}
+        phaseLabel="Brief"
+      />
 
-      {/* Progress */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Tell us about your idea</h2>
-          <span className="text-sm font-medium text-accent-foreground">
-            {answered} / {QUESTIONS.length}
-          </span>
-        </div>
-        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Questions */}
-      <div className="space-y-4">
-        {QUESTIONS.map((q) => (
-          <QuestionCard
-            key={q.field}
-            title={q.title}
-            placeholder={q.placeholder}
-            value={data.idea[q.field]}
-            onChange={(value) => updateIdea(q.field, value)}
-          />
-        ))}
-      </div>
-
-      {/* Brand DNA — locked into every generated prompt to prevent style drift */}
-      <div className="mt-4 rounded-xl glass p-5">
-        <h3 className="font-medium text-base">Brand DNA</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Locked into the build prompt so generated code stays visually consistent — shared live with Studio.
-        </p>
-
-        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* Primary color — swatch picker + hex/name field */}
-          <div>
-            <label htmlFor={primaryColorId} className="text-sm text-muted-foreground block font-normal">Primary color</label>
-            <div className="mt-1.5 flex items-center gap-2">
-              <input
-                type="color"
-                aria-label="Pick primary color"
-                value={HEX6.test(data.brand.primaryColor) ? data.brand.primaryColor : "#6366f1"}
-                onChange={(e) => updateBrand("primaryColor", e.target.value)}
-                className="h-9 w-10 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-1"
-              />
-              <input
-                id={primaryColorId}
-                value={data.brand.primaryColor}
-                onChange={(e) => updateBrand("primaryColor", e.target.value)}
-                placeholder="#6366F1 or indigo"
-                className="w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
-              />
-            </div>
-          </div>
-
-          {/* Typography */}
-          <div>
-            <label htmlFor={typographyId} className="text-sm text-muted-foreground block font-normal">Typography</label>
-            <select
-              id={typographyId}
-              value={FONTS.includes(data.brand.font as (typeof FONTS)[number]) ? data.brand.font : ""}
-              onChange={(e) => updateBrand("font", e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none focus:border-ring"
-            >
-              <option value="" disabled>
-                Choose a font…
-              </option>
-              {FONTS.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Vibe — segmented, matches Studio */}
-          <div>
-            <span className="text-sm text-muted-foreground">Vibe</span>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {VIBES.map((v) => (
+      {/* ── SECTION 1: VISION & IDEA ─────────────────────────────────── */}
+      {activeSection === "vision" && (
+        <div className="space-y-6">
+          {/* Try an example — only while the brief is still empty */}
+          {data.idea.problem.trim().length === 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border p-3">
+              <span className="text-xs text-muted-foreground">New here? Try an example —</span>
+              {EXAMPLE_BRIEFS.map((ex) => (
                 <button
-                  key={v}
+                  key={ex.id}
                   type="button"
-                  onClick={() => updateBrand("vibe", v)}
-                  className={cn(
-                    "rounded-lg border px-3 py-1.5 text-sm capitalize transition-colors",
-                    data.brand.vibe === v
-                      ? "border-primary bg-primary/15 text-accent-foreground"
-                      : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
-                  )}
+                  onClick={() => applyExample(ex)}
+                  className="rounded-lg border border-border bg-secondary/40 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-secondary"
                 >
-                  {v}
+                  {ex.label}
                 </button>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Corner radius — slider, matches Studio */}
+          {/* Questions Progress */}
           <div>
             <div className="flex items-center justify-between">
-              <label htmlFor={radiusId} className="text-sm text-muted-foreground block font-normal">Corner radius</label>
-              <span className="text-sm font-medium">{radiusToNum(data.brand.radius)}px</span>
-            </div>
-            <input
-              id={radiusId}
-              type="range"
-              min={0}
-              max={24}
-              step={1}
-              value={radiusToNum(data.brand.radius)}
-              onChange={(e) => updateBrand("radius", `${e.target.value}px`)}
-              className="mt-2.5 w-full accent-primary"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Prompt output */}
-      <div className="mt-6 flex items-center gap-4 rounded-xl glass p-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
-          <WandIcon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="font-medium">Pressure-test this idea</div>
-          <div className="truncate text-sm text-muted-foreground">
-            Riskiest assumptions, who to interview, a sharpened problem statement
-          </div>
-        </div>
-        <CopyButton value={prompts?.idea.prompt ?? ""} label="Copy" variant="solid" />
-      </div>
-
-      <TechStackPhase />
-
-      <BriefAnalysisPanel
-        key={selectedExample?.id ?? "live"}
-        projectId={activeId}
-        idea={data.idea}
-        tech={data.tech}
-        onAccept={(draft, insights) => {
-          updateSchemaDraft(draft);
-          updateBriefInsights({
-            ...insights,
-            sourceIdea: data.idea,
-            sourceCapabilities: data.tech.capabilities,
-            sourceSurfaces: data.tech.surfaces,
-          });
-        }}
-        initialResult={selectedExample?.analysis}
-      />
-
-      {/* Persistent view of the accepted analysis — survives a reload, unlike
-          BriefAnalysisPanel's own internal state, which resets on mount. */}
-      {data.briefInsights && (
-        <div
-          className={cn(
-            "mt-4 rounded-xl glass p-5",
-            briefInsightsStale && "border border-amber-500/40"
-          )}
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">Accepted analysis</span>
-            {briefInsightsStale && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase text-amber-400">
-                <AlertTriangleIcon className="h-3 w-3" />
-                Idea changed since this ran
+              <h2 className="text-lg font-semibold">Tell us about your idea</h2>
+              <span className="text-xs font-mono font-medium text-accent-foreground">
+                {answered} / {QUESTIONS.length} answered
               </span>
-            )}
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">{data.briefInsights.sharpenedProblem}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">
-            {data.briefInsights.riskiestAssumptions.map((a, i) => (
-              <li key={i}>{a}</li>
-            ))}
-          </ul>
-          {briefInsightsStale && (
-            <p className="mt-3 text-xs text-amber-400/90">
-              You&apos;ve edited the idea or capabilities since this ran — the risks above may no
-              longer match. Run the analysis above again to refresh them.
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              These four answers define your core product contract across prompts, schemas, and architecture.
             </p>
-          )}
+          </div>
+
+          {/* Question Cards */}
+          <div className="space-y-4">
+            {QUESTIONS.map((q) => (
+              <QuestionCard
+                key={q.field}
+                title={q.title}
+                placeholder={q.placeholder}
+                value={data.idea[q.field]}
+                onChange={(value) => updateIdea(q.field, value)}
+              />
+            ))}
+          </div>
+
+          {/* Prompt output: Pressure test */}
+          <div className="flex items-center gap-4 rounded-xl glass p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-accent-foreground">
+              <WandIcon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">Pressure-test this idea</div>
+              <div className="truncate text-xs text-muted-foreground">
+                Riskiest assumptions, who to interview, a sharpened problem statement
+              </div>
+            </div>
+            <CopyButton value={prompts?.idea.prompt ?? ""} label="Copy" variant="solid" />
+          </div>
+
+          <PhaseSectionFooter next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
-      {/* Continue — requires both the idea questions and a stack, so the build
-          prompt never ships with "(not provided)" standing in for the brief. */}
-      {stack && answered === QUESTIONS.length ? (
-        <div className="mt-6 flex justify-end">
-          <Link
-            href="/canvas/build"
-            onClick={confirmStack}
-            className="inline-flex items-center gap-1 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Continue to Build
-            <ChevronRightIcon className="h-4 w-4" />
-          </Link>
+      {/* ── SECTION 2: BRAND DNA ─────────────────────────────────────── */}
+      {activeSection === "brand" && (
+        <div className="space-y-6">
+          <div className="rounded-xl glass p-6">
+            <h3 className="font-semibold text-lg">Brand DNA & Tokens</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Locked into the build prompt and compiled into W3C DTCG tokens (`.nx/ui/design-tokens.json`) so generated code stays visually consistent.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+              {/* Primary color — swatch picker + hex/name field */}
+              <div>
+                <label htmlFor={primaryColorId} className="text-xs font-medium text-muted-foreground block">
+                  Primary accent color
+                </label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <input
+                    type="color"
+                    aria-label="Pick primary color"
+                    value={HEX6.test(data.brand.primaryColor) ? data.brand.primaryColor : "#6366f1"}
+                    onChange={(e) => updateBrand("primaryColor", e.target.value)}
+                    className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-1"
+                  />
+                  <input
+                    id={primaryColorId}
+                    value={data.brand.primaryColor}
+                    onChange={(e) => updateBrand("primaryColor", e.target.value)}
+                    placeholder="#6366F1 or indigo"
+                    className="w-full rounded-lg border border-border bg-secondary/30 p-2.5 font-mono text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
+                  />
+                </div>
+              </div>
+
+              {/* Typography */}
+              <div>
+                <label htmlFor={typographyId} className="text-xs font-medium text-muted-foreground block">
+                  Primary Typography
+                </label>
+                <select
+                  id={typographyId}
+                  value={FONTS.includes(data.brand.font as (typeof FONTS)[number]) ? data.brand.font : ""}
+                  onChange={(e) => updateBrand("font", e.target.value)}
+                  className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none focus:border-ring font-mono"
+                >
+                  <option value="" disabled>
+                    Choose a font…
+                  </option>
+                  {FONTS.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Vibe — segmented */}
+              <div>
+                <span className="text-xs font-medium text-muted-foreground block">Vibe & Aesthetic</span>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {VIBES.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => updateBrand("vibe", v)}
+                      className={cn(
+                        "rounded-lg border px-3 py-1.5 text-xs capitalize transition-colors",
+                        data.brand.vibe === v
+                          ? "border-primary bg-primary/15 text-accent-foreground font-semibold"
+                          : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Corner radius — slider */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <label htmlFor={radiusId} className="text-xs font-medium text-muted-foreground block">
+                    Base Corner Radius
+                  </label>
+                  <span className="font-mono text-xs font-semibold">{radiusToNum(data.brand.radius)}px</span>
+                </div>
+                <input
+                  id={radiusId}
+                  type="range"
+                  min={0}
+                  max={24}
+                  step={1}
+                  value={radiusToNum(data.brand.radius)}
+                  onChange={(e) => updateBrand("radius", `${e.target.value}px`)}
+                  className="mt-2.5 w-full accent-primary cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Token Live Preview Card */}
+          <div className="rounded-xl border border-border/80 bg-card/60 p-5 shadow-xs">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground block mb-3 font-semibold">
+              Live Token Sandbox
+            </span>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                style={{
+                  backgroundColor: data.brand.primaryColor || "#8B5CF6",
+                  borderRadius: data.brand.radius || "10px",
+                  fontFamily: data.brand.font || "inherit",
+                }}
+                className="px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105"
+              >
+                Primary Button
+              </button>
+              <div
+                style={{
+                  borderRadius: data.brand.radius || "10px",
+                  borderColor: data.brand.primaryColor || "#8B5CF6",
+                }}
+                className="border px-4 py-2 text-xs font-mono bg-card"
+              >
+                Border Radius: {data.brand.radius || "10px"}
+              </div>
+              <span
+                style={{ fontFamily: data.brand.font || "inherit" }}
+                className="text-sm font-medium text-foreground"
+              >
+                Typography: {data.brand.font || "Default"}
+              </span>
+            </div>
+          </div>
+
+          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
-      ) : stack ? (
-        <p className="mt-6 text-right text-xs text-muted-foreground">
-          Answer the {QUESTIONS.length - answered} remaining question
-          {QUESTIONS.length - answered === 1 ? "" : "s"} above to continue to Build.
-        </p>
-      ) : null}
+      )}
+
+      {/* ── SECTION 3: TECH STACK ────────────────────────────────────── */}
+      {activeSection === "stack" && (
+        <div className="space-y-6">
+          <TechStackPhase />
+          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
+        </div>
+      )}
+
+      {/* ── SECTION 4: DATA SCHEMA (ERD) ─────────────────────────────── */}
+      {activeSection === "schema" && (
+        <div className="space-y-6">
+          <SchemaVisualizer data={data} onUpdateSchema={updateSchema} className="mt-0" />
+          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
+        </div>
+      )}
+
+      {/* ── SECTION 5: AI REVIEW & INSIGHTS ──────────────────────────── */}
+      {activeSection === "review" && (
+        <div className="space-y-6">
+          <BriefAnalysisPanel
+            key={selectedExample?.id ?? "live"}
+            projectId={activeId}
+            idea={data.idea}
+            tech={data.tech}
+            onAccept={(draft, insights) => {
+              updateSchemaDraft(draft);
+              updateBriefInsights({
+                ...insights,
+                sourceIdea: data.idea,
+                sourceCapabilities: data.tech.capabilities,
+                sourceSurfaces: data.tech.surfaces,
+              });
+            }}
+            initialResult={selectedExample?.analysis}
+          />
+
+          {/* Persistent view of accepted analysis */}
+          {data.briefInsights && (
+            <div
+              className={cn(
+                "rounded-xl glass p-5",
+                briefInsightsStale && "border border-amber-500/40"
+              )}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium">Accepted analysis</span>
+                {briefInsightsStale && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase text-amber-400">
+                    <AlertTriangleIcon className="h-3 w-3" />
+                    Idea changed since this ran
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{data.briefInsights.sharpenedProblem}</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">
+                {data.briefInsights.riskiestAssumptions.map((a, i) => (
+                  <li key={i}>{a}</li>
+                ))}
+              </ul>
+              {briefInsightsStale && (
+                <p className="mt-3 text-xs text-amber-400/90">
+                  You&apos;ve edited the idea or capabilities since this ran — the risks above may no
+                  longer match. Run the analysis above again to refresh them.
+                </p>
+              )}
+            </div>
+          )}
+
+          <PhaseSectionFooter
+            prev={prevSection}
+            onNavigate={setActiveSection}
+            finalAction={continueButton}
+          />
+        </div>
+      )}
     </>
   );
 }
