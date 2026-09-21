@@ -115,6 +115,10 @@ export {
   Database as DatabaseIcon,
   CreditCard as CreditCardIcon,
   AlertTriangle as AlertTriangleIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  Minus as MinusIcon,
+  Move as MoveIcon,
 } from "lucide-react";
 
 import {

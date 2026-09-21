@@ -24,6 +24,8 @@ export interface BrandDNA {
   primaryColor: string;
   radius: string;
   font: string;
+  motionPreset?: string;
+  motionSpeed?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -159,6 +161,58 @@ export interface WorkspaceData {
    * three initial build steps.
    */
   iterations: IterationEntry[];
+  /** Structured visual data schema (tables, fields, relations) */
+  schema?: ProductSchema;
+  /** Active MCP server ids selected in the MCP Fleet */
+  selectedMcpServers?: string[];
+}
+
+/* ------------------------------------------------------------------ */
+/* Visual Data Modeling & Schema                                      */
+/* ------------------------------------------------------------------ */
+
+export type SchemaColumnType =
+  | "uuid"
+  | "string"
+  | "int"
+  | "float"
+  | "boolean"
+  | "datetime"
+  | "json"
+  | "text";
+
+export interface SchemaField {
+  id: string;
+  name: string;
+  type: SchemaColumnType;
+  isPrimary?: boolean;
+  isNullable?: boolean;
+  isUnique?: boolean;
+  defaultValue?: string;
+}
+
+export type RelationType = "1:1" | "1:N" | "N:N";
+
+export interface SchemaRelation {
+  id: string;
+  sourceTableId: string;
+  sourceFieldId: string;
+  targetTableId: string;
+  targetFieldId: string;
+  type: RelationType;
+}
+
+export interface SchemaTable {
+  id: string;
+  name: string;
+  description?: string;
+  fields: SchemaField[];
+  position?: { x: number; y: number };
+}
+
+export interface ProductSchema {
+  tables: SchemaTable[];
+  relations: SchemaRelation[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -183,3 +237,34 @@ export interface PhaseProgress {
   total: number;
   percent: number;
 }
+
+/* ------------------------------------------------------------------ */
+/* Topological DAG & Drift Categorization                            */
+/* ------------------------------------------------------------------ */
+
+export interface DagNode {
+  id: string;
+  name: string;
+  description: string;
+  stage: number;
+  role?: string;
+  deps: string[];
+  contracts?: string[];
+  verification?: string;
+}
+
+export interface WorkflowDag {
+  version: string;
+  project: string;
+  nodes: DagNode[];
+}
+
+export type NxDriftKind =
+  | "unchanged"
+  | "missing"
+  | "extra"
+  | "progress"
+  | "refinement"
+  | "divergence"
+  | "content";
+
