@@ -1,5 +1,9 @@
 # nxstudio — Founders' Partnership Agreement (Draft)
 
+> **Status: TERMINATED as of 2026-08-28.** Kema Sambondu is no longer a party to this
+> agreement or to nxstudio; the partnership described below has been discontinued. The
+> terms are kept below for historical record only and are no longer in effect.
+
 > **Status: DRAFT for discussion.** This is a plain-language working agreement between
 > the two founders, meant to record what was agreed in the 2026-07-29 call. It is not
 > legal advice. Before either party relies on it, have it reviewed by a lawyer in a
