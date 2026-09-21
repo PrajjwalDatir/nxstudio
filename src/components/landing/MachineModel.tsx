@@ -141,12 +141,12 @@ export const POSE: Record<
   MachinePose,
   { headX: number; headZ: number; lean: number; eye: number; armL: number; armR: number }
 > = {
-  dormant: { headX: 0.5, headZ: 0.16, lean: 0.16, eye: 0.12, armL: 0.05, armR: 0.1 },
-  briefed: { headX: 0.12, headZ: 0.1, lean: 0.05, eye: 0.95, armL: 0.24, armR: 0.36 },
-  ready: { headX: -0.1, headZ: 0.05, lean: -0.04, eye: 1.6, armL: 0.34, armR: 0.5 },
-  curious: { headX: 0.14, headZ: -0.32, lean: 0.02, eye: 0.6, armL: 0.08, armR: 0.3 },
-  excited: { headX: -0.22, headZ: 0.06, lean: -0.1, eye: 1.4, armL: 0.48, armR: 0.46 },
-  proud: { headX: -0.02, headZ: 0.0, lean: -0.02, eye: 1.0, armL: 0.18, armR: 0.18 },
+  dormant: { headX: 0.5, headZ: 0.16, lean: 0.16, eye: 0.12, armL: 0.18, armR: 0.18 },
+  briefed: { headX: 0.12, headZ: 0.1, lean: 0.05, eye: 0.95, armL: 0.22, armR: 0.28 },
+  ready: { headX: -0.1, headZ: 0.05, lean: -0.04, eye: 1.6, armL: 0.22, armR: 0.28 },
+  curious: { headX: 0.14, headZ: -0.32, lean: 0.02, eye: 0.6, armL: 0.18, armR: 0.32 },
+  excited: { headX: -0.22, headZ: 0.06, lean: -0.1, eye: 1.4, armL: 0.45, armR: 0.45 },
+  proud: { headX: -0.02, headZ: 0.0, lean: -0.02, eye: 1.0, armL: 0.20, armR: 0.20 },
 };
 
 export function useIsLightMode() {
@@ -246,12 +246,10 @@ function nxBadgeTexture(isLight: boolean): THREE.CanvasTexture | null {
   const grad = ctx.createLinearGradient(4, 1, 28, 31);
   if (isLight) {
     grad.addColorStop(0, "#8B5CF6");
-    grad.addColorStop(0.5, "#7C3AED");
-    grad.addColorStop(1, "#6D28D9");
+    grad.addColorStop(1, "#7C3AED");
   } else {
     grad.addColorStop(0, "#DDD6FE");
-    grad.addColorStop(0.5, "#A78BFA");
-    grad.addColorStop(1, "#7C3AED");
+    grad.addColorStop(1, "#C4B5FD");
   }
 
   const hexPath = new Path2D("M16 1 28 8.5 V23.5 L16 31 4 23.5 V8.5 Z");
@@ -272,6 +270,114 @@ function nxBadgeTexture(isLight: boolean): THREE.CanvasTexture | null {
   return tex;
 }
 
+let _robotEyeTex: THREE.CanvasTexture | null = null;
+
+function robotEyeTexture(): THREE.CanvasTexture | null {
+  if (_robotEyeTex) return _robotEyeTex;
+  if (typeof document === "undefined") return null;
+
+  const w = 512;
+  const h = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // Deep obsidian OLED screen background
+  ctx.fillStyle = "#04040A";
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle ambient brand lilac inner glow on screen edges
+  const vig = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w / 2);
+  vig.addColorStop(0, "rgba(196, 181, 253, 0.08)");
+  vig.addColorStop(0.6, "rgba(167, 139, 250, 0.03)");
+  vig.addColorStop(1, "rgba(2, 2, 8, 0.98)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, w, h);
+
+  // Function to draw one expressive happy arch eye in brand lilac
+  const drawEye = (cx: number, cy: number, eyeWidth: number, eyeHeight: number) => {
+    const drawCrescent = (inset = 0, fillStyle: string, blur = 0, shadowColor: string | null = null) => {
+      ctx.save();
+      if (blur > 0 && shadowColor) {
+        ctx.shadowColor = shadowColor;
+        ctx.shadowBlur = blur;
+      }
+      ctx.fillStyle = fillStyle;
+
+      const w2 = eyeWidth * 0.45 - inset * 0.4;
+      const topY = cy - eyeHeight * 0.46 + inset * 0.8;
+      const innerY = cy - eyeHeight * 0.12 + inset * 1.2;
+      const tipY = cy + eyeHeight * 0.22 - inset * 0.2;
+
+      ctx.beginPath();
+      // Left rounded tip
+      ctx.moveTo(cx - w2, tipY);
+      // Top outer curve
+      ctx.bezierCurveTo(
+        cx - w2 * 0.45,
+        topY,
+        cx + w2 * 0.45,
+        topY,
+        cx + w2,
+        tipY
+      );
+      // Right tip round-over
+      ctx.quadraticCurveTo(cx + w2 + 4 - inset * 0.2, tipY + 8, cx + w2 - 6, tipY + 6);
+      // Bottom inner curve
+      ctx.bezierCurveTo(
+        cx + w2 * 0.4,
+        innerY,
+        cx - w2 * 0.4,
+        innerY,
+        cx - w2 + 6,
+        tipY + 6
+      );
+      // Left tip round-over
+      ctx.quadraticCurveTo(cx - w2 - 4 + inset * 0.2, tipY + 8, cx - w2, tipY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+
+    // Layer 1: Wide luminous brand lilac glow
+    drawCrescent(-8, "rgba(196, 181, 253, 0.45)", 34, "#C4B5FD");
+
+    // Layer 2: Radiant brand lilac body
+    drawCrescent(0, "#C4B5FD", 22, "#A78BFA");
+
+    // Layer 3: Vibrant light violet/lilac core
+    drawCrescent(4, "#DDD6FE", 14, "#C4B5FD");
+
+    // Layer 4: Bright pastel lilac core
+    drawCrescent(8, "#EDE9FE", 8, "#DDD6FE");
+
+    // Layer 5: Pure crest white/lilac shimmer
+    drawCrescent(12, "#FFFFFF", 4, "#EDE9FE");
+  };
+
+  // Draw left and right eyes
+  const eyeY = h * 0.52;
+  const eyeW = w * 0.28;
+  const eyeH = h * 0.54;
+  drawEye(w * 0.31, eyeY, eyeW, eyeH);
+  drawEye(w * 0.69, eyeY, eyeW, eyeH);
+
+  // Digital OLED horizontal scanlines overlay
+  ctx.save();
+  ctx.fillStyle = "rgba(4, 4, 10, 0.45)";
+  for (let y = 0; y < h; y += 4) {
+    ctx.fillRect(0, y, w, 1.6);
+  }
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 16;
+  _robotEyeTex = tex;
+  return tex;
+}
+
 /**
  * NX Emblem mounted on the main machine's front chest.
  * Displays the authentic official nxstudio hexagonal brand monolith emblem.
@@ -279,17 +385,18 @@ function nxBadgeTexture(isLight: boolean): THREE.CanvasTexture | null {
 function NxChestTattoo() {
   const isLight = useIsLightMode();
   const badgeTex = nxBadgeTexture(isLight);
+  // Conical torso slopes at ~0.114 rad; match tilt angle so the monitor lies flush against the chest
   return (
-    <group position={[0, 0.44, 0.58]} rotation={[0.08, 0, 0]}>
-      {/* Outer bezel frame */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.44, 0.32, 0.02]} />
-        <meshStandardMaterial color={isLight ? "#A8A4C0" : "#262238"} metalness={isLight ? 0.8 : 0.88} roughness={0.15} />
+    <group position={[0, 0.44, 0.585]} rotation={[-0.114, 0, 0]}>
+      {/* Outer bezel frame - deep enough so the back embeds solidly into the curved chest sides with zero floating gaps */}
+      <mesh position={[0, 0, -0.015]}>
+        <boxGeometry args={[0.42, 0.30, 0.05]} />
+        <meshStandardMaterial color={isLight ? "#A8A4C0" : "#221E34"} metalness={isLight ? 0.75 : 0.85} roughness={0.2} />
       </mesh>
 
       {/* Official nxstudio Brand Logo Faceplate */}
-      <mesh position={[0, 0, 0.012]}>
-        <planeGeometry args={[0.4, 0.28]} />
+      <mesh position={[0, 0, 0.015]}>
+        <planeGeometry args={[0.39, 0.27]} />
         <meshStandardMaterial
           map={badgeTex}
           emissiveMap={badgeTex}
@@ -299,19 +406,6 @@ function NxChestTattoo() {
           metalness={0.8}
         />
       </mesh>
-
-      {/* 4 Corner Precision Bolts */}
-      {[
-        [-0.17, 0.11],
-        [0.17, 0.11],
-        [-0.17, -0.11],
-        [0.17, -0.11],
-      ].map(([rx, ry], idx) => (
-        <mesh key={idx} position={[rx, ry, 0.018]}>
-          <cylinderGeometry args={[0.012, 0.012, 0.016, 6]} />
-          <meshStandardMaterial color="#DDD6FE" emissive="#A78BFA" emissiveIntensity={1.2} />
-        </mesh>
-      ))}
     </group>
   );
 }
@@ -435,6 +529,7 @@ export function Machine({
   facing?: number;
 }) {
   const isLight = useIsLightMode();
+  const eyeTex = robotEyeTexture();
   const group = useRef<THREE.Group>(null);
   const head = useRef<THREE.Group>(null);
   const torso = useRef<THREE.Group>(null);
@@ -488,11 +583,12 @@ export function Machine({
       head.current.rotation.x = THREE.MathUtils.lerp(head.current.rotation.x, target.headX, a);
       head.current.rotation.z = THREE.MathUtils.lerp(head.current.rotation.z, target.headZ, a);
     }
-    // Eyes brighten as the unit comes up — the clearest read on its state.
+    // Eyes brighten as the unit comes up — vibrant electric cyan digital display.
     // The stage drives them directly (dyn.eye); on the beat they pulse.
     const eyeTarget = dyn ? dyn.eye : target.eye;
+    const eyeGlow = Math.max(1.4, eyeTarget * 2.4);
     eyes.current.forEach((m) => {
-      if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, eyeTarget * 2.8, a);
+      if (m) m.emissiveIntensity = THREE.MathUtils.lerp(m.emissiveIntensity, eyeGlow, a);
     });
 
     // Assembly: parts ease from scattered → seated as `build` rises. Every
@@ -511,10 +607,24 @@ export function Machine({
     if (head.current) head.current.position.y = 1.42 + apart * (0.42 + wob);
     arms.current.forEach((g, i) => {
       if (!g) return;
+      const s = i === 0 ? -1 : 1;
+      const baseArm = i === 0 ? target.armR : target.armL;
+
       g.position.x = apart * (i === 0 ? -0.5 : 0.5);
       g.position.y = apart * (0.24 + wob);
+
       // Dance: the arms lift and wave in opposition, in time with the bounce.
-      g.rotation.z = Math.sin(beat + (i === 0 ? 0 : Math.PI)) * 0.5 * dance;
+      // Both arms rotate outward away from the flared conical torso (s * angle),
+      // bounded safely so hands and forearms never clip into the body.
+      const wave = 0.5 + 0.5 * Math.sin(beat + (i === 0 ? 0 : Math.PI));
+      const danceOutward = 0.18 + 0.38 * wave;
+      const armOutward = THREE.MathUtils.lerp(baseArm, danceOutward, dance);
+      g.rotation.z = s * armOutward;
+
+      // Natural forward/back swing synced with hip sway tempo
+      const danceForward = Math.sin(beat * 0.5 + (i === 0 ? 0 : Math.PI)) * 0.14 + 0.1;
+      g.rotation.x = THREE.MathUtils.lerp(0, danceForward, dance);
+      g.rotation.y = THREE.MathUtils.lerp(0, s * 0.08, dance);
     });
     
     // Leg positioning + Hurt Instinct Flinch
@@ -553,16 +663,10 @@ export function Machine({
       <group ref={torso}>
       {/* Head — centered and aligned with CAD-grade precision symmetry. */}
       <group ref={head} position={[0, 1.42, 0]} rotation={[0, 0, 0]}>
-        {/* Main helmet sphere */}
+        {/* Main helmet sphere — 36 segments for smooth rounded finish */}
         <mesh castShadow>
-          <sphereGeometry args={[0.62, 24, 20]} />
+          <sphereGeometry args={[0.62, 36, 24]} />
           <Shell />
-        </mesh>
-
-        {/* Forehead power visor crest */}
-        <mesh position={[0, 0.45, 0.35]} rotation={[-0.2, 0, 0]}>
-          <boxGeometry args={[0.34, 0.05, 0.14]} />
-          <Joint />
         </mesh>
 
         {/* Dialogue speech line anchored directly near his mouth in 3D */}
@@ -583,90 +687,45 @@ export function Machine({
           />
         </mesh>
 
-        {/* Ears — an open outer-helix curve plus a lobe, read as ears rather
-            than a flat sensor disc. The amber sensor glint (vs. the eyes'
-            violet) codes them as the "listening" organ at a glance. */}
-        {[-0.54, 0.54].map((x) => {
-          const side = Math.sign(x);
-          return (
-            <group key={x} position={[x, 0.04, 0.08]} rotation={[0.1, side * -0.35, 0]}>
-              {/* Outer helix: an open C so it reads as a curled rim, not a ring */}
-              <mesh rotation={[0, Math.PI / 2, side * 2.0]}>
-                <torusGeometry args={[0.11, 0.026, 10, 20, Math.PI * 1.4]} />
-                <Joint />
-              </mesh>
-              {/* Lobe — soft, flattened, hangs below the helix */}
-              <mesh position={[side * 0.01, -0.1, 0.01]} scale={[0.62, 1, 0.8]}>
-                <sphereGeometry args={[0.06, 14, 12]} />
-                <Joint />
-              </mesh>
-              {/* Canal recess — the shadowed inner well the helix curls around */}
-              <mesh position={[side * 0.028, -0.005, 0.01]} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.052, 16]} />
-                <Recess />
-              </mesh>
-              {/* Sensor glint — amber, distinct from the eyes' violet */}
-              <mesh position={[side * 0.045, -0.005, 0.012]}>
-                <sphereGeometry args={[0.02, 10, 8]} />
-                <meshStandardMaterial color="#FDBA74" emissive="#F59E0B" emissiveIntensity={2.6} toneMapped={false} />
-              </mesh>
-            </group>
-          );
-        })}
-
-        {/* Jaw seam tuck */}
-        <mesh position={[0, -0.22, 0.5]} rotation={[0.34, 0, 0]}>
-          <boxGeometry args={[0.42, 0.05, 0.06]} />
-          <Joint />
-        </mesh>
-
-        {/* Smoked-glass helmet visor band — adapts cleanly to light and dark themes */}
-        <mesh position={[0, 0.06, 0.36]} rotation={[0.08, 0, 0]}>
-          <boxGeometry args={[0.72, 0.22, 0.12]} />
-          <meshStandardMaterial color={isLight ? "#9490B0" : "#06050C"} roughness={0.1} metalness={isLight ? 0.78 : 0.95} />
-        </mesh>
-
-        {/* Minimalist Warm-Light Glowing Capsule Eyes — vibrant, friendly, iconic */}
-        {[-0.2, 0.2].map((x) => (
-          <group key={x} position={[x, 0.06, 0.44]} rotation={[0.04, x * 0.28, 0]}>
-            {/* Dark recessed socket frame — subtle titanium bezel */}
-            <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.4, 0.85, 1]}>
-              <cylinderGeometry args={[0.11, 0.105, 0.04, 24]} />
-              <Recess />
-            </mesh>
-
-            {/* Main Glowing Capsule Lens — Vibrant radiant white with soft glow */}
-            <mesh position={[0, 0, 0.025]} scale={[1.45, 0.88, 1]}>
-              <sphereGeometry args={[0.08, 24, 20]} />
-              <meshStandardMaterial
-                ref={(m) => {
-                  if (m) eyes.current[x < 0 ? 0 : 1] = m;
-                }}
-                color="#FFFFFF"
-                emissive={isLight ? "#A78BFA" : "#DDD6FE"}
-                emissiveIntensity={4.5}
-                toneMapped={false}
-              />
-            </mesh>
-
-            {/* Inner radiant highlight core */}
-            <mesh position={[0, 0, 0.05]} scale={[1.1, 0.65, 0.8]}>
-              <sphereGeometry args={[0.045, 16, 12]} />
-              <meshStandardMaterial
-                color="#FFFFFF"
-                emissive="#FFFFFF"
-                emissiveIntensity={6.0}
-                toneMapped={false}
-              />
-            </mesh>
-
-            {/* Expressive arching brow line above each capsule */}
-            <mesh position={[x > 0 ? 0.01 : -0.01, 0.105, 0.025]} rotation={[0, 0, x > 0 ? -0.15 : 0.15]}>
-              <torusGeometry args={[0.11, 0.01, 8, 20, Math.PI * 0.6]} />
+        {/* Temple ear-sensor nodules — sleek brand lilac sensors */}
+        {[-0.52, 0.52].map((x) => (
+          <group key={x} position={[x, 0.08, 0.1]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh>
+              <cylinderGeometry args={[0.08, 0.08, 0.09, 14]} />
               <Joint />
+            </mesh>
+            <mesh position={[0, 0.05 * Math.sign(x), 0]}>
+              <sphereGeometry args={[0.048, 14, 12]} />
+              <meshStandardMaterial color="#A78BFA" emissive="#C4B5FD" emissiveIntensity={2.8} toneMapped={false} />
             </mesh>
           </group>
         ))}
+
+        {/* Sleek Dark Visor Bezel Rim — framing the OLED display smoothly into the helmet contour */}
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.624, 32, 20, Math.PI * 0.5 - 0.56, 1.12, 1.12, 0.68]} />
+          <meshStandardMaterial color="#12101C" roughness={0.35} metalness={0.85} side={THREE.DoubleSide} />
+        </mesh>
+
+        {/* High-Gloss OLED Face Visor Screen with Glowing Lilac Crescent Eyes */}
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.627, 32, 20, Math.PI * 0.5 - 0.52, 1.04, 1.16, 0.60]} />
+          <meshPhysicalMaterial
+            ref={(m) => {
+              if (m) eyes.current[0] = m;
+            }}
+            map={eyeTex}
+            emissiveMap={eyeTex}
+            emissive="#C4B5FD"
+            emissiveIntensity={3.2}
+            roughness={0.06}
+            metalness={0.12}
+            clearcoat={1.0}
+            clearcoatRoughness={0.03}
+            side={THREE.DoubleSide}
+            toneMapped={false}
+          />
+        </mesh>
 
         {/* Rivet crown band */}
         <mesh position={[0, 0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -686,56 +745,14 @@ export function Machine({
         <meshStandardMaterial color="#8B5CF6" emissive="#C084FC" emissiveIntensity={2.8} toneMapped={false} />
       </mesh>
 
-      {/* Segmented Barrel Torso */}
+      {/* Segmented Barrel Torso — 40 radial segments for smooth curvature without low-poly facet seams */}
       <mesh position={[0, 0.35, 0]} castShadow>
-        <cylinderGeometry args={[0.52, 0.64, 1.05, 16]} />
+        <cylinderGeometry args={[0.52, 0.64, 1.05, 40]} />
         <Shell />
-      </mesh>
-      {/* Waist armor collar & ribbing seams */}
-      <mesh position={[0, 0.35, 0]}>
-        <cylinderGeometry args={[0.55, 0.55, 0.16, 16]} />
-        <Shell color="dark" />
-      </mesh>
-      <mesh position={[0, 0.74, 0]}>
-        <cylinderGeometry args={[0.52, 0.52, 0.07, 16]} />
-        <Shell color="dark" />
       </mesh>
 
       {/* NX Chest Emblem */}
       <NxChestTattoo />
-
-      {/* Status Indicator LEDs — perfectly mirrored */}
-      {[-0.23, 0.23].map((x) => (
-        <mesh key={x} position={[x, 0.65, 0.49]}>
-          <sphereGeometry args={[0.028, 10, 10]} />
-          <meshStandardMaterial
-            color="#8B5CF6"
-            emissive="#A78BFA"
-            emissiveIntensity={1.6}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-
-      {/* Power conduit hydraulics connecting chest to shoulders — perfectly mirrored */}
-      {[-0.33, 0.33].map((x, i) => (
-        <mesh
-          key={i}
-          position={[x, 0.76, 0.26]}
-          rotation={[0.3, 0, i === 0 ? -0.4 : 0.4]}
-        >
-          <cylinderGeometry args={[0.025, 0.025, 0.36, 10]} />
-          <Joint />
-        </mesh>
-      ))}
-
-      {/* Chest cooling vent slats */}
-      {[0.24, 0.16].map((y) => (
-        <mesh key={y} position={[0, y, 0.55]} rotation={[0.08, 0, 0]}>
-          <boxGeometry args={[0.28, 0.028, 0.045]} />
-          <Shell color="dark" />
-        </mesh>
-      ))}
 
       {/* Hip collar */}
       <mesh position={[0, -0.12, 0]}>
@@ -750,11 +767,13 @@ export function Machine({
       ] as const).map(({ s, shoulderY, curl }, i) => (
         <group
           key={s}
-          ref={(el) => {
-            arms.current[i] = el;
-          }}
+          position={[s * 0.62, shoulderY, 0]}
         >
-          <group position={[s * 0.62, shoulderY, 0]}>
+          <group
+            ref={(el) => {
+              arms.current[i] = el;
+            }}
+          >
             {/* Pauldron shoulder cap */}
             <mesh position={[0, 0.06, 0]} rotation={[0, 0, s * 0.2]}>
               <sphereGeometry args={[0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.7]} />

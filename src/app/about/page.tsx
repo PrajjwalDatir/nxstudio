@@ -6,7 +6,7 @@ import { LandingNav } from "@/components/landing/LandingNav";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
 import { SectionKicker } from "@/components/landing/SectionKicker";
-import { ArrowRightIcon, SparklesIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 
 export default function AboutPage() {
   const targetRef = useRef<HTMLDivElement>(null);
@@ -47,14 +47,10 @@ export default function AboutPage() {
                   Our Philosophy
                 </SectionKicker>
 
-                <h1 className="mt-6 font-mono text-xs uppercase tracking-widest text-accent-foreground flex items-center gap-1.5 font-bold">
-                  <SparklesIcon className="h-3.5 w-3.5" /> About Nx Studio
-                </h1>
-
                 {/* World-Class Single Paragraph Copywriting */}
-                <p className="mt-8 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight leading-[1.3] text-foreground">
+                <h1 className="mt-8 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight leading-[1.3] text-foreground">
                   We built <span className="text-gradient">Nx Studio</span> on a singular conviction: the journey from human intent to production software should never be lost in context drift, decision fatigue, or repetitive boilerplate. By compiling raw product vision into precise, self-contained architecture bundles, Nx Studio equips modern AI agents—from Cursor to Claude Code—to build complete software systems with <span className="text-accent-foreground underline decoration-primary/40 underline-offset-4">absolute context</span>, uncompromised precision, and award-winning craftsmanship from line zero.
-                </p>
+                </h1>
 
                 <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
                   <AuthButton
