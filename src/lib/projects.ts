@@ -97,6 +97,8 @@ export function newWorkspaceData(name: string): WorkspaceData {
     checklist: {},
     customStages: [],
     iterations: [],
+    schema: { tables: [], relations: [] },
+    selectedMcpServers: ["nxstudio", "github", "postgres"],
   };
 }
 
@@ -130,6 +132,8 @@ export function hydrateData(
     checklist: stored.checklist ?? {},
     customStages: stored.customStages ?? [],
     iterations: stored.iterations ?? [],
+    schema: stored.schema ?? { tables: [], relations: [] },
+    selectedMcpServers: stored.selectedMcpServers ?? ["nxstudio", "github", "postgres"],
   };
 }
 

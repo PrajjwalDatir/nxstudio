@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { BillingSection } from "@/components/billing/BillingSection";
 import { ReferralPanel } from "@/components/referral/ReferralPanel";
 import { AdminPromptsPanel } from "@/components/admin/AdminPromptsPanel";
+import { McpTokensSection } from "@/components/settings/McpTokensSection";
 import { GithubIcon, CheckCircleIcon, LoaderIcon, ExternalLinkIcon, SettingsIcon, ScaffoldIcon } from "@/components/icons";
 
 function Field({
@@ -196,6 +197,9 @@ export default function SettingsPage() {
           </div>
         )}
       </section>
+
+      {/* Model Context Protocol (MCP) Tokens */}
+      <McpTokensSection />
 
       {/* Subscription */}
       <BillingSection />

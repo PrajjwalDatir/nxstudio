@@ -8,7 +8,7 @@
  * carries it into the build prompts.
  */
 import type { BrandDNA } from "@/lib/types";
-import { BRAND_TARGETS } from "./schema";
+import { BRAND_TARGETS, MOTION_TARGETS } from "./schema";
 
 function asString(value: unknown): string | undefined {
   if (typeof value === "string") return value.trim() || undefined;
@@ -40,6 +40,12 @@ export function brandPatchFromStudioValues(
 
   const font = asString(values[BRAND_TARGETS.font]);
   if (font) patch.font = font;
+
+  const motionPreset = asString(values[MOTION_TARGETS.preset]);
+  if (motionPreset) patch.motionPreset = motionPreset;
+
+  const motionSpeed = asString(values[MOTION_TARGETS.speed]);
+  if (motionSpeed) patch.motionSpeed = motionSpeed;
 
   return patch;
 }
