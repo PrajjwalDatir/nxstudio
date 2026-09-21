@@ -15,7 +15,6 @@ export default function TeamPage() {
     if (!name) return null;
     const lower = name.toLowerCase();
     if (lower.includes("nxstudio")) return "Founder & GTM";
-    if (lower.includes("contributor")) return "Content & Distribution";
     return null;
   };
 

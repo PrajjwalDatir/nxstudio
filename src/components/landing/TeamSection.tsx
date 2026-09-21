@@ -17,19 +17,11 @@ interface Member {
 const MEMBERS: Member[] = [
   {
     name: "nxstudio",
-    role: "Product & GTM",
+    role: "Founder & Engineering",
     location: "India",
     blurb:
       "Architects nxstudio's core compiler, .nx/ bundle engine, and WebGL canvas. Engineers the technical pipeline that translates founder specs into agent-ready context.",
     photo: null, // Uses the branded generated avatar. Drop /public/team/avatar.jpg to override.
-  },
-  {
-    name: "Community Contributor",
-    role: "Content & Distribution",
-    location: "Zambia",
-    blurb:
-      "Runs content and community distribution, keeping nxstudio in front of the vibe coders building with AI IDEs.",
-    photo: null, // Uses the branded generated avatar. Drop /public/team/contributor.jpg to override.
   },
 ];
 
@@ -71,17 +63,17 @@ export function TeamSection({ index = "06" }: { index?: string }) {
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <SectionKicker index={index} align="center">
-            Team
+            Founder
           </SectionKicker>
           <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Two people. One tight loop.
+            Built by nxstudio.
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
-            One builds the product, one puts it in front of the people who need it.
+            Engineering the compiler, canvas, and context pipeline for developers and AI agents.
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-3xl gap-5 sm:grid-cols-2">
+        <div className="mx-auto mt-12 max-w-md">
           {MEMBERS.map((m) => (
             <div
               key={m.name}
