@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CursorMark, ClaudeMark, WindsurfMark, V0Mark, ProductHuntMark } from "./brand-icons";
+import { CursorMark, ClaudeMark, WindsurfMark, V0Mark, ProductHuntMark, LaunchpadlyMark } from "./brand-icons";
 
 const IDES = [
   {
@@ -70,13 +70,14 @@ export function IdeFlipper() {
 }
 
 export function IdeBadgeFlipper() {
+  const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    setMounted(true);
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % IDES.length);
     }, 3600);
-
     return () => clearInterval(timer);
   }, []);
 
@@ -84,25 +85,41 @@ export function IdeBadgeFlipper() {
   const Icon = current.mark;
 
   return (
-    <div className="relative inline-flex h-10 items-center justify-center min-w-[150px] [perspective:1000px]">
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={current.name}
-          initial={{ rotateX: -90, opacity: 0, scale: 0.95, y: 6 }}
-          animate={{ rotateX: 0, opacity: 1, scale: 1, y: 0 }}
-          exit={{ rotateX: 90, opacity: 0, scale: 0.95, y: -6 }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 22,
-            mass: 0.9,
-          }}
-          className="group flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/40 px-3.5 py-1.5 text-sm font-semibold text-foreground shadow-sm transition-all"
-        >
-          <Icon className={`h-4 w-4 shrink-0 ${current.iconColor}`} />
-          <span className="font-semibold text-foreground text-xs sm:text-sm">{current.name}</span>
-        </motion.div>
-      </AnimatePresence>
+    <div className="relative inline-flex h-10 items-center justify-center min-w-[190px]">
+      {/* ── Static row: visible in SSR / headless / crawlers ── */}
+      <div className={`flex items-center gap-2 ${mounted ? "opacity-0 pointer-events-none absolute" : ""}`}>
+        {IDES.map((ide) => {
+          const IdeIcon = ide.mark;
+          return (
+            <span
+              key={ide.name}
+              title={ide.name}
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border/60 bg-secondary/40"
+            >
+              <IdeIcon className={`h-4 w-4 ${ide.iconColor}`} />
+            </span>
+          );
+        })}
+      </div>
+
+      {/* ── Animated flipper: only after hydration ── */}
+      {mounted && (
+        <div className="[perspective:1000px]">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={current.name}
+              initial={{ rotateX: -90, opacity: 0, scale: 0.95, y: 6 }}
+              animate={{ rotateX: 0, opacity: 1, scale: 1, y: 0 }}
+              exit={{ rotateX: 90, opacity: 0, scale: 0.95, y: -6 }}
+              transition={{ type: "spring", stiffness: 200, damping: 22, mass: 0.9 }}
+              className="group flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/40 px-3.5 py-1.5 text-sm font-semibold text-foreground shadow-sm transition-all"
+            >
+              <Icon className={`h-4 w-4 shrink-0 ${current.iconColor}`} />
+              <span className="font-semibold text-foreground text-xs sm:text-sm">{current.name}</span>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
@@ -147,14 +164,12 @@ const LAUNCHES: LaunchEntry[] = [
     accent: "text-[#FF6154]",
   },
   {
-    type: "image",
+    type: "custom",
     name: "Launchpadly",
     href: "https://launchpadly.co/startup/nxstudio?ref=badge",
-    lightImg: "https://launchpadly.co/embed/badges/startup/nxstudio.svg?variant=compact",
-    darkImg: "https://launchpadly.co/embed/badges/startup/nxstudio.svg?variant=compact",
-    alt: "nxstudio - Launchpadly Startup Directory",
-    width: 200,
-    height: 36,
+    Icon: LaunchpadlyMark,
+    label: "Launchpadly",
+    accent: "text-[#34d399]",
   },
   {
     type: "image",

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   NxLogo,
-  SearchIcon,
   LockIcon,
   CheckCircleIcon,
   CircleIcon,
@@ -11,28 +10,14 @@ import {
   BellIcon,
   KeyRoundIcon,
 } from "@/components/icons";
-import { PHASES, type PhaseId } from "@/lib/phases";
 import { MAIN_NAV_ITEMS, STUDIO_MODE_NAV_ITEMS } from "@/lib/navigation";
-import type { PhaseProgress } from "@/lib/types";
-import { PhaseCardBody, PhaseCardFrame } from "@/components/canvas/PhaseCard";
 import { cn } from "@/lib/utils";
 
 /**
  * A frame of the actual nxstudio product (the Project Canvas) as the hero
- * visual — the pattern top dev-tool launches use: show the real app, in a
- * window, with a soft shadow that melts into the page.
- *
- * The phase cards are the real board components fed the real PHASES data, so
- * that view can't drift into flattering the product with UI we never shipped.
- * The other sidebar destinations are staged (nxstudio doesn't route from a
- * marketing page) but built from the same nav data and design tokens, so
- * clicking around the sidebar reads as a real, navigable product rather than
- * a static screenshot.
+ * visual — showcasing the 3 core pillars of the Product OS:
+ * Relational Schema, Topological DAG, and Native MCP Protocol Bus.
  */
-const PREVIEW_PROGRESS: Record<PhaseId, PhaseProgress> = {
-  idea: { done: 6, total: 9, percent: 67 },
-  build: { done: 1, total: 1, percent: 100 },
-};
 
 const TEAM = [
   { initials: "PD", name: "Prajjwal Datir", role: "Owner" },
@@ -69,36 +54,595 @@ function MiniHeader({ title, subtitle }: { title: string; subtitle: React.ReactN
         <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
       </div>
       <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:flex">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
         Synced
       </span>
     </div>
   );
 }
 
+type BriefStepId = "vision" | "brand" | "stack" | "schema" | "review";
+
+interface StepConfig {
+  id: BriefStepId;
+  stepNum: number;
+  label: string;
+  category: string;
+}
+
+const BRIEF_STEPS: StepConfig[] = [
+  { id: "vision", stepNum: 1, label: "Vision", category: "Vision & Problem Space" },
+  { id: "brand", stepNum: 2, label: "Brand", category: "Brand DNA & Design Tokens" },
+  { id: "stack", stepNum: 3, label: "Stack", category: "Engineered Tech Stack" },
+  { id: "schema", stepNum: 4, label: "Schema", category: "Data Schema (ERD)" },
+  { id: "review", stepNum: 5, label: "Review", category: "Deterministic AI Review" },
+];
+
+function StepVisionContent() {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+      {/* Left 2 cols: Core Brief & Positioning */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 sm:col-span-2 flex flex-col justify-between shadow-sm">
+        <div>
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              <h4 className="text-xs font-semibold tracking-tight text-foreground sm:text-sm">
+                Product Vision & Strategic Moat
+              </h4>
+            </div>
+            <span className="font-mono text-[10px] text-muted-foreground">brief.vision.v1</span>
+          </div>
+
+          <div className="mt-3 space-y-2.5 font-mono text-[11px]">
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-muted-foreground tracking-wider block">One-Line Pitch</span>
+              <p className="text-foreground text-xs font-medium font-sans">
+                Turn an idea into a single, deterministic build prompt for AI coding agents.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+                <span className="text-[10px] uppercase text-muted-foreground tracking-wider block">Core Problem</span>
+                <p className="text-muted-foreground text-[11px] font-sans leading-relaxed">
+                  Vague natural-language prompts cause hallucinated tech stacks, broken schemas, and agent drift.
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+                <span className="text-[10px] uppercase text-muted-foreground tracking-wider block">Target ICP</span>
+                <p className="text-muted-foreground text-[11px] font-sans leading-relaxed">
+                  Solo developers & technical founders orchestrating Claude, Cursor, and Codex workflows.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+          <span className="text-muted-foreground">Compiled to .nx/brief/vision.md</span>
+          <span className="font-mono text-muted-foreground">Conviction: High</span>
+        </div>
+      </div>
+
+      {/* Right 1 col: Differentiators */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 flex flex-col justify-between shadow-xs">
+        <div>
+          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              Strategic Moat
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">3 pillars</span>
+          </div>
+
+          <div className="mt-2.5 space-y-1.5 text-[11px] font-mono">
+            <div className="p-2 rounded bg-background/50 border border-border/40">
+              <span className="text-foreground font-medium block">Context Directory</span>
+              <span className="text-muted-foreground text-[10px]">Deterministic .nx/ contracts</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40">
+              <span className="text-foreground font-medium block">Topological DAG</span>
+              <span className="text-muted-foreground text-[10px]">Tiered execution order</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40">
+              <span className="text-foreground font-medium block">Native MCP Bus</span>
+              <span className="text-muted-foreground text-[10px]">IDE-to-runtime sync</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 pt-2 border-t border-border/40 text-[10px] font-mono text-muted-foreground flex justify-between">
+          <span>Drift Protection</span>
+          <span className="text-lilac">Active</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepBrandContent() {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+      {/* Left 2 cols: Design Tokens */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 sm:col-span-2 flex flex-col justify-between shadow-sm">
+        <div>
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              <h4 className="text-xs font-semibold tracking-tight text-foreground sm:text-sm">
+                Universal Design Tokens & Kinematics
+              </h4>
+            </div>
+            <span className="font-mono text-[10px] text-muted-foreground">W3C Tokens Spec</span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-2">
+              <div className="h-10 rounded-md bg-[#C4B5FD] flex items-end p-1.5">
+                <span className="font-mono text-[9px] font-bold text-black">#C4B5FD</span>
+              </div>
+              <div>
+                <span className="text-[11px] font-mono font-medium text-foreground block">brand.lilac</span>
+                <span className="text-[10px] text-muted-foreground">Primary Accent</span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-2">
+              <div className="h-10 rounded-md bg-[#08080A] border border-border/80 flex items-end p-1.5">
+                <span className="font-mono text-[9px] font-bold text-white">#08080A</span>
+              </div>
+              <div>
+                <span className="text-[11px] font-mono font-medium text-foreground block">surface.canvas</span>
+                <span className="text-[10px] text-muted-foreground">Near-black ground</span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-2">
+              <div className="h-10 rounded-md bg-[#FFFFFF] flex items-end p-1.5">
+                <span className="font-mono text-[9px] font-bold text-black">#FFFFFF</span>
+              </div>
+              <div>
+                <span className="text-[11px] font-mono font-medium text-foreground block">text.foreground</span>
+                <span className="text-[10px] text-muted-foreground">High contrast text</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-mono">
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between items-center">
+              <span className="text-muted-foreground">Typography</span>
+              <span className="text-foreground">Instrument Sans</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between items-center">
+              <span className="text-muted-foreground">Monospace</span>
+              <span className="text-foreground">Geist Mono</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+          <span className="text-muted-foreground">Compiled to .nx/ui/tokens.json</span>
+          <span className="font-mono text-muted-foreground">Format: Universal W3C</span>
+        </div>
+      </div>
+
+      {/* Right 1 col: Kinematics & Token Spec */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 flex flex-col justify-between shadow-xs">
+        <div>
+          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              Kinematics & Radius
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">Motion</span>
+          </div>
+
+          <div className="mt-2.5 space-y-1.5 text-[11px] font-mono">
+            <div className="p-2 rounded bg-background/50 border border-border/40">
+              <span className="text-muted-foreground text-[10px] block">Curve</span>
+              <span className="text-foreground font-medium text-[10px]">cubic-bezier(0.16, 1, 0.3, 1)</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40">
+              <span className="text-muted-foreground text-[10px] block">Corner Radius</span>
+              <span className="text-foreground font-medium text-[10px]">16px (Card) · 8px (Control)</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40">
+              <span className="text-muted-foreground text-[10px] block">Accessibility</span>
+              <span className="text-lilac font-medium text-[10px]">14.2:1 Contrast (AAA)</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 pt-2 border-t border-border/40 text-[10px] font-mono text-muted-foreground flex justify-between">
+          <span>Component Contracts</span>
+          <span className="text-foreground font-medium">Synchronized</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepStackContent() {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+      {/* Left 2 cols: Stack Spec */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 sm:col-span-2 flex flex-col justify-between shadow-sm">
+        <div>
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              <h4 className="text-xs font-semibold tracking-tight text-foreground sm:text-sm">
+                Engineered Tech Stack Specification
+              </h4>
+            </div>
+            <span className="font-mono text-[10px] text-muted-foreground">Zero Vendor Lock-in</span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-muted-foreground block">Application Framework</span>
+              <p className="text-foreground font-medium">Next.js 15 (App Router)</p>
+              <p className="text-muted-foreground text-[10px]">React 19, Server Components & Actions</p>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-muted-foreground block">Database & Typed ORM</span>
+              <p className="text-foreground font-medium">PostgreSQL + Prisma</p>
+              <p className="text-muted-foreground text-[10px]">Declarative schema & migration lock</p>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-muted-foreground block">Styling & Design System</span>
+              <p className="text-foreground font-medium">Tailwind CSS v4 + Radix</p>
+              <p className="text-muted-foreground text-[10px]">Accessible headless primitive components</p>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/50 p-2.5 space-y-1">
+              <span className="text-[10px] uppercase text-muted-foreground block">Agent Integration</span>
+              <p className="text-foreground font-medium">Model Context Protocol</p>
+              <p className="text-muted-foreground text-[10px]">Native JSON-RPC tool invocation</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+          <span className="text-muted-foreground">Compiled to .nx/stack/matrix.json</span>
+          <span className="font-mono text-muted-foreground">Runtime: Node.js 22 LTS</span>
+        </div>
+      </div>
+
+      {/* Right 1 col: Target Capabilities */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 flex flex-col justify-between shadow-xs">
+        <div>
+          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              Runtime Architecture
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">Stack</span>
+          </div>
+
+          <div className="mt-2.5 space-y-1.5 text-[11px] font-mono">
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between">
+              <span className="text-muted-foreground">API Protocol</span>
+              <span className="text-foreground">HTTP + JSON-RPC</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between">
+              <span className="text-muted-foreground">Auth Provider</span>
+              <span className="text-foreground">Supabase / JWT</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between">
+              <span className="text-muted-foreground">State Strategy</span>
+              <span className="text-foreground">Zustand Store</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 pt-2 border-t border-border/40 text-[10px] font-mono text-muted-foreground flex justify-between">
+          <span>Static Compilation</span>
+          <span className="text-lilac">Verified</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepSchemaContent() {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+      {/* Card 1: Visual Relational Schema (Dot Grid Blueprint) */}
+      <div className="group relative flex flex-col justify-between rounded-xl border border-border/80 bg-card/40 p-3.5 shadow-sm transition-all hover:border-lilac/40 sm:col-span-2">
+        <div>
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              <h4 className="text-xs font-semibold tracking-tight text-foreground sm:text-sm">
+                Relational Architecture & Schema
+              </h4>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
+              <span>PostgreSQL · Prisma</span>
+              <span>•</span>
+              <span>0 Circular FKs</span>
+            </div>
+          </div>
+
+          {/* Dot-grid Canvas Area */}
+          <div className="relative mt-3 rounded-lg border border-border/60 bg-background/50 bg-[radial-gradient(#27272a_1.2px,transparent_1.2px)] bg-[size:14px_14px] p-3.5 overflow-hidden min-h-[140px]">
+            {/* SVG Bézier Relationship Connector */}
+            <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-10">
+              <path
+                d="M 135 55 C 165 55, 175 75, 205 75"
+                fill="none"
+                stroke="var(--lilac, #C4B5FD)"
+                strokeWidth="1.5"
+                strokeDasharray="4 3"
+              />
+            </svg>
+
+            <div className="relative z-20 flex flex-wrap gap-3 items-start">
+              {/* Table 1: users */}
+              <div className="w-36 rounded-lg border border-border/80 bg-card/95 p-2.5 shadow-xs">
+                <div className="flex items-center justify-between border-b border-border/40 pb-1.5 mb-1.5">
+                  <span className="font-mono text-xs font-semibold text-foreground">users</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">3 cols</span>
+                </div>
+                <div className="space-y-1.5 text-[11px] font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-foreground">id</span>
+                    <span className="text-lilac text-[10px] font-medium">uuid pk</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">email</span>
+                    <span className="text-muted-foreground/80 text-[10px]">varchar</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">created_at</span>
+                    <span className="text-muted-foreground/80 text-[10px]">date</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Table 2: workspaces */}
+              <div className="w-38 rounded-lg border border-border/80 bg-card/95 p-2.5 shadow-xs">
+                <div className="flex items-center justify-between border-b border-border/40 pb-1.5 mb-1.5">
+                  <span className="font-mono text-xs font-semibold text-foreground">workspaces</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">3 cols</span>
+                </div>
+                <div className="space-y-1.5 text-[11px] font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-foreground">id</span>
+                    <span className="text-lilac text-[10px] font-medium">uuid pk</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">name</span>
+                    <span className="text-muted-foreground/80 text-[10px]">varchar</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">owner_id</span>
+                    <span className="text-lilac text-[10px] font-medium">fk → users</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+          <span className="text-muted-foreground">Compiled to .nx/db/schema.sql</span>
+          <span className="font-mono text-muted-foreground">Validated AST</span>
+        </div>
+      </div>
+
+      {/* Card 2: Topological DAG & Native MCP Fleet */}
+      <div className="flex flex-col justify-between gap-3">
+        {/* Subcard A: Topological DAG */}
+        <div className="rounded-xl border border-border/80 bg-card/40 p-3 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              Execution DAG
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">Tiers T0–T2</span>
+          </div>
+          <div className="mt-2 space-y-1 text-[10px] font-mono">
+            <div className="flex items-center justify-between py-1 px-1.5">
+              <span className="text-muted-foreground">T0: init_schema</span>
+              <span className="text-muted-foreground">done</span>
+            </div>
+            <div className="flex items-center justify-between py-1 px-1.5 rounded bg-secondary/30">
+              <span className="text-foreground font-medium">T1: auth_api</span>
+              <span className="text-lilac font-medium">running</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Subcard B: Native MCP Bus */}
+        <div className="rounded-xl border border-border/80 bg-card/40 p-3 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              Native MCP Protocol
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">JSON-RPC 2.0</span>
+          </div>
+          <div className="mt-2 space-y-1 text-[10px] font-mono">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Endpoint</span>
+              <span className="text-foreground font-medium">/api/mcp</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Fleet</span>
+              <span className="text-foreground">Cursor Connected</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Last Query</span>
+              <span className="text-muted-foreground">nx_get_schema (2ms)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepReviewContent() {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+      {/* Left 2 cols: Master Build Prompt Preview */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 sm:col-span-2 flex flex-col justify-between shadow-sm">
+        <div>
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              <h4 className="text-xs font-semibold tracking-tight text-foreground sm:text-sm">
+                Deterministic Agent Build Prompt
+              </h4>
+            </div>
+            <span className="font-mono text-[10px] text-muted-foreground">4,120 tokens</span>
+          </div>
+
+          <div className="mt-3 rounded-lg border border-border/60 bg-background/80 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground overflow-x-auto space-y-1">
+            <div className="text-foreground font-semibold"># PRODUCTION BUILD SPEC: nxstudio</div>
+            <div>&gt; TARGET_STACK: Next.js 15 + Prisma + PostgreSQL + Tailwind v4</div>
+            <div>&gt; CONTEXT_ROOT: .nx/ (memory.json, schema.prisma, tokens.json)</div>
+            <div className="text-muted-foreground/60 py-1">---</div>
+            <div>[TASK_01_SCHEMA]: Scaffold tables &lt;users, workspaces&gt; from .nx/db/schema.sql</div>
+            <div>[TASK_02_BRAND]: Inject W3C tokens into tailwind.config from .nx/ui/tokens.json</div>
+            <div>[TASK_03_MCP]: Register /api/mcp endpoints with JSON-RPC schemas</div>
+            <div className="text-lilac font-medium pt-1">[STATUS]: Ready for zero-hallucination agent execution.</div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+          <span className="text-muted-foreground">Compiled to .nx/prompts/master-build-prompt.md</span>
+          <span className="font-mono text-muted-foreground">AST Validation: 100%</span>
+        </div>
+      </div>
+
+      {/* Right 1 col: Pre-flight Audit Scorecard */}
+      <div className="rounded-xl border border-border/80 bg-card/40 p-3.5 flex flex-col justify-between shadow-xs">
+        <div>
+          <div className="flex items-center justify-between pb-2 border-b border-border/40">
+            <span className="font-mono text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac" />
+              Pre-Flight Audit
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">Audit</span>
+          </div>
+
+          <div className="mt-2.5 space-y-1.5 text-[11px] font-mono">
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between">
+              <span className="text-muted-foreground">Schema Invariants</span>
+              <span className="text-foreground">Passed</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between">
+              <span className="text-muted-foreground">Token Alignment</span>
+              <span className="text-foreground">100%</span>
+            </div>
+            <div className="p-2 rounded bg-background/50 border border-border/40 flex justify-between">
+              <span className="text-muted-foreground">Agent Drift Risk</span>
+              <span className="text-lilac">0.0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 pt-2 border-t border-border/40 text-[10px] font-mono text-muted-foreground flex justify-between">
+          <span>Ready to Emit</span>
+          <span className="text-foreground font-medium">Claude / Cursor</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CanvasView() {
+  const [activeStep, setActiveStep] = useState<BriefStepId>("schema");
+  const currentStepConfig = BRIEF_STEPS.find((s) => s.id === activeStep) ?? BRIEF_STEPS[3];
+  const stepIndex = BRIEF_STEPS.findIndex((s) => s.id === activeStep);
+
   return (
     <>
       <MiniHeader
         title="Project Canvas"
         subtitle={
           <>
-            Tracking phases for <span className="text-accent-foreground">nxstudio</span>
+            Architecture & execution pipeline for <span className="text-accent-foreground font-semibold">nxstudio</span>
           </>
         }
       />
-      <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3.5 py-2.5">
-        <SearchIcon className="h-4 w-4 text-accent-foreground" />
-        <span className="flex-1 text-xs text-muted-foreground">Command nx for actions and search…</span>
-        <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">⌘K</span>
+
+      {/* ── Top Stepped Navigation Bar with Progress Bar ─────────────── */}
+      <div className="mt-4 space-y-2.5">
+        <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center gap-2">
+            <span className="font-mono uppercase tracking-wider text-primary font-bold">
+              Brief · Step {currentStepConfig.stepNum} of 5
+            </span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="font-medium text-foreground">{currentStepConfig.category}</span>
+          </div>
+          <span className="font-mono text-muted-foreground text-[10px]">
+            {currentStepConfig.stepNum}/5 Complete ({currentStepConfig.stepNum * 20}%)
+          </span>
+        </div>
+
+        {/* Stepped progress bar track */}
+        <div className="grid grid-cols-5 gap-1">
+          {BRIEF_STEPS.map((s, idx) => (
+            <div
+              key={s.id}
+              className={cn(
+                "h-1 rounded-full transition-colors duration-300",
+                idx <= stepIndex ? "bg-primary" : "bg-secondary"
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Navigation Step Pills (Clickable) */}
+        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border/80 bg-background/50 p-1">
+          {BRIEF_STEPS.map((s, idx) => {
+            const isActive = s.id === activeStep;
+            const isDone = idx < stepIndex;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActiveStep(s.id)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all cursor-pointer outline-none",
+                  isActive
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : isDone
+                    ? "text-foreground hover:bg-secondary/60"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-mono transition-colors",
+                    isActive
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-secondary text-muted-foreground"
+                  )}
+                >
+                  {s.stepNum}
+                </span>
+                <span>{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {PHASES.map((phase) => (
-          <PhaseCardFrame key={phase.id}>
-            <PhaseCardBody phase={phase} progress={PREVIEW_PROGRESS[phase.id]} />
-          </PhaseCardFrame>
-        ))}
-      </div>
+
+      {/* Render selected step view */}
+      {activeStep === "vision" && <StepVisionContent />}
+      {activeStep === "brand" && <StepBrandContent />}
+      {activeStep === "stack" && <StepStackContent />}
+      {activeStep === "schema" && <StepSchemaContent />}
+      {activeStep === "review" && <StepReviewContent />}
     </>
   );
 }
