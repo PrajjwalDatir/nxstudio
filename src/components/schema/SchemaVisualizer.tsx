@@ -1064,7 +1064,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                               e.stopPropagation();
                               addField(table.id);
                             }}
-                            title="Add column"
+                            title="Add column" aria-label="Add column"
                             className="rounded-lg p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
                           >
                             <PlusIcon className="h-3.5 w-3.5" />
@@ -1074,7 +1074,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                               e.stopPropagation();
                               deleteTable(table.id);
                             }}
-                            title="Delete table"
+                            title="Delete table" aria-label="Delete table"
                             className="rounded-lg p-1 text-muted-foreground hover:bg-red-500/10 hover:text-red-400 transition-colors"
                           >
                             <TrashIcon className="h-3.5 w-3.5" />
@@ -1184,6 +1184,15 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                                         : "Primary Key"
                                       : "Make Primary Key"
                                   }
+                                  aria-label={
+                                    field.isPrimary
+                                      ? isSolePk
+                                        ? "Sole Primary Key (Mandatory)"
+                                        : isReferencedByFk
+                                        ? "Primary Key (Referenced by Foreign Key)"
+                                        : "Primary Key"
+                                      : "Make Primary Key"
+                                  }
                                   className={cn(
                                     "px-1 text-[9px] font-mono font-semibold transition-colors",
                                     field.isPrimary
@@ -1210,6 +1219,13 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                                   }}
                                   disabled={isSolePk || isReferencedByFk}
                                   title={
+                                    isSolePk
+                                      ? "Cannot delete: Sole Primary Key of table"
+                                      : isReferencedByFk
+                                      ? "Cannot delete: Referenced by a Foreign Key"
+                                      : "Delete column"
+                                  }
+                                  aria-label={
                                     isSolePk
                                       ? "Cannot delete: Sole Primary Key of table"
                                       : isReferencedByFk
@@ -1256,7 +1272,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
             {/* Zoom Controls */}
             <button
               onClick={() => handleZoom(-0.15)}
-              title="Zoom out"
+              title="Zoom out" aria-label="Zoom out"
               className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               <ZoomOutIcon className="h-3.5 w-3.5" />
@@ -1270,7 +1286,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
             </button>
             <button
               onClick={() => handleZoom(0.15)}
-              title="Zoom in"
+              title="Zoom in" aria-label="Zoom in"
               className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               <ZoomInIcon className="h-3.5 w-3.5" />
@@ -1339,7 +1355,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     <span className="text-foreground">{tTable?.name ?? "?"}.{tField?.name ?? "?"}</span>
                     <button
                       onClick={() => deleteRelation(rel.id)}
-                      title="Delete relationship"
+                      title="Delete relationship" aria-label="Delete relationship"
                       className="ml-1 text-muted-foreground hover:text-foreground"
                     >
                       <XIcon className="h-2.5 w-2.5" />
