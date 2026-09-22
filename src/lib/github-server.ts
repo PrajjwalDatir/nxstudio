@@ -17,6 +17,12 @@ function validateRepoAndBranch(repo: string, branch: string): { owner: string; n
   if (!repo || !REPO_REGEX.test(repo)) return null;
   if (!branch || branch.includes("..") || branch.includes("\0")) return null;
   const [owner, name] = repo.split("/");
+  if (
+    owner === "." || owner === ".." || owner.includes("/") || owner.includes("\\") ||
+    name === "." || name === ".." || name.includes("/") || name.includes("\\")
+  ) {
+    return null;
+  }
   return { owner, name };
 }
 

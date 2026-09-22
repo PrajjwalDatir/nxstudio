@@ -23,3 +23,7 @@
 **Learning:** URL sanitization needs to account for browser-specific normalization behaviors, particularly around path separators. A check for `//` is insufficient if the browser resolves `/\` to the same effect.
 **Prevention:** Always check and reject paths starting with `/\` (e.g., `!path.startsWith("/\\")`) in addition to checking `//` when validating relative paths.
 
+## 2026-09-22 - Path Traversal vulnerability in regex validation
+**Vulnerability:** Path traversal possible in `validateRepoAndBranch` because the regex `/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/` allowed `.` and `..` in the owner and name parts of the repository name, leading to path traversal in GitHub API requests.
+**Learning:** Regular expressions that allow dots (e.g. for filenames) can inadvertently allow path traversal sequences if not explicitly restricted.
+**Prevention:** When validating identifiers that will be used in paths, ensure `.` and `..` are explicitly rejected, either by refining the regex or by performing secondary string checks.
