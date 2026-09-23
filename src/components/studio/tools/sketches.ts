@@ -31,6 +31,13 @@ export type SketchFactory = () => Sketch;
 /** Flow field — particles advected along an animated Perlin-noise vector field. */
 const flow: SketchFactory = () => {
   let pts: { x: number; y: number }[] = [];
+
+  // PERF: Cache color objects to prevent allocation in hot loops
+  let cachedBgStr = "";
+  let cachedFadeColor: P5.Color | null = null;
+  let cachedPrimaryStr = "";
+  let cachedInkColor: P5.Color | null = null;
+
   const ensure = (p: P5, n: number) => {
     while (pts.length < n) pts.push({ x: p.random(p.width), y: p.random(p.height) });
     if (pts.length > n) pts.length = n;
@@ -43,15 +50,24 @@ const flow: SketchFactory = () => {
     },
     draw(p, params) {
       ensure(p, params.count);
-      const fade = p.color(params.background);
-      fade.setAlpha(18);
+
+      if (params.background !== cachedBgStr || !cachedFadeColor) {
+        cachedBgStr = params.background;
+        cachedFadeColor = p.color(params.background);
+      }
+      cachedFadeColor.setAlpha(18);
+
       p.noStroke();
-      p.fill(fade);
+      p.fill(cachedFadeColor);
       p.rect(0, 0, p.width, p.height);
 
-      const ink = p.color(params.primary);
-      ink.setAlpha(110);
-      p.stroke(ink);
+      if (params.primary !== cachedPrimaryStr || !cachedInkColor) {
+        cachedPrimaryStr = params.primary;
+        cachedInkColor = p.color(params.primary);
+      }
+      cachedInkColor.setAlpha(110);
+
+      p.stroke(cachedInkColor);
       p.strokeWeight(1.2);
 
       const t = p.frameCount * 0.002 * params.speed;
@@ -77,6 +93,11 @@ const flow: SketchFactory = () => {
 const particles: SketchFactory = () => {
   let ps: Particle2D[] = [];
   let spatialGrid = new SpatialHashGrid(130);
+
+  // PERF: Cache color objects to prevent allocation in hot loops
+  let cachedPrimaryStr = "";
+  let cachedLineInk: P5.Color | null = null;
+  let cachedNodeInk: P5.Color | null = null;
 
   const ensure = (p: P5, n: number) => {
     while (ps.length < n) {
@@ -112,8 +133,14 @@ const particles: SketchFactory = () => {
       // Rebuild Spatial Hash Grid: O(N)
       spatialGrid.build(ps);
 
+      if (params.primary !== cachedPrimaryStr || !cachedLineInk || !cachedNodeInk) {
+        cachedPrimaryStr = params.primary;
+        cachedLineInk = p.color(params.primary);
+        cachedNodeInk = p.color(params.primary); // Must be separate instance to avoid shared alpha mutation
+      }
+
       p.strokeWeight(1.2);
-      const lineInk = p.color(params.primary);
+
       // Query adjacent grid cells: average O(N) instead of O(N^2) with zero array allocations
       for (let i = 0; i < ps.length; i++) {
         const a = ps[i];
@@ -125,17 +152,16 @@ const particles: SketchFactory = () => {
 
           if (dSq < maxDistanceSq) {
             const d = Math.sqrt(dSq);
-            lineInk.setAlpha(p.map(d, 0, maxDist, 160, 0));
-            p.stroke(lineInk);
+            cachedLineInk!.setAlpha(p.map(d, 0, maxDist, 160, 0));
+            p.stroke(cachedLineInk!);
             p.line(a.x, a.y, b.x, b.y);
           }
         });
       }
 
-      const nodeInk = p.color(params.primary);
-      nodeInk.setAlpha(255);
+      cachedNodeInk.setAlpha(255);
       p.noStroke();
-      p.fill(nodeInk);
+      p.fill(cachedNodeInk);
       for (let i = 0; i < ps.length; i++) {
         p.circle(ps[i].x, ps[i].y, nodeSize);
       }
