@@ -18,7 +18,7 @@ import { CopyButton } from "./CopyButton";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
 import { SubmitPromptDialog } from "@/components/prompts/SubmitPromptDialog";
 import { McpFleetSelector } from "@/components/mcp/McpFleetSelector";
-import { PhaseSectionNav, PhaseSectionFooter, type PhaseSectionItem } from "./PhaseSectionNav";
+import { PhaseSectionNav, type PhaseSectionItem } from "./PhaseSectionNav";
 import {
   BadgeCheckIcon,
   ListChecksIcon,
@@ -440,10 +440,6 @@ export function BuildPhase() {
     },
   ];
 
-  const currentIdx = BUILD_SECTIONS.findIndex((s) => s.id === activeSection);
-  const prevSection = currentIdx > 0 ? BUILD_SECTIONS[currentIdx - 1] : null;
-  const nextSection = currentIdx < BUILD_SECTIONS.length - 1 ? BUILD_SECTIONS[currentIdx + 1] : null;
-
   return (
     <>
       <PhaseHeader title="Build" status={status} phaseId="build" />
@@ -507,8 +503,6 @@ export function BuildPhase() {
               })}
             </div>
           </div>
-
-          <PhaseSectionFooter next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -612,8 +606,6 @@ export function BuildPhase() {
             it finds <span className="font-mono text-accent-foreground">AGENTS.md</span> even without
             relying on native auto-discovery.
           </div>
-
-          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -621,7 +613,6 @@ export function BuildPhase() {
       {activeSection === "mcp" && (
         <div className="space-y-6">
           <McpFleetSelector />
-          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -779,8 +770,6 @@ export function BuildPhase() {
               </div>
             )}
           </div>
-
-          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -788,7 +777,6 @@ export function BuildPhase() {
       {activeSection === "iterate" && (
         <div className="space-y-6">
           <IterateSection />
-          <PhaseSectionFooter prev={prevSection} onNavigate={setActiveSection} />
         </div>
       )}
 

@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspace } from "@/lib/workspace-store";
 import { PHASES, getPhaseProgress, getPhaseStatus } from "@/lib/phases";
-import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { resolveAppSection } from "@/lib/app-context";
 import { trackMascotTip, trackMascotAction } from "@/lib/analytics";
 import { ArrowRightIcon, ChevronRightIcon, XIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 export type Pose = "dormant" | "briefed" | "ready" | "curious" | "excited" | "proud";
 
@@ -338,9 +338,8 @@ export function MascotNudge() {
   const pathname = usePathname() ?? "";
   const { data } = useWorkspace();
   const section = resolveAppSection(pathname, data.customStages);
-  const reduce = usePrefersReducedMotion();
 
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
 
@@ -382,24 +381,19 @@ export function MascotNudge() {
     setCurrentIndex((prev) => (prev + 1) % lines.length);
   }, [lines.length]);
 
-  const handleOpen = useCallback(() => {
-    setIsOpen(true);
-    trackMascotAction("opened", section.label);
-  }, [section.label]);
-
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setIsOpen(false);
     trackMascotAction("closed", section.label);
   }, [section.label]);
 
   const handleBotClick = useCallback(() => {
-    if (!isOpen) {
-      setIsOpen(true);
-      trackMascotAction("opened", section.label);
-    } else {
-      handleNext();
-    }
-  }, [isOpen, handleNext, section.label]);
+    setIsOpen((prev) => {
+      const next = !prev;
+      trackMascotAction(next ? "opened" : "closed", section.label);
+      return next;
+    });
+  }, [section.label]);
 
   // Next milestone action
   const nextAction = nextPhase
@@ -409,115 +403,94 @@ export function MascotNudge() {
   return (
     <aside
       aria-label="Assistant guidance"
-      className="fixed bottom-6 right-6 z-40 flex items-end gap-3 pointer-events-none select-none"
+      className="fixed bottom-5 right-5 z-40 flex items-end gap-2.5 pointer-events-none select-none"
     >
-      {/* Visual Novel Dialogue Card */}
+      {/* Liquid Glass Dialogue Micro-Card */}
       {isOpen && (
         <div
-          className="pointer-events-auto w-[340px] sm:w-[400px] rounded-2xl border border-white/10 bg-neutral-950/95 backdrop-blur-xl shadow-2xl p-4 sm:p-5 transition-all duration-200"
-          style={{ willChange: "transform, opacity" }}
+          className="pointer-events-auto relative w-[260px] sm:w-[280px] rounded-2xl border border-white/20 dark:border-white/10 bg-background/60 dark:bg-card/45 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_36px_0_rgba(0,0,0,0.16),inset_0_1px_1px_0_rgba(255,255,255,0.25)] p-3 transition-all animate-in fade-in-50 zoom-in-95 duration-150"
         >
-          {/* Header with speaker tag and mood indicator */}
-          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-1.5 rounded-md border border-[var(--lilac)]/30 bg-[var(--lilac)]/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--lilac)]">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full bg-[var(--lilac)] ${
-                    reduce ? "" : "animate-pulse"
-                  }`}
-                />
-                NX // GUIDE
-              </div>
-              <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-400 border border-white/10 rounded px-1.5 py-0.5">
-                [{currentLine.mood}]
-              </span>
+          {/* Specular rim highlight */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent"
+          />
+
+          {/* Minimal header */}
+          <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-lilac animate-pulse" />
+              <span className="text-[11px] font-semibold text-foreground tracking-tight">NX</span>
+              <span className="text-[10px] font-mono text-muted-foreground">· {safeIndex + 1}/{lines.length}</span>
             </div>
             <button
               onClick={handleClose}
-              aria-label="Minimize Guide"
-              className="rounded p-1 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close"
+              className="rounded-md p-0.5 text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
             >
-              <XIcon className="h-3.5 w-3.5" />
+              <XIcon className="h-3 w-3" />
             </button>
           </div>
 
-          {/* Topic header */}
-          {currentLine.topic && (
-            <div className="mt-2.5">
-              <span className="font-mono text-[9px] font-semibold tracking-widest text-[var(--lilac)] uppercase">
-                {`// ${currentLine.topic}`}
-              </span>
-            </div>
-          )}
-
-          {/* Dialogue text — click to advance dialogue */}
+          {/* Dialogue text */}
           <div
             onClick={handleNext}
-            className="mt-1.5 cursor-pointer min-h-[52px] group"
-            title="Click to advance dialogue"
+            className="py-1.5 cursor-pointer select-none group"
+            title="Click for next tip"
           >
-            <p className="text-sm leading-relaxed text-neutral-200 group-hover:text-white transition-colors">
-              &ldquo;{currentLine.text}&rdquo;
-              <span
-                className={`inline-block ml-1.5 text-[var(--lilac)] font-mono text-xs select-none ${
-                  reduce ? "" : "animate-pulse"
-                }`}
-              >
-                ▼
-              </span>
+            <p className="text-xs text-foreground/85 leading-relaxed font-normal group-hover:text-foreground transition-colors">
+              {currentLine.text}
             </p>
           </div>
 
           {/* Footer Controls */}
-          <div className="mt-3 flex items-center justify-between pt-2.5 border-t border-white/5 text-xs">
+          <div className="flex items-center justify-between pt-1.5 border-t border-border/40 text-[11px]">
             {currentLine.action || nextAction ? (
               <Link
                 href={(currentLine.action || nextAction)!.href}
                 onClick={() => {
                   trackMascotAction("continue_clicked", section.label);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--lilac)]/40 bg-[var(--lilac)]/10 px-2.5 py-1 text-xs font-medium text-[var(--lilac)] hover:bg-[var(--lilac)]/20 transition-colors"
+                className="inline-flex items-center gap-1 font-medium text-lilac hover:underline text-[11px] truncate max-w-[180px]"
               >
-                {(currentLine.action || nextAction)!.label}
-                <ArrowRightIcon className="h-3 w-3" />
+                <span className="truncate">{(currentLine.action || nextAction)!.label}</span>
+                <ArrowRightIcon className="h-2.5 w-2.5 shrink-0" />
               </Link>
             ) : (
-              <span className="font-mono text-[10px] text-neutral-500">
-                {safeIndex + 1} / {lines.length}
-              </span>
+              <span />
             )}
 
             <button
               onClick={handleNext}
-              className="inline-flex items-center gap-1 font-mono text-[11px] text-neutral-400 hover:text-[var(--lilac)] transition-colors ml-auto"
+              className="inline-flex items-center gap-0.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors ml-auto shrink-0"
             >
               <span>Next</span>
-              <ChevronRightIcon className="h-3 w-3" />
+              <ChevronRightIcon className="h-2.5 w-2.5" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Expressive Robot Avatar in the Corner */}
+      {/* Expressive Robot Avatar */}
       <div className="pointer-events-auto relative flex flex-col items-center">
-        {/* Minimized Pill Badge */}
+        {/* Minimized Pill Badge (Clean Liquid Glass) */}
         {!isOpen && (
           <button
-            onClick={handleOpen}
-            className="mb-2 whitespace-nowrap rounded-lg border border-[var(--lilac)]/30 bg-neutral-950/90 px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--lilac)] shadow-xl backdrop-blur-md hover:bg-[var(--lilac)]/10 transition-all hover:scale-105"
+            onClick={handleBotClick}
+            className="mb-1.5 whitespace-nowrap rounded-full border border-white/20 dark:border-white/10 bg-background/80 dark:bg-card/70 px-2.5 py-0.5 font-mono text-[10px] font-medium text-lilac shadow-md backdrop-blur-xl hover:bg-lilac/10 transition-all hover:scale-105 cursor-pointer"
           >
-            <span>NX GUIDE</span>
-            <span className="ml-1 text-[8px]">●</span>
+            <span>NX Guide</span>
+            <span className="ml-1 text-[8px] text-lilac animate-pulse">●</span>
           </button>
         )}
 
-        {/* Expressive Bot Portrait */}
         <button
           onClick={handleBotClick}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          aria-label={isOpen ? "Cycle NX advice" : "Open NX Guide"}
-          className="relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none"
+          aria-label={isOpen ? "Close NX Guide" : "Open NX Copilot Guide"}
+          title={isOpen ? "Click to close" : "NX Copilot (click for advice)"}
+          className="relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -525,7 +498,7 @@ export function MascotNudge() {
             src={`/mascot/${activePose}.png`}
             alt={`NX Mascot - ${activePose}`}
             draggable={false}
-            className="h-full w-full object-contain drop-shadow-2xl transition-transform duration-150"
+            className="h-full w-full object-contain drop-shadow-2xl transition-transform duration-150 select-none"
           />
         </button>
       </div>

@@ -78,7 +78,7 @@ function WorkbenchContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 sm:p-10 space-y-12 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground p-6 sm:p-10 space-y-12 max-w-[1720px] mx-auto">
       {/* Header bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-6 gap-4">
         <div>

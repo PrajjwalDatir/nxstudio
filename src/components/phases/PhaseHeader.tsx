@@ -33,6 +33,7 @@ export function PhaseHeader({
   meta,
   finished,
   showTeam = false,
+  action,
 }: {
   title: string;
   status?: Status;
@@ -41,6 +42,7 @@ export function PhaseHeader({
   meta?: string;
   finished?: boolean;
   showTeam?: boolean;
+  action?: React.ReactNode;
 }) {
   const { result } = useSync();
   const { activeProject, setDueDate, resetPhase } = useWorkspace();
@@ -89,6 +91,7 @@ export function PhaseHeader({
         </div>
 
         <div className="flex items-center gap-3">
+          {action}
           {contributors.length > 0 && (
             <div className="flex -space-x-2">
               {contributors.slice(0, 4).map((c) =>

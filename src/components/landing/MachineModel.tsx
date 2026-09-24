@@ -484,9 +484,9 @@ function MouthDialogue({ line }: { line: string }) {
       zIndexRange={[100, 0]}
       style={{ pointerEvents: "none", userSelect: "none" }}
     >
-      <div className="flex w-max max-w-[280px] sm:max-w-[384px] justify-center">
+      <div className="flex w-max max-w-[220px] sm:max-w-[270px] justify-center">
         <MachineBubble tail="bottom">
-          <p className="text-sm font-medium text-popover-foreground whitespace-pre-line text-center">
+          <p className="text-xs font-medium text-foreground/90 whitespace-pre-line text-center leading-relaxed tracking-tight">
             <span ref={textRef}>{line}</span>
           </p>
         </MachineBubble>
