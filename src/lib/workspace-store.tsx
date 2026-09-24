@@ -69,6 +69,7 @@ interface WorkspaceContextType {
   activeProject: Project;
   activeId: string;
   createProject: (name: string) => string;
+  importProject: (name: string, dataPatch: Partial<WorkspaceData>, github?: { repo: string | null; branch?: string }) => string;
   switchProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
   deleteProject: (id: string) => void;
@@ -401,6 +402,27 @@ export function WorkspaceProvider({
     setStore((s) => ({ ...s, projects: [...s.projects, p], activeId: p.id }));
     return p.id;
   }, []);
+
+  const importProject = useCallback(
+    (name: string, dataPatch: Partial<WorkspaceData>, github?: { repo: string | null; branch?: string }) => {
+      const p = newProject(name || "Imported Product");
+      const imported: Project = {
+        ...p,
+        data: {
+          ...p.data,
+          ...dataPatch,
+          productName: dataPatch.productName || name || p.data.productName,
+        },
+        github: {
+          repo: github?.repo ?? null,
+          branch: github?.branch ?? "main",
+        },
+      };
+      setStore((s) => ({ ...s, projects: [...s.projects, imported], activeId: imported.id }));
+      return imported.id;
+    },
+    []
+  );
 
   const switchProject = useCallback((id: string) => {
     setStore((s) => (s.projects.some((p) => p.id === id) ? { ...s, activeId: id } : s));
@@ -773,6 +795,7 @@ export function WorkspaceProvider({
         activeProject,
         activeId: store.activeId,
         createProject,
+        importProject,
         switchProject,
         renameProject,
         deleteProject,
