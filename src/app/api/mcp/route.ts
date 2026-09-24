@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       start(controller) {
         controller.enqueue(
           encoder.encode(
-            `event: endpoint\ndata: ${JSON.stringify({ endpoint: "/api/mcp", server: "nxstudio-product-os", version: "1.0.0" })}\n\n`
+            `event: endpoint\ndata: /api/mcp\n\n`
           )
         );
       },
