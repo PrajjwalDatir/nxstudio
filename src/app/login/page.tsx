@@ -22,6 +22,9 @@ export const metadata: Metadata = pageMetadata({
 const ERROR_MESSAGES: Record<string, string> = {
   auth: "Sign-in failed. Please try again.",
   "auth-callback-failed": "We couldn't complete sign-in. Please try again.",
+  "in-app-browser": "In-app browsers (Instagram, Twitter, etc.) block OAuth cookies. Please open nxstudio in Safari or Chrome to sign in.",
+  "account-already-exists": "This GitHub account is already registered. Sign in below and your guest project will be combined into your account.",
+  "access-denied": "GitHub authorization was cancelled. Please try again.",
 };
 
 export default async function LoginPage({
