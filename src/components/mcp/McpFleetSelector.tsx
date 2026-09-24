@@ -101,14 +101,14 @@ const MCP_REGISTRY: McpServerDef[] = [
     icon: NxStudioMcpIcon,
     cursorConfig: () => ({
       command: "npx",
-      args: ["-y", "@nxstudio/mcp"],
+      args: ["-y", "mcp-remote", "https://nxstudio.dev/api/mcp"],
       env: {
         NX_API_KEY: "${NX_API_KEY}",
       },
     }),
     claudeConfig: () => ({
       command: "npx",
-      args: ["-y", "@nxstudio/mcp"],
+      args: ["-y", "mcp-remote", "https://nxstudio.dev/api/mcp"],
       env: {
         NX_API_KEY: "${NX_API_KEY}",
       },
