@@ -18,6 +18,8 @@ import {
   Collection,
   GitHubConnection,
   Project,
+  ProjectRow,
+  rowToProject,
   collectionToRow,
   hydrateData,
   newCollection,
@@ -266,6 +268,68 @@ export function WorkspaceProvider({
           dueDates: p.dueDates ?? {},
         }));
         setTimeout(() => setStore((s) => ({ ...s, projects: migrated, activeId: migrated[0].id })), 0);
+      }
+    }
+
+    // Combine projects created during an anonymous guest session after signing in with GitHub
+    if (typeof window !== "undefined") {
+      const pendingMerge = localStorage.getItem("nx_pending_merge_projects");
+      if (pendingMerge) {
+        try {
+          const parsed = JSON.parse(pendingMerge);
+          const rawList: unknown[] = Array.isArray(parsed)
+            ? parsed
+            : (parsed as { projects?: unknown[] })?.projects || [];
+          if (rawList.length > 0) {
+            setTimeout(() => {
+              setStore((prev) => {
+                const existingNames = new Set(
+                  prev.projects.map((p) => p.data.productName.trim().toLowerCase())
+                );
+                const toAdd: Project[] = [];
+
+                for (const raw of rawList) {
+                  const item = raw as Record<string, unknown>;
+                  let proj: Project;
+                  if ("github_repo" in item) {
+                    proj = rowToProject(item as unknown as ProjectRow);
+                  } else {
+                    const typed = item as unknown as Project;
+                    proj = {
+                      ...newProject(typed.data?.productName || "Product"),
+                      ...typed,
+                      data: hydrateData(typed.data, typed.data?.productName || "Product"),
+                      github: { repo: typed.github?.repo ?? null, branch: typed.github?.branch ?? "main" },
+                      dueDates: typed.dueDates ?? {},
+                    };
+                  }
+
+                  const nameKey = proj.data.productName.trim().toLowerCase();
+                  if (!existingNames.has(nameKey) || prev.projects.length === 0) {
+                    toAdd.push({
+                      ...proj,
+                      id: `p_${Math.random().toString(36).slice(2, 10)}`,
+                    });
+                  }
+                }
+
+                if (toAdd.length > 0) {
+                  const combined = [...prev.projects, ...toAdd];
+                  return {
+                    ...prev,
+                    projects: combined,
+                    activeId: toAdd[toAdd.length - 1].id,
+                  };
+                }
+                return prev;
+              });
+            }, 0);
+          }
+        } catch (e) {
+          console.error("Failed to merge anonymous projects:", e);
+        } finally {
+          localStorage.removeItem("nx_pending_merge_projects");
+        }
       }
     }
 
