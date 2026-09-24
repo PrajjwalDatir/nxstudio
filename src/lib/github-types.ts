@@ -54,3 +54,16 @@ export interface RepoSync {
 
 /** Client-facing alias for the same wire shape. */
 export type SyncResult = RepoSync;
+
+/** Context fetched from a GitHub repository for reverse-engineering and importing. */
+export interface RepoImportContext {
+  ok?: boolean;
+  repo: string;
+  branch: string;
+  defaultBranch?: string;
+  productName?: string;
+  description?: string;
+  files: { path: string; size: number }[];
+  fileTree: string[];
+  combinedContext: string;
+}

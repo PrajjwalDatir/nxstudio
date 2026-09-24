@@ -1,7 +1,19 @@
 // One contract for the sync boundary — declared in github-types, re-exported
 // here so existing importers of "@/lib/github" keep working.
-export type { GitHubStatus, SyncResult, GhUser } from "./github-types";
-import type { GitHubStatus, SyncResult, GhUser } from "./github-types";
+export type { GitHubStatus, SyncResult, GhUser, RepoImportContext } from "./github-types";
+import type { GitHubStatus, SyncResult, GhUser, RepoImportContext } from "./github-types";
+
+/**
+ * Normalizes input strings (URLs, SSH strings, slugs) into standard "owner/repo" format.
+ */
+export function normalizeGitHubRepo(input: string): string {
+  let cleaned = input.trim();
+  cleaned = cleaned.replace(/^git@github\.com:/, "");
+  cleaned = cleaned.replace(/^https?:\/\/(www\.)?github\.com\//, "");
+  cleaned = cleaned.replace(/\.git$/, "");
+  cleaned = cleaned.replace(/\/+$/, "");
+  return cleaned;
+}
 
 export async function connectGitHub(token: string): Promise<GitHubStatus> {
   const res = await fetch("/api/github/connect", {
@@ -58,4 +70,17 @@ export async function getGhUser(token: string): Promise<GhUser | null> {
   });
   if (!res.ok) return null;
   return (await res.json()) as GhUser;
+}
+
+export async function fetchGitHubRepoContext(repo: string, branch = "main"): Promise<RepoImportContext> {
+  const normalized = normalizeGitHubRepo(repo);
+  const res = await fetch(
+    `/api/github/repo-context?repo=${encodeURIComponent(normalized)}&branch=${encodeURIComponent(branch)}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    const { error } = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(error || "Failed to fetch repository context from GitHub.");
+  }
+  return (await res.json()) as RepoImportContext;
 }

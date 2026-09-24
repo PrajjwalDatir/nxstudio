@@ -6,27 +6,33 @@
 // Server-only module: imported exclusively by /api/github/* route handlers.
 import { NX_ROOT, NX_STANDARD_PATHS, parseNx } from "./nx-compiler";
 // Wire types live in one place (client-safe); the server just produces them.
-import type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync } from "./github-types";
+import type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync, RepoImportContext } from "./github-types";
+import { normalizeGitHubRepo } from "./github";
 
-export type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync };
+export type { GhUser, GhCommit, GhIssue, GhContributor, RepoSync, RepoImportContext };
 
 const API = "https://api.github.com";
 const REPO_REGEX = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
 
 function validateRepoAndBranch(repo: string, branch: string): { owner: string; name: string } | null {
-  if (!repo || !REPO_REGEX.test(repo)) return null;
+  const cleanRepo = normalizeGitHubRepo(repo);
+  if (!cleanRepo || !REPO_REGEX.test(cleanRepo)) return null;
   if (!branch || branch.includes("..") || branch.includes("\0")) return null;
-  const [owner, name] = repo.split("/");
+  const [owner, name] = cleanRepo.split("/");
   return { owner, name };
 }
 
-async function gh(token: string, path: string) {
+async function gh(token: string | undefined | null, path: string) {
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "nxstudio",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const res = await fetch(`${API}${path}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
+    headers,
     cache: "no-store",
   });
   return res;
@@ -38,7 +44,7 @@ export async function getUser(token: string): Promise<GhUser | null> {
   return (await res.json()) as GhUser;
 }
 
-async function fetchOne(token: string, encOwner: string, encName: string, encBranch: string, path: string): Promise<string | null> {
+async function fetchOne(token: string | undefined | null, encOwner: string, encName: string, encBranch: string, path: string): Promise<string | null> {
   // Reject directory traversal
   if (path.includes("..") || path.includes("\0")) return null;
   const encPath = path.split("/").map(encodeURIComponent).join("/");
@@ -206,5 +212,166 @@ export async function syncRepo(
     issues,
     contributors: [...contribMap.values()].sort((a, b) => b.commits - a.commits),
     syncedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Fetch key context files and tree structure from a GitHub repository to reverse-engineer
+ * the Product OS specification (idea, tech, brand, schema ERD).
+ */
+export async function fetchRepoContextForImport(
+  token: string | undefined | null,
+  rawRepo: string,
+  rawBranch?: string
+): Promise<RepoImportContext | { error: string; status: number }> {
+  const normalized = normalizeGitHubRepo(rawRepo);
+  const parsed = validateRepoAndBranch(normalized, rawBranch || "main");
+  if (!parsed) {
+    return { error: "Invalid repository format. Use owner/repo or full GitHub URL.", status: 400 };
+  }
+  const { owner, name } = parsed;
+  const encOwner = encodeURIComponent(owner);
+  const encName = encodeURIComponent(name);
+
+  // 1. Fetch repository metadata to check access and determine default branch
+  const repoRes = await gh(token, `/repos/${encOwner}/${encName}`);
+  if (repoRes.status === 404) {
+    return {
+      error: token
+        ? "Repository not found. Please verify the owner and repo name."
+        : "Repository not found or private. Connect your GitHub account in Settings to access private repos.",
+      status: 404,
+    };
+  }
+  if (repoRes.status === 401) {
+    return { error: "GitHub authorization failed. Please check your GitHub token in Settings.", status: 401 };
+  }
+  if (repoRes.status === 403 || repoRes.status === 429) {
+    return { error: "GitHub API rate limit reached. Please connect a GitHub token in Settings or try again later.", status: 429 };
+  }
+  if (!repoRes.ok) {
+    return { error: `GitHub API error (${repoRes.status}).`, status: repoRes.status };
+  }
+
+  const repoMeta = (await repoRes.json()) as {
+    name?: string;
+    description?: string;
+    default_branch?: string;
+  };
+
+  const branch = rawBranch?.trim() || repoMeta.default_branch || "main";
+  const encBranch = encodeURIComponent(branch);
+
+  // 2. Fetch git tree recursively to discover files
+  let allPaths: string[] = [];
+  const treeRes = await gh(token, `/repos/${encOwner}/${encName}/git/trees/${encBranch}?recursive=1`);
+  if (treeRes.ok) {
+    const treeData = (await treeRes.json()) as { tree?: { path: string; type: string }[] };
+    allPaths = (treeData.tree ?? []).filter((i) => i.type === "blob").map((i) => i.path);
+  }
+
+  // Fallback candidate files if recursive tree is truncated or unavailable
+  const fallbackCandidates = [
+    "package.json",
+    "README.md",
+    "prisma/schema.prisma",
+    "schema.sql",
+    "db/schema.ts",
+    "src/db/schema.ts",
+  ];
+
+  // 3. Score and prioritize context-rich files
+  const pathsToFetch: string[] = [];
+
+  if (allPaths.length > 0) {
+    const isManifest = (p: string) =>
+      /^(package\.json|pnpm-workspace\.yaml|Cargo\.toml|go\.mod|requirements\.txt|pyproject\.toml)$/i.test(p);
+    const isReadme = (p: string) => /^README(\.md|\.rst|\.txt)?$/i.test(p);
+    const isSchema = (p: string) =>
+      /(\.prisma$|schema\.sql$|database\.sql$|init\.sql$|schema\.ts$|models?\.py$|models?\.ts$)/i.test(p) ||
+      p.includes("supabase/migrations/") ||
+      p.includes("prisma/");
+    const isApiSpec = (p: string) => /(openapi|swagger)\.(json|yaml|yml)$/i.test(p);
+
+    allPaths.filter(isManifest).slice(0, 2).forEach((p) => pathsToFetch.push(p));
+    allPaths.filter(isReadme).slice(0, 1).forEach((p) => pathsToFetch.push(p));
+    allPaths.filter(isSchema).slice(0, 5).forEach((p) => pathsToFetch.push(p));
+    allPaths.filter(isApiSpec).slice(0, 1).forEach((p) => pathsToFetch.push(p));
+  } else {
+    pathsToFetch.push(...fallbackCandidates);
+  }
+
+  const uniquePaths = Array.from(new Set(pathsToFetch)).slice(0, 10);
+
+  // 4. Fetch content for prioritized files in parallel
+  const MAX_FILE_SIZE = 12000;
+  const fetchedFiles: { path: string; content: string }[] = [];
+
+  await Promise.all(
+    uniquePaths.map(async (p) => {
+      try {
+        const content = await fetchOne(token, encOwner, encName, encBranch, p);
+        if (content != null && content.trim().length > 0) {
+          const trimmed =
+            content.length > MAX_FILE_SIZE
+              ? content.slice(0, MAX_FILE_SIZE) + "\n... [content truncated for length]"
+              : content;
+          fetchedFiles.push({ path: p, content: trimmed });
+        }
+      } catch {
+        // ignore individual file fetch errors
+      }
+    })
+  );
+
+  // 5. Select compact top directory structure (first 60 paths)
+  const treeSummary = allPaths.slice(0, 60);
+
+  // 6. Inspect package.json if present to suggest productName
+  let detectedProductName = repoMeta.name || name;
+  const pkgFile = fetchedFiles.find((f) => f.path === "package.json");
+  if (pkgFile) {
+    try {
+      const parsedPkg = JSON.parse(pkgFile.content);
+      if (parsedPkg.name && typeof parsedPkg.name === "string") {
+        detectedProductName = parsedPkg.name.replace(/^@[^/]+\//, "");
+      }
+    } catch {
+      // ignore json parse error
+    }
+  }
+
+  // 7. Compose combinedContext string
+  const contextParts: string[] = [
+    `Repository: ${owner}/${name}`,
+    `Branch: ${branch}`,
+  ];
+  if (repoMeta.description) {
+    contextParts.push(`Description: ${repoMeta.description}`);
+  }
+  if (treeSummary.length > 0) {
+    contextParts.push(
+      `\n=== Repository File Tree (${allPaths.length} total files) ===\n` +
+      treeSummary.join("\n") +
+      (allPaths.length > 60 ? `\n... and ${allPaths.length - 60} more files` : "")
+    );
+  }
+
+  for (const f of fetchedFiles) {
+    contextParts.push(`\n=== File: ${f.path} ===\n${f.content}`);
+  }
+
+  const combinedContext = contextParts.join("\n\n");
+
+  return {
+    ok: true,
+    repo: `${owner}/${name}`,
+    branch,
+    defaultBranch: repoMeta.default_branch || "main",
+    productName: detectedProductName,
+    description: repoMeta.description,
+    files: fetchedFiles.map((f) => ({ path: f.path, size: f.content.length })),
+    fileTree: treeSummary,
+    combinedContext,
   };
 }
