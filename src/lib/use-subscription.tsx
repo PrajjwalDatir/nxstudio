@@ -113,16 +113,29 @@ export function SubscriptionProvider({
  */
 export function useSubscription() {
   const ctx = useContext(SubscriptionContext);
-  if (!ctx) throw new Error("useSubscription must be used within SubscriptionProvider");
-
-  const { subscription, setSubscription, email, setEmail, isAnonymous, setIsAnonymous } = ctx;
 
   const refresh = useCallback(async () => {
+    if (!ctx) return;
     const r = await loadSubscriptionClient();
-    setSubscription(r.subscription);
-    setEmail(r.email);
-    setIsAnonymous(r.isAnonymous);
-  }, [setSubscription, setEmail, setIsAnonymous]);
+    ctx.setSubscription(r.subscription);
+    ctx.setEmail(r.email);
+    ctx.setIsAnonymous(r.isAnonymous);
+  }, [ctx]);
+
+  if (!ctx) {
+    const tierInfo = getTierInfo("free");
+    return {
+      subscription: null,
+      email: "",
+      state: "none" as AccessState,
+      isActive: false,
+      ...tierInfo,
+      isAnonymous: false,
+      refresh,
+    };
+  }
+
+  const { subscription, email, isAnonymous } = ctx;
 
   const state: AccessState = deriveAccessState(subscription);
   const isActive = premiumOf(state);
