@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { withAuthApiHandler } from "@/lib/api-handler";
 import { generateStructured, DEFAULT_MODEL } from "@/lib/ai/gemini";
 import { consumeAiBudget } from "@/lib/ai/budget";
+import { fetchRepoContextForImport } from "@/lib/github-server";
+import { normalizeGitHubRepo } from "@/lib/github";
 import {
   WorkspaceData,
   ProductSchema,
@@ -15,8 +18,10 @@ import {
 export const runtime = "nodejs";
 
 interface ImportRepoRequest {
-  codebaseContext: string;
+  codebaseContext?: string;
   repoName?: string;
+  githubRepo?: string;
+  githubBranch?: string;
 }
 
 const IMPORT_SCHEMA = {
@@ -125,10 +130,33 @@ const IMPORT_SCHEMA = {
 };
 
 export const POST = withAuthApiHandler<ImportRepoRequest>(async (req, user, body) => {
-  const context = body.codebaseContext?.trim();
+  let context = body.codebaseContext?.trim() || "";
+  let detectedName: string | undefined = body.repoName?.trim();
+  let resolvedRepo: string | null = null;
+  let resolvedBranch = body.githubBranch?.trim() || "main";
+
+  if (body.githubRepo?.trim()) {
+    const rawRepo = body.githubRepo.trim();
+    resolvedRepo = normalizeGitHubRepo(rawRepo);
+
+    // If context is omitted or short, auto-fetch from GitHub directly
+    if (context.length < 20) {
+      const token = (await cookies()).get("gh_token")?.value;
+      const ghContext = await fetchRepoContextForImport(token, resolvedRepo, resolvedBranch);
+      if ("error" in ghContext) {
+        return NextResponse.json({ error: ghContext.error }, { status: ghContext.status });
+      }
+      context = ghContext.combinedContext;
+      resolvedBranch = ghContext.branch;
+      if (!detectedName && ghContext.productName) {
+        detectedName = ghContext.productName;
+      }
+    }
+  }
+
   if (!context || context.length < 20) {
     return NextResponse.json(
-      { error: "Please provide meaningful codebase context (e.g. file tree, package.json, schema, README)." },
+      { error: "Please provide a valid GitHub repository or paste codebase context (e.g. file tree, package.json, schema, README)." },
       { status: 400 }
     );
   }
@@ -289,7 +317,7 @@ Respond with strictly structured JSON conformant to the requested schema.`;
     };
 
     const patch: Partial<WorkspaceData> = {
-      productName: rawResult.productName || body.repoName || "Imported Product",
+      productName: rawResult.productName || detectedName || body.repoName || "Imported Product",
       idea: rawResult.idea,
       brand: {
         vibe: rawResult.brand.vibe || "Modern Industrial",
@@ -306,7 +334,11 @@ Respond with strictly structured JSON conformant to the requested schema.`;
       schema: structuredSchema,
     };
 
-    return NextResponse.json({ ok: true, patch });
+    return NextResponse.json({
+      ok: true,
+      patch,
+      github: resolvedRepo ? { repo: resolvedRepo, branch: resolvedBranch } : null,
+    });
   } catch (err) {
     console.error("Failed to import and analyze codebase context:", err);
     return NextResponse.json(
