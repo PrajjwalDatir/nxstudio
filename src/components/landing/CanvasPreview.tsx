@@ -573,36 +573,8 @@ function CanvasView() {
         }
       />
 
-      {/* ── Top Stepped Navigation Bar with Progress Bar ─────────────── */}
-      <div className="mt-4 space-y-2.5">
-        <div className="flex items-center justify-between text-[11px]">
-          <div className="flex items-center gap-2">
-            <span className="font-mono uppercase tracking-wider text-primary font-bold">
-              Brief · Step {currentStepConfig.stepNum} of 5
-            </span>
-            <span className="text-muted-foreground/50">/</span>
-            <span className="font-medium text-foreground">{currentStepConfig.category}</span>
-          </div>
-          <span className="font-mono text-muted-foreground text-[10px]">
-            {currentStepConfig.stepNum}/5 Complete ({currentStepConfig.stepNum * 20}%)
-          </span>
-        </div>
-
-        {/* Stepped progress bar track */}
-        <div className="grid grid-cols-5 gap-1">
-          {BRIEF_STEPS.map((s, idx) => (
-            <div
-              key={s.id}
-              className={cn(
-                "h-1 rounded-full transition-colors duration-300",
-                idx <= stepIndex ? "bg-primary" : "bg-secondary"
-              )}
-            />
-          ))}
-        </div>
-
-        {/* Navigation Step Pills (Clickable) */}
-        <div className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border/80 bg-background/50 p-1">
+      {/* ── Navigation Step Pills (Clickable) ─────────────── */}
+      <div className="mt-4 flex items-center gap-1 overflow-x-auto rounded-xl border border-border/80 bg-background/50 p-1">
           {BRIEF_STEPS.map((s, idx) => {
             const isActive = s.id === activeStep;
             const isDone = idx < stepIndex;
@@ -635,7 +607,6 @@ function CanvasView() {
             );
           })}
         </div>
-      </div>
 
       {/* Render selected step view */}
       {activeStep === "vision" && <StepVisionContent />}

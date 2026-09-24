@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export interface PhaseSectionItem {
@@ -27,69 +27,9 @@ export function PhaseSectionNav({
   onSelect,
   phaseLabel = "Phase",
 }: PhaseSectionNavProps) {
-  const currentIndex = sections.findIndex((s) => s.id === activeId);
-  const activeSection = sections[currentIndex] ?? sections[0];
-  const completedCount = sections.filter((s) => s.isDone).length;
-  const progressPercent = Math.round((completedCount / sections.length) * 100);
-
   return (
-    <div className="mb-8 space-y-4">
-      {/* ── Top Progress Status Bar ────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="font-mono text-xs font-semibold uppercase tracking-wider text-primary">
-            {phaseLabel} · Step {currentIndex + 1} of {sections.length}
-          </span>
-          <span className="text-muted-foreground/40">/</span>
-          <span className="text-xs font-medium text-foreground">
-            {activeSection?.label}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-medium text-muted-foreground">
-            {completedCount}/{sections.length} complete ({progressPercent}%)
-          </span>
-          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-secondary/80 border border-border/40">
-            <motion.div
-              className="h-full rounded-full bg-primary"
-              initial={false}
-              animate={{ width: `${progressPercent}%` }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Segmented Progress Bar (Track) ──────────────────────────────── */}
-      <div className="grid grid-cols-5 gap-1.5">
-        {sections.map((sec, idx) => {
-          const isCurrent = sec.id === activeId;
-          const isComplete = sec.isDone;
-
-          return (
-            <div
-              key={sec.id}
-              onClick={() => onSelect(sec.id)}
-              className="group cursor-pointer py-1"
-            >
-              <div
-                className={cn(
-                  "h-1.5 w-full rounded-full transition-all duration-200",
-                  isCurrent
-                    ? "bg-primary shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                    : isComplete
-                    ? "bg-primary/50 group-hover:bg-primary/70"
-                    : "bg-secondary group-hover:bg-secondary-foreground/20"
-                )}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Interactive Navigation Pills ─────────────────────────────────── */}
-      <div className="flex overflow-x-auto pb-1 scrollbar-none">
+    <div className="mb-6">
+      <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1 scrollbar-none">
         <nav
           aria-label={`${phaseLabel} section navigation`}
           className="inline-flex min-w-full sm:min-w-0 items-center gap-1 rounded-2xl border border-border/80 bg-card/60 p-1.5 shadow-sm backdrop-blur-sm"
@@ -149,50 +89,20 @@ export function PhaseSectionNav({
   );
 }
 
-interface PhaseSectionFooterProps {
+export interface PhaseSectionFooterProps {
   prev?: PhaseSectionItem | null;
   next?: PhaseSectionItem | null;
-  onNavigate: (id: string) => void;
+  onNavigate?: (id: string) => void;
   finalAction?: React.ReactNode;
 }
 
 export function PhaseSectionFooter({
-  prev,
-  next,
-  onNavigate,
   finalAction,
 }: PhaseSectionFooterProps) {
+  if (!finalAction) return null;
   return (
-    <div className="mt-12 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 border-t border-border pt-6">
-      <div>
-        {prev ? (
-          <button
-            type="button"
-            onClick={() => onNavigate(prev.id)}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground hover:bg-secondary/60 hover:border-primary/40 transition-all shadow-xs"
-          >
-            <ChevronLeftIcon className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Previous: <strong className="font-semibold">{prev.label}</strong></span>
-          </button>
-        ) : (
-          <span />
-        )}
-      </div>
-
-      <div className="flex items-center gap-3">
-        {next ? (
-          <button
-            type="button"
-            onClick={() => onNavigate(next.id)}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-transform hover:-translate-y-0.5"
-          >
-            <span>Next: <strong className="font-bold">{next.label}</strong></span>
-            <ChevronRightIcon className="h-3.5 w-3.5" />
-          </button>
-        ) : (
-          finalAction ?? null
-        )}
-      </div>
+    <div className="mt-8 flex justify-end">
+      {finalAction}
     </div>
   );
 }
