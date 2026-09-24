@@ -159,9 +159,10 @@ export const POST = withAuthApiHandler<{
       prompt: buildPrompt(body.idea, stack, body.tech.capabilities),
       schema: RESULT_SCHEMA,
     });
-  } catch (err) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "AI analysis failed, try again.";
     console.error("Gemini brief-analysis error:", err);
-    return NextResponse.json({ error: "AI analysis failed, try again." }, { status: 502 });
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 
   // Best-effort: the analysis still returns to the client even if the log write fails.
