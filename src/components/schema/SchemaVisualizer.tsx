@@ -11,12 +11,12 @@ import {
   WorkspaceData,
 } from "@/lib/types";
 import { compileSqlSchema, compilePrismaSchema } from "@/lib/nx-compiler";
+import { SqlSchemaEditor } from "./SqlSchemaEditor";
+import { PrismaSchemaEditor } from "./PrismaSchemaEditor";
 import {
   PlusIcon,
   XIcon,
-  CheckIcon,
-  CopyIcon,
-  LayersIcon,
+  DatabaseIcon,
   KeyRoundIcon,
   GitBranchIcon,
   FileTextIcon,
@@ -25,7 +25,8 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
   ExpandIcon,
-  MoveIcon,
+  ShrinkIcon,
+  ScanIcon,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -210,12 +211,23 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
   const [activeTab, setActiveTab] = useState<"erd" | "sql" | "prisma">("erd");
   const [newTableName, setNewTableName] = useState("");
   const [isAddingTable, setIsAddingTable] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Canvas Pan & Zoom State
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [isPanning, setIsPanning] = useState(false);
+
+  // Escape key to exit fullscreen workspace
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMaximized) {
+        setIsMaximized(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMaximized]);
   const panStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
 
   // Table Dragging State
@@ -727,130 +739,193 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
   const compiledSql = useMemo(() => compileSqlSchema(data), [data]);
   const compiledPrisma = useMemo(() => compilePrismaSchema(data), [data]);
 
-  const copyCode = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  };
+  const generateFreshSqlFromErd = useCallback(() => {
+    const pureData = {
+      ...data,
+      schema: {
+        tables: schema.tables,
+        relations: schema.relations,
+        customSql: undefined,
+      },
+    };
+    return compileSqlSchema(pureData);
+  }, [data, schema.tables, schema.relations]);
+
+  const generateFreshPrismaFromErd = useCallback(() => {
+    const pureData = {
+      ...data,
+      schema: {
+        tables: schema.tables,
+        relations: schema.relations,
+        customPrisma: undefined,
+      },
+    };
+    return compilePrismaSchema(pureData);
+  }, [data, schema.tables, schema.relations]);
 
   return (
-    <div className={cn("rounded-2xl border border-border/80 bg-card/40 p-5 sm:p-6 shadow-sm", className)}>
+    <div
+      className={cn(
+        isMaximized
+          ? "fixed inset-0 z-50 flex flex-col bg-background/98 p-4 sm:p-6 overflow-hidden backdrop-blur-xl animate-in fade-in duration-200"
+          : "relative rounded-2xl border border-border/80 bg-card/40 p-4 sm:p-6 shadow-sm transition-all",
+        className
+      )}
+    >
       {/* Header / Mode Switcher */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/80 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <LayersIcon className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-bold tracking-tight text-foreground">Data Architecture & Schema ERD</h3>
-            <span className="font-mono text-[11px] text-muted-foreground">
-              Stage 0: Foundation
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Design schema tables visually, reposition with drag-and-drop, and draw relationships directly between columns.
-          </p>
+      <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <div className="flex items-center gap-2">
+          <DatabaseIcon className="h-4 w-4 text-lilac shrink-0" />
+          <h3 className="text-sm font-semibold text-foreground">Data Schema</h3>
+          <span className="text-xs text-muted-foreground font-mono">
+            · {schema.tables.length} {schema.tables.length === 1 ? "table" : "tables"}
+            {schema.relations.length > 0 && ` · ${schema.relations.length} rel`}
+          </span>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs & Top Controls */}
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-border bg-secondary/40 p-0.5">
             <button
               onClick={() => setActiveTab("erd")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "erd" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                activeTab === "erd"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <GitBranchIcon className="h-3.5 w-3.5" />
-              Visual ERD
+              <GitBranchIcon className="h-3 w-3" />
+              Canvas
             </button>
             <button
               onClick={() => setActiveTab("sql")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "sql" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                activeTab === "sql"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <FileTextIcon className="h-3.5 w-3.5" />
-              SQL DDL
+              <FileTextIcon className="h-3 w-3" />
+              SQL
             </button>
             <button
               onClick={() => setActiveTab("prisma")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                activeTab === "prisma" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                activeTab === "prisma"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <FileTextIcon className="h-3.5 w-3.5" />
+              <FileTextIcon className="h-3 w-3" />
               Prisma
             </button>
           </div>
+
+          {activeTab === "erd" && schema.tables.length > 0 && (
+            <button
+              onClick={() => setIsAddingTable(true)}
+              className="flex items-center gap-1 rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shadow-2xs"
+              title="Add new schema table"
+            >
+              <PlusIcon className="h-3.5 w-3.5 text-lilac" />
+              <span className="hidden sm:inline">Add Table</span>
+            </button>
+          )}
+
+          {/* Full Space Toggle */}
+          <button
+            onClick={() => setIsMaximized((prev) => !prev)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all shadow-2xs",
+              isMaximized
+                ? "border-primary/50 bg-primary/15 text-primary"
+                : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground hover:bg-secondary"
+            )}
+            title={isMaximized ? "Exit Full Space (Esc)" : "Full Space"}
+          >
+            {isMaximized ? (
+              <ShrinkIcon className="h-3.5 w-3.5" />
+            ) : (
+              <ExpandIcon className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <span className="hidden sm:inline">
+              {isMaximized ? "Exit" : "Full Space"}
+            </span>
+          </button>
         </div>
       </div>
 
       {/* Template Quick Loader (when empty) */}
       {schema.tables.length === 0 && activeTab === "erd" && (
         <div className="my-8 rounded-xl border border-dashed border-border p-8 text-center bg-secondary/20">
-          <LayersIcon className="mx-auto h-8 w-8 text-muted-foreground/60" />
-          <h4 className="mt-3 text-sm font-semibold text-foreground">No schema tables defined yet</h4>
-          <p className="mt-1 text-xs text-muted-foreground max-w-md mx-auto">
-            Design database tables and relationships visually to establish a deterministic foundation contract for your AI coding agents.
+          <DatabaseIcon className="mx-auto h-7 w-7 text-muted-foreground/50" />
+          <h4 className="mt-2 text-sm font-medium text-foreground">
+            No tables defined yet
+          </h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Load a starter template or create a custom table.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
             {TEMPLATES.map((tmpl) => (
               <button
                 key={tmpl.name}
                 onClick={() => loadTemplate(tmpl.schema)}
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-medium text-foreground hover:border-primary/50 transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-lilac/50 transition-all shadow-xs"
               >
-                <SparklesIcon className="h-3.5 w-3.5 text-primary" />
-                Load {tmpl.name}
+                <SparklesIcon className="h-3 w-3 text-lilac" />
+                {tmpl.name}
               </button>
             ))}
             <button
               onClick={() => setIsAddingTable(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-medium text-accent-foreground hover:bg-primary/20 transition-all"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-lilac/40 bg-lilac/10 px-3 py-1.5 text-xs font-medium text-lilac hover:bg-lilac/20 transition-all"
             >
-              <PlusIcon className="h-3.5 w-3.5" />
-              Create Custom Table
+              <PlusIcon className="h-3 w-3" />
+              New Table
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Add Table Dialog Form */}
-      {isAddingTable && (
-        <div className="mt-4 rounded-xl border border-primary/40 bg-primary/5 p-4 flex flex-col sm:flex-row items-center gap-3 animate-in fade-in-50 duration-200">
-          <div className="flex-1 w-full">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              Table Name (e.g. users, products, subscriptions)
-            </label>
-            <input
-              type="text"
-              value={newTableName}
-              onChange={(e) => setNewTableName(e.target.value)}
-              placeholder="e.g. customers"
-              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-xs outline-none focus:border-primary font-mono"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && addTable()}
-            />
-          </div>
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            <button
-              onClick={addTable}
-              className="h-9 rounded-lg bg-primary px-4 text-xs font-medium text-primary-foreground hover:opacity-90 transition-all"
-            >
-              Create Table
-            </button>
-            <button
-              onClick={() => setIsAddingTable(false)}
-              className="h-9 rounded-lg border border-border bg-secondary/50 px-3 text-xs text-muted-foreground hover:text-foreground"
-            >
-              Cancel
-            </button>
-          </div>
+          {isAddingTable && (
+            <div className="mt-4 flex items-center justify-center gap-2 max-w-sm mx-auto animate-in fade-in-50 duration-150">
+              <input
+                type="text"
+                value={newTableName}
+                onChange={(e) => setNewTableName(e.target.value)}
+                placeholder="Table name (e.g. users)..."
+                className="h-8 flex-1 rounded-lg border border-lilac/60 bg-background px-3 text-xs outline-none focus:ring-1 focus:ring-lilac font-mono"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addTable();
+                  if (e.key === "Escape") {
+                    setIsAddingTable(false);
+                    setNewTableName("");
+                  }
+                }}
+              />
+              <button
+                onClick={addTable}
+                disabled={!newTableName.trim()}
+                className="h-8 rounded-lg bg-lilac px-3 text-xs font-semibold text-white hover:bg-lilac/90 transition-all disabled:opacity-40"
+              >
+                Create
+              </button>
+              <button
+                onClick={() => {
+                  setIsAddingTable(false);
+                  setNewTableName("");
+                }}
+                className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Main Tab 1: Visual Interactive ERD Canvas */}
       {activeTab === "erd" && schema.tables.length > 0 && (
-        <div className="relative mt-5">
+        <div className={cn("relative mt-5", isMaximized && "flex-1 flex flex-col min-h-0 mt-3")}>
           {/* Canvas Viewport */}
           <div
             ref={viewportRef}
@@ -863,7 +938,10 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
               backgroundPosition: `${pan.x}px ${pan.y}px`,
             }}
             className={cn(
-              "relative h-[650px] w-full rounded-2xl border border-border/80 bg-card/20 shadow-inner overflow-hidden select-none",
+              "relative w-full rounded-2xl border border-border/80 bg-card/20 shadow-inner overflow-hidden select-none transition-all",
+              isMaximized
+                ? "flex-1 h-full min-h-[450px]"
+                : "h-[740px] lg:h-[calc(100vh-270px)] min-h-[620px]",
               "bg-[radial-gradient(#94a3b8_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#3f3f46_1.3px,transparent_1.3px)]",
               isPanning ? "cursor-grabbing" : drawingArrow ? "cursor-crosshair" : "cursor-default"
             )}
@@ -1246,148 +1324,134 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                 })}
               </div>
             </div>
-          </div>
 
-          {/* Floating Canvas Controls (Excalidraw / DrawSQL inspired) */}
-          <div
-            data-canvas-control
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 rounded-full border border-border/80 bg-background/85 px-3 py-1.5 shadow-xl backdrop-blur-md"
-          >
-            {/* Zoom Controls */}
-            <button
-              onClick={() => handleZoom(-0.15)}
-              title="Zoom out"
-              className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            {/* Floating Canvas Dock (anchored strictly inside canvas viewport) */}
+            <div
+              data-canvas-control
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 rounded-full border border-border/80 bg-background/90 p-1 px-2 shadow-xl backdrop-blur-md transition-all select-none max-w-[calc(100%-24px)] pointer-events-auto"
             >
-              <ZoomOutIcon className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={resetView}
-              title="Reset zoom to 100%"
-              className="min-w-[44px] text-center font-mono text-[11px] font-medium text-foreground hover:text-primary transition-colors"
-            >
-              {Math.round(zoom * 100)}%
-            </button>
-            <button
-              onClick={() => handleZoom(0.15)}
-              title="Zoom in"
-              className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            >
-              <ZoomInIcon className="h-3.5 w-3.5" />
-            </button>
-
-            <div className="h-4 w-px bg-border/80 mx-1" />
-
-            <button
-              onClick={fitView}
-              title="Fit all tables to view"
-              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            >
-              <ExpandIcon className="h-3 w-3" />
-              <span className="text-[10px]">Fit</span>
-            </button>
-
-            <div className="h-4 w-px bg-border/80 mx-1" />
-
-            <button
-              onClick={() => setIsAddingTable(true)}
-              className="flex items-center gap-1 rounded-full bg-secondary hover:bg-secondary/80 border border-border px-2.5 py-0.5 text-xs font-medium text-foreground transition-all"
-            >
-              <PlusIcon className="h-3 w-3 text-lilac" />
-              <span className="text-[10px]">Add Table</span>
-            </button>
-          </div>
-
-          {/* Interactive User Guide Chip */}
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground font-mono px-1">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <MoveIcon className="h-3 w-3" /> Drag table header to move
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2 w-2 rounded-full border border-lilac" /> Drag socket ○ to connect
-              </span>
-              <span>•</span>
-              <span>Click relationship badge to change type</span>
-            </div>
-            <span>Wheel: Pan • Ctrl + Wheel: Zoom</span>
-          </div>
-
-          {/* Active Relationships Summary Bar */}
-          {schema.relations.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-border/80 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-mono text-muted-foreground">Relationships ({schema.relations.length}):</span>
-              {schema.relations.map((rel) => {
-                const sTable = schema.tables.find((t) => t.id === rel.sourceTableId);
-                const tTable = schema.tables.find((t) => t.id === rel.targetTableId);
-                const sField = sTable?.fields.find((f) => f.id === rel.sourceFieldId);
-                const tField = tTable?.fields.find((f) => f.id === rel.targetFieldId);
-                return (
-                  <span
-                    key={rel.id}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/30 px-2 py-0.5 font-mono text-[11px] text-muted-foreground"
+              {isAddingTable ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    addTable();
+                  }}
+                  className="flex items-center gap-1.5 px-1 py-0.5"
+                >
+                  <input
+                    type="text"
+                    value={newTableName}
+                    onChange={(e) => setNewTableName(e.target.value)}
+                    placeholder="Table name..."
+                    className="h-7 w-32 sm:w-44 rounded-full border border-lilac/60 bg-background px-3 text-xs font-mono outline-none focus:ring-1 focus:ring-lilac shadow-2xs"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        setIsAddingTable(false);
+                        setNewTableName("");
+                      }
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newTableName.trim()}
+                    className="h-7 rounded-full bg-lilac px-3 text-xs font-semibold text-white hover:bg-lilac/90 transition-all disabled:opacity-40"
                   >
-                    <span className="text-foreground">{sTable?.name ?? "?"}.{sField?.name ?? "?"}</span>
-                    <button
-                      onClick={() => cycleRelationType(rel.id)}
-                      title="Click to cycle relationship type"
-                      className="text-lilac font-medium hover:underline"
-                    >
-                      → {rel.type} →
-                    </button>
-                    <span className="text-foreground">{tTable?.name ?? "?"}.{tField?.name ?? "?"}</span>
-                    <button
-                      onClick={() => deleteRelation(rel.id)}
-                      title="Delete relationship"
-                      className="ml-1 text-muted-foreground hover:text-foreground"
-                    >
-                      <XIcon className="h-2.5 w-2.5" />
-                    </button>
-                  </span>
-                );
-              })}
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingTable(false);
+                      setNewTableName("");
+                    }}
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    title="Cancel (Esc)"
+                  >
+                    <XIcon className="h-3.5 w-3.5" />
+                  </button>
+                </form>
+              ) : (
+                <>
+                  {/* Zoom Controls */}
+                  <button
+                    type="button"
+                    onClick={() => handleZoom(-0.15)}
+                    title="Zoom out (-)"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <ZoomOutIcon className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetView}
+                    title="Reset zoom to 100%"
+                    className="px-1.5 text-center font-mono text-[11px] font-medium text-foreground hover:text-lilac transition-colors"
+                  >
+                    {Math.round(zoom * 100)}%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleZoom(0.15)}
+                    title="Zoom in (+)"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <ZoomInIcon className="h-3.5 w-3.5" />
+                  </button>
+
+                  <div className="h-3.5 w-px bg-border/80 mx-0.5" />
+
+                  {/* Fit View */}
+                  <button
+                    type="button"
+                    onClick={fitView}
+                    title="Fit all tables into view"
+                    className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <ScanIcon className="h-3 w-3 text-lilac" />
+                    <span className="text-[11px] font-medium">Fit</span>
+                  </button>
+
+                  <div className="h-3.5 w-px bg-border/80 mx-0.5" />
+
+                  {/* Add Table */}
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingTable(true)}
+                    className="flex items-center gap-1 rounded-full bg-secondary/80 hover:bg-secondary border border-border/80 px-2.5 py-1 text-xs font-medium text-foreground transition-all shadow-2xs hover:border-lilac/40"
+                    title="Add a new schema table"
+                  >
+                    <PlusIcon className="h-3 w-3 text-lilac" />
+                    <span className="text-[11px]">Table</span>
+                  </button>
+                </>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* Main Tab 2: SQL DDL Preview */}
+      {/* Main Tab 2: SQL DDL Editor */}
       {activeTab === "sql" && (
-        <div className="relative mt-4 rounded-xl border border-border bg-background/70 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-secondary/30">
-            <span className="font-mono text-xs text-muted-foreground">.nx/db/schema.sql</span>
-            <button
-              onClick={() => copyCode(compiledSql)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium hover:border-primary/40 transition-colors"
-            >
-              {copied ? <CheckIcon className="h-3 w-3 text-emerald-400" /> : <CopyIcon className="h-3 w-3" />}
-              {copied ? "Copied" : "Copy SQL"}
-            </button>
-          </div>
-          <pre className="p-4 font-mono text-xs text-foreground/90 overflow-x-auto leading-relaxed">
-            {compiledSql}
-          </pre>
-        </div>
+        <SqlSchemaEditor
+          initialSql={compiledSql}
+          tables={schema.tables}
+          relations={schema.relations}
+          onApplySchema={onUpdateSchema}
+          onResetFromErd={generateFreshSqlFromErd}
+          isMaximized={isMaximized}
+        />
       )}
 
-      {/* Main Tab 3: Prisma Schema Preview */}
+      {/* Main Tab 3: Prisma Schema Editor */}
       {activeTab === "prisma" && (
-        <div className="relative mt-4 rounded-xl border border-border bg-background/70 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-secondary/30">
-            <span className="font-mono text-xs text-muted-foreground">.nx/db/schema.prisma</span>
-            <button
-              onClick={() => copyCode(compiledPrisma)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium hover:border-primary/40 transition-colors"
-            >
-              {copied ? <CheckIcon className="h-3 w-3 text-emerald-400" /> : <CopyIcon className="h-3 w-3" />}
-              {copied ? "Copied" : "Copy Prisma"}
-            </button>
-          </div>
-          <pre className="p-4 font-mono text-xs text-foreground/90 overflow-x-auto leading-relaxed">
-            {compiledPrisma}
-          </pre>
-        </div>
+        <PrismaSchemaEditor
+          initialPrisma={compiledPrisma}
+          currentSchema={schema}
+          onApplyPrisma={onUpdateSchema}
+          onResetFromErd={generateFreshPrismaFromErd}
+          isMaximized={isMaximized}
+        />
       )}
     </div>
   );
