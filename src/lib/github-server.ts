@@ -15,6 +15,7 @@ const REPO_REGEX = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
 
 function validateRepoAndBranch(repo: string, branch: string): { owner: string; name: string } | null {
   if (!repo || !REPO_REGEX.test(repo)) return null;
+  if (repo.includes("..") || repo.split("/").some((part) => part === "." || part === "..")) return null;
   if (!branch || branch.includes("..") || branch.includes("\0")) return null;
   const [owner, name] = repo.split("/");
   return { owner, name };
