@@ -61,7 +61,7 @@ export function getTierInfo(tier: PlanTier) {
       return {
         tier: "free" as const,
         tierName: "Free",
-        projectLimit: 1,
+        projectLimit: 2,
         canUseCollections: false,
         canUsePromptGallery: false,
         canUseMachineWorkflows: true,

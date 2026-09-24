@@ -92,7 +92,7 @@ export function BillingSection() {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            You are currently on the <strong className="text-foreground">Free</strong> plan (1 project ALL ACCESS). Upgrade to Pro for unlimited workspaces and no gates.
+            You are currently on the <strong className="text-foreground">Free</strong> plan (2 projects ALL ACCESS). Upgrade to Pro for unlimited workspaces and no gates.
           </p>
         )}
 

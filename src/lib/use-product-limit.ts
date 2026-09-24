@@ -4,7 +4,7 @@ import { useProjects } from "@/lib/workspace-store";
 import { useSubscription } from "@/lib/use-subscription";
 
 /**
- * Free: 1 Active Project Workspace.
+ * Free: 2 Active Project Workspaces.
  * Pro (10 USDT): Unlimited.
  */
 export function useProductLimit() {
