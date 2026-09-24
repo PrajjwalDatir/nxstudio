@@ -10,6 +10,7 @@ import { WorkspaceData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PremiumDialog } from "@/components/billing/PremiumDialog";
+import { ImportProjectDialog } from "@/components/canvas/ImportProjectDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,7 @@ import {
   TrashIcon,
   CheckIcon,
   MoreIcon,
+  SparklesIcon,
 } from "@/components/icons";
 
 function overall(data: WorkspaceData): number {
@@ -67,15 +69,26 @@ export default function ProjectsPage() {
   const [collectionName, setCollectionName] = useState("");
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
 
   const startCreate = () => {
     if (atLimit) {
       setPayTitle("Workspace Limit Reached");
-      setPayDesc(`Free is capped at ${limit} active project workspace. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.`);
+      setPayDesc(`Free is capped at ${limit} active project workspaces. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.`);
       setPayOpen(true);
       return;
     }
     setCreating(true);
+  };
+
+  const startImport = () => {
+    if (atLimit) {
+      setPayTitle("Workspace Limit Reached");
+      setPayDesc(`Free is capped at ${limit} active project workspaces. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.`);
+      setPayOpen(true);
+      return;
+    }
+    setImportOpen(true);
   };
 
   const startCreateCollection = () => {
@@ -254,6 +267,10 @@ export default function ProjectsPage() {
             <FolderIcon className="h-4 w-4" />
             New Collection
           </Button>
+          <Button variant="outline" onClick={startImport} className="gap-2">
+            <SparklesIcon className="h-4 w-4 text-primary" />
+            Import Project
+          </Button>
           <Button onClick={startCreate} className="gap-2">
             <PlusIcon className="h-4 w-4" />
             New Project
@@ -265,18 +282,24 @@ export default function ProjectsPage() {
         <button
           onClick={() => {
             setPayTitle("Workspace Limit Reached");
-            setPayDesc("Free is limited to 1 active workspace. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.");
+            setPayDesc(`Free is limited to ${limit} active workspaces. Upgrade to Pro (10 USDT) for unlimited workspaces and no gates.`);
             setPayOpen(true);
           }}
           className="mt-4 flex w-full items-center justify-between rounded-xl border border-primary/30 bg-accent/20 px-4 py-3 text-left text-sm"
         >
           <span className="text-muted-foreground">
-            Free accounts are limited to {limit} product.{" "}
+            Free accounts are limited to {limit} {limit === 1 ? "product" : "products"}.{" "}
             <span className="font-medium text-foreground">Upgrade to build multi-product workspaces.</span>
           </span>
           <span className="shrink-0 font-semibold text-accent-foreground">Upgrade →</span>
         </button>
       )}
+
+      <ImportProjectDialog
+        isOpen={importOpen}
+        onOpenChange={setImportOpen}
+        mode="new"
+      />
 
       <PremiumDialog
         open={payOpen}
