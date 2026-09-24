@@ -14,3 +14,6 @@
 **Learning:** Using `.filter()` inside the callback of a `.map()` mapping over an array (e.g. `items.map(i => otherArray.filter(o => o.id === i.id))`) causes an O(N*M) runtime complexity. When performed inside a React `useMemo`, this can be a sneaky performance bottleneck blocking main thread renders as datasets grow.
 **Action:** Use a single O(N) pass to construct a `Map` that groups items by key (using `.push()` to an array for each key), then query the `Map` in O(1) time within the `.map()` loop.
 
+## 2026-08-07 - Preserving API signatures during O(N) optimizations
+**Learning:** When optimizing nested O(N*M) lookups inside React hooks by extracting inner searches (like `.findIndex`) into a pre-computed `Map`, modifying inner helper functions to require those Map lookups can break existing abstractions or call sites that still rely on the original behavior.
+**Action:** When optimizing an internal helper function (e.g., `getFieldSocketPos`), modify its signature to accept optional pre-computed indices (`providedTableIndex?: number`) instead of hardcoding Map lookups or magic numbers directly. This allows callers with a Map to bypass the O(N) search while preserving the original fallback behavior (`?? array.findIndex()`) for backward compatibility.

@@ -260,12 +260,12 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
 
   // Pure calculation of field socket world coordinates
   const getFieldSocketPos = useCallback(
-    (tableId: string, fieldId: string, side: "left" | "right"): { x: number; y: number } => {
-      const tableIndex = schema.tables.findIndex((t) => t.id === tableId);
+    (tableId: string, fieldId: string, side: "left" | "right", providedTableIndex?: number, providedFieldIndex?: number): { x: number; y: number } => {
+      const tableIndex = providedTableIndex ?? schema.tables.findIndex((t) => t.id === tableId);
       const table = schema.tables[tableIndex];
       if (!table) return { x: 0, y: 0 };
       const tPos = getTablePos(table, tableIndex);
-      const fieldIndex = table.fields.findIndex((f) => f.id === fieldId);
+      const fieldIndex = providedFieldIndex ?? table.fields.findIndex((f) => f.id === fieldId);
       const rowY = tPos.y + 44 + Math.max(fieldIndex, 0) * 37 + 18.5;
       const rowX = side === "right" ? tPos.x + TABLE_WIDTH : tPos.x;
       return { x: rowX, y: rowY };
@@ -275,10 +275,23 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
 
   // Calculate Bezier Arrow Paths between tables
   const calculatedArrows = useMemo(() => {
+    const tableIndexMap = new Map<string, number>();
+    const fieldIndexMap = new Map<string, number>();
+
+    schema.tables.forEach((t, tIndex) => {
+      tableIndexMap.set(t.id, tIndex);
+      t.fields.forEach((f, fIndex) => {
+        fieldIndexMap.set(`${t.id}:${f.id}`, fIndex);
+      });
+    });
+
     return schema.relations
       .map((rel) => {
-        const sourceTableIndex = schema.tables.findIndex((t) => t.id === rel.sourceTableId);
-        const targetTableIndex = schema.tables.findIndex((t) => t.id === rel.targetTableId);
+        const sourceTableIndex = tableIndexMap.get(rel.sourceTableId);
+        const targetTableIndex = tableIndexMap.get(rel.targetTableId);
+
+        if (sourceTableIndex === undefined || targetTableIndex === undefined) return null;
+
         const sourceTable = schema.tables[sourceTableIndex];
         const targetTable = schema.tables[targetTableIndex];
 
@@ -292,8 +305,11 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
         const sourceSide: "left" | "right" = isSourceLeft ? "right" : "left";
         const targetSide: "left" | "right" = isSourceLeft ? "left" : "right";
 
-        const start = getFieldSocketPos(rel.sourceTableId, rel.sourceFieldId, sourceSide);
-        const end = getFieldSocketPos(rel.targetTableId, rel.targetFieldId, targetSide);
+        const sourceFieldIndex = fieldIndexMap.get(`${rel.sourceTableId}:${rel.sourceFieldId}`);
+        const targetFieldIndex = fieldIndexMap.get(`${rel.targetTableId}:${rel.targetFieldId}`);
+
+        const start = getFieldSocketPos(rel.sourceTableId, rel.sourceFieldId, sourceSide, sourceTableIndex, sourceFieldIndex);
+        const end = getFieldSocketPos(rel.targetTableId, rel.targetFieldId, targetSide, targetTableIndex, targetFieldIndex);
 
         const dx = Math.max(Math.abs(end.x - start.x) * 0.45, 40);
         const cp1X = isSourceLeft ? start.x + dx : start.x - dx;
