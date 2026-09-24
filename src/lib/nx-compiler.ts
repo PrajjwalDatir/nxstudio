@@ -40,6 +40,10 @@ export interface NxFile {
  */
 export function compileDesignTokens(data: WorkspaceData): string {
   const primary = data.brand.primaryColor || "#8B5CF6";
+  const secondary = data.brand.secondaryColor || data.brand.palette?.[1] || "#EC4899";
+  const accent = data.brand.accentColor || data.brand.palette?.[2] || "#38BDF8";
+  const surface = data.brand.backgroundColor || data.brand.palette?.[3] || "#09090B";
+  const onSurface = data.brand.textColor || data.brand.palette?.[4] || "#FAFAFA";
   const radius = data.brand.radius || "10px";
   const font = data.brand.font || "Inter";
   const vibe = data.brand.vibe || "minimal";
@@ -50,6 +54,10 @@ export function compileDesignTokens(data: WorkspaceData): string {
       product: data.productName || "Product",
       vibe,
       generatedBy: "Nx Studio Compiler",
+      assets: {
+        logo: data.brand.logoName || (data.brand.logo ? "logo (embedded)" : null),
+        wordmark: data.brand.wordmarkName || (data.brand.wordmark ? "wordmark (embedded)" : null),
+      },
     },
     color: {
       primary: {
@@ -57,8 +65,18 @@ export function compileDesignTokens(data: WorkspaceData): string {
         $type: "color",
         $description: "Primary accent color for interactive elements and brand recognition",
       },
+      secondary: {
+        $value: secondary,
+        $type: "color",
+        $description: "Secondary brand color for auxiliary actions and components",
+      },
+      accent: {
+        $value: accent,
+        $type: "color",
+        $description: "Highlight accent color for badges, tags, and callouts",
+      },
       surface: {
-        $value: "#09090B",
+        $value: surface,
         $type: "color",
         $description: "Baseline canvas surface color",
       },
@@ -68,7 +86,7 @@ export function compileDesignTokens(data: WorkspaceData): string {
         $description: "Elevated containers, cards, and modal surfaces",
       },
       on_surface: {
-        $value: "#FAFAFA",
+        $value: onSurface,
         $type: "color",
         $description: "High-contrast text on base surfaces",
       },
@@ -82,6 +100,15 @@ export function compileDesignTokens(data: WorkspaceData): string {
         $type: "color",
         $description: "Structural boundary stroke",
       },
+      ...(data.brand.palette && data.brand.palette.length === 5
+        ? {
+            palette_slot_0: { $value: data.brand.palette[0], $type: "color", $description: "Primary slot" },
+            palette_slot_1: { $value: data.brand.palette[1], $type: "color", $description: "Secondary slot" },
+            palette_slot_2: { $value: data.brand.palette[2], $type: "color", $description: "Accent slot" },
+            palette_slot_3: { $value: data.brand.palette[3], $type: "color", $description: "Background slot" },
+            palette_slot_4: { $value: data.brand.palette[4], $type: "color", $description: "Text slot" },
+          }
+        : {}),
     },
     radius: {
       base: {
@@ -213,6 +240,10 @@ export function compileWireframeSvg(data: WorkspaceData): string {
  */
 export function compileSqlSchema(data: WorkspaceData): string {
   const schema = data.schema;
+  if (schema?.customSql !== undefined && schema.customSql.trim().length > 0) {
+    return schema.customSql;
+  }
+
   if (!schema || !schema.tables || schema.tables.length === 0) {
     return `-- .nx/db/schema.sql\n-- No visual schema tables defined yet.\n`;
   }
@@ -271,6 +302,10 @@ export function compileSqlSchema(data: WorkspaceData): string {
  */
 export function compilePrismaSchema(data: WorkspaceData): string {
   const schema = data.schema;
+  if (schema?.customPrisma !== undefined && schema.customPrisma.trim().length > 0) {
+    return schema.customPrisma;
+  }
+
   if (!schema || !schema.tables || schema.tables.length === 0) {
     return `// .nx/db/schema.prisma\n// No visual schema tables defined yet.\n`;
   }
@@ -480,6 +515,13 @@ export function compileNxFiles(data: WorkspaceData): NxFile[] {
     brand: {
       vibe: data.brand.vibe,
       primary_color: data.brand.primaryColor,
+      secondary_color: data.brand.secondaryColor || data.brand.palette?.[1] || null,
+      accent_color: data.brand.accentColor || data.brand.palette?.[2] || null,
+      background_color: data.brand.backgroundColor || data.brand.palette?.[3] || null,
+      text_color: data.brand.textColor || data.brand.palette?.[4] || null,
+      palette: data.brand.palette || null,
+      logo: data.brand.logoName || (data.brand.logo ? "embedded" : null),
+      wordmark: data.brand.wordmarkName || (data.brand.wordmark ? "embedded" : null),
       radius: data.brand.radius,
       font: data.brand.font,
       motion_preset: data.brand.motionPreset || "none",
@@ -537,9 +579,9 @@ For layout wireframe hierarchy, inspect \`.nx/ui/wireframe.svg\`.
 ## Brand DNA
 - **Vibe:** ${data.brand.vibe}
 - **Primary Color:** ${data.brand.primaryColor}
-- **Border Radius:** ${data.brand.radius}
+${data.brand.secondaryColor || data.brand.palette?.[1] ? `- **Secondary Color:** ${data.brand.secondaryColor || data.brand.palette?.[1]}\n` : ""}${data.brand.accentColor || data.brand.palette?.[2] ? `- **Accent Color:** ${data.brand.accentColor || data.brand.palette?.[2]}\n` : ""}${data.brand.backgroundColor || data.brand.palette?.[3] ? `- **Background Surface Color:** ${data.brand.backgroundColor || data.brand.palette?.[3]}\n` : ""}${data.brand.textColor || data.brand.palette?.[4] ? `- **Typography Text Color:** ${data.brand.textColor || data.brand.palette?.[4]}\n` : ""}${data.brand.palette?.length === 5 ? `- **5-Color Harmonic Palette:** ${data.brand.palette.join(", ")}\n` : ""}- **Border Radius:** ${data.brand.radius}
 - **Font:** ${data.brand.font}
-${data.brand.motionPreset ? `- **Motion Preset:** ${data.brand.motionPreset}\n` : ""}
+${data.brand.logoName ? `- **Brand Logo / Icon:** Uploaded (${data.brand.logoName})\n` : ""}${data.brand.wordmarkName ? `- **Brand Wordmark:** Uploaded (${data.brand.wordmarkName})\n` : ""}${data.brand.motionPreset ? `- **Motion Preset:** ${data.brand.motionPreset}\n` : ""}
 ${
   data.designNotes
     ? `## Studio Design Notes & Canvas Annotations\n${data.designNotes}\n`
@@ -1043,15 +1085,28 @@ function parseBrandGuideMd(content: string): Partial<BrandDNA> | null {
   };
   const vibe = field("Vibe");
   const primaryColor = field("Primary Color") || field("Primary");
+  const secondaryColor = field("Secondary Color") || field("Secondary");
+  const accentColor = field("Accent Color") || field("Accent");
+  const backgroundColor = field("Background Surface Color") || field("Background Color") || field("Background");
+  const textColor = field("Typography Text Color") || field("Text Color");
   const radius = field("Border Radius") || field("Radius");
   const font = field("Font") || field("Typography");
   const motionPreset = field("Motion Preset") || field("Motion");
   const motionSpeed = field("Motion Speed");
+  const paletteRaw = field("5-Color Harmonic Palette") || field("Palette");
 
-  if (!vibe && !primaryColor && !radius && !font && !motionPreset && !motionSpeed) return null;
+  if (!vibe && !primaryColor && !radius && !font && !motionPreset && !motionSpeed && !secondaryColor && !accentColor && !backgroundColor && !textColor && !paletteRaw) return null;
   const out: Partial<BrandDNA> = {};
   if (vibe) out.vibe = vibe;
   if (primaryColor) out.primaryColor = primaryColor;
+  if (secondaryColor) out.secondaryColor = secondaryColor;
+  if (accentColor) out.accentColor = accentColor;
+  if (backgroundColor) out.backgroundColor = backgroundColor;
+  if (textColor) out.textColor = textColor;
+  if (paletteRaw) {
+    const parts = paletteRaw.split(/[, ]+/).filter(Boolean);
+    if (parts.length === 5) out.palette = parts;
+  }
   if (radius) out.radius = radius;
   if (font) out.font = font;
   if (motionPreset) out.motionPreset = motionPreset;
@@ -1153,6 +1208,11 @@ export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Par
       const b: Partial<BrandDNA> = {};
       if (m.brand.vibe) b.vibe = m.brand.vibe;
       if (m.brand.primary_color) b.primaryColor = m.brand.primary_color;
+      if (m.brand.secondary_color) b.secondaryColor = m.brand.secondary_color;
+      if (m.brand.accent_color) b.accentColor = m.brand.accent_color;
+      if (m.brand.background_color) b.backgroundColor = m.brand.background_color;
+      if (m.brand.text_color) b.textColor = m.brand.text_color;
+      if (Array.isArray(m.brand.palette)) b.palette = m.brand.palette;
       if (m.brand.radius) b.radius = m.brand.radius;
       if (m.brand.font) b.font = m.brand.font;
       if (m.brand.motion_preset) b.motionPreset = m.brand.motion_preset;
@@ -1185,6 +1245,10 @@ export function mergeNxIntoWorkspace(parsed: ParsedNx, data: WorkspaceData): Par
         const tokens = JSON.parse(doc);
         const b: Partial<BrandDNA> = {};
         if (tokens.color?.primary?.$value) b.primaryColor = tokens.color.primary.$value;
+        if (tokens.color?.secondary?.$value) b.secondaryColor = tokens.color.secondary.$value;
+        if (tokens.color?.accent?.$value) b.accentColor = tokens.color.accent.$value;
+        if (tokens.color?.surface?.$value) b.backgroundColor = tokens.color.surface.$value;
+        if (tokens.color?.on_surface?.$value) b.textColor = tokens.color.on_surface.$value;
         if (tokens.radius?.base?.$value) b.radius = tokens.radius.base.$value;
         if (tokens.typography?.font_family?.$value) b.font = tokens.typography.font_family.$value;
         if (tokens.meta?.vibe) b.vibe = tokens.meta.vibe;

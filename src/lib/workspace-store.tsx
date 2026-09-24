@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import { getStoredValue, setStoredValue } from "./storage";
 import { createClient } from "@/lib/supabase/client";
-import { CustomStage, IdeaData, IterationEntry, ProductSchema, TechStackInput, WorkspaceData } from "./types";
+import { CustomStage, IdeaData, IterationEntry, ProductSchema, TechStackInput, WorkspaceData, BrandDNA } from "./types";
 import { mergeNxIntoWorkspace } from "./nx-compiler";
 import { isBriefInsightsStale } from "./staleness";
 import {
@@ -83,7 +83,7 @@ interface WorkspaceContextType {
   data: WorkspaceData;
   setProductName: (name: string) => void;
   updateIdea: <K extends keyof IdeaData>(field: K, value: IdeaData[K]) => void;
-  updateBrand: (field: keyof WorkspaceData["brand"], value: string) => void;
+  updateBrand: (fieldOrPatch: keyof BrandDNA | Partial<BrandDNA>, value?: any) => void;
   updateDesignNotes: (text: string) => void;
   updateSchemaDraft: (draft: WorkspaceData["schemaDraft"]) => void;
   updateBriefInsights: (insights: WorkspaceData["briefInsights"]) => void;
@@ -410,8 +410,13 @@ export function WorkspaceProvider({
   );
 
   const updateBrand = useCallback(
-    (field: keyof WorkspaceData["brand"], value: string) =>
-      patchData((d) => ({ ...d, brand: { ...d.brand, [field]: value } })),
+    (fieldOrPatch: keyof BrandDNA | Partial<BrandDNA>, value?: any) => {
+      if (typeof fieldOrPatch === "object" && fieldOrPatch !== null) {
+        patchData((d) => ({ ...d, brand: { ...d.brand, ...fieldOrPatch } }));
+      } else {
+        patchData((d) => ({ ...d, brand: { ...d.brand, [fieldOrPatch]: value } }));
+      }
+    },
     [patchData]
   );
 

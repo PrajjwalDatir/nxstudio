@@ -26,6 +26,15 @@ export interface BrandDNA {
   font: string;
   motionPreset?: string;
   motionSpeed?: string;
+  textColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  palette?: string[];
+  logo?: string;
+  logoName?: string;
+  wordmark?: string;
+  wordmarkName?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -213,6 +222,8 @@ export interface SchemaTable {
 export interface ProductSchema {
   tables: SchemaTable[];
   relations: SchemaRelation[];
+  customSql?: string;
+  customPrisma?: string;
 }
 
 /* ------------------------------------------------------------------ */

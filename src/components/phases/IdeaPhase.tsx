@@ -12,7 +12,9 @@ import { PhaseHeader } from "./PhaseHeader";
 import { CopyButton } from "./CopyButton";
 import { TechStackPhase } from "./TechStackPhase";
 import { SchemaVisualizer } from "@/components/schema/SchemaVisualizer";
-import { PhaseSectionNav, PhaseSectionFooter, type PhaseSectionItem } from "./PhaseSectionNav";
+import { PhaseSectionNav, type PhaseSectionItem } from "./PhaseSectionNav";
+import { BrandAssetUploader } from "@/components/brand/BrandAssetUploader";
+import { PaletteGenerator } from "@/components/brand/PaletteGenerator";
 import Link from "next/link";
 import {
   PaperclipIcon,
@@ -406,7 +408,6 @@ function BriefAnalysisPanel({
 }
 
 export function IdeaPhase() {
-  const primaryColorId = useId();
   const typographyId = useId();
   const radiusId = useId();
 
@@ -486,15 +487,11 @@ export function IdeaPhase() {
     },
   ];
 
-  const currentIdx = SECTIONS.findIndex((s) => s.id === activeSection);
-  const prevSection = currentIdx > 0 ? SECTIONS[currentIdx - 1] : null;
-  const nextSection = currentIdx < SECTIONS.length - 1 ? SECTIONS[currentIdx + 1] : null;
-
   const continueButton = stack && answered === QUESTIONS.length ? (
     <Link
       href="/canvas/build"
       onClick={confirmStack}
-      className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:opacity-95"
+      className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:opacity-95"
     >
       Continue to Build
       <ChevronRightIcon className="h-4 w-4" />
@@ -508,9 +505,9 @@ export function IdeaPhase() {
 
   return (
     <>
-      <PhaseHeader title="Brief" status="in-progress" phaseId="idea" showTeam />
+      <PhaseHeader title="Brief" status="in-progress" phaseId="idea" showTeam action={continueButton} />
 
-      {/* Top Section Navigation with Progress Bar */}
+      {/* Top Section Navigation */}
       <PhaseSectionNav
         sections={SECTIONS}
         activeId={activeSection}
@@ -577,44 +574,85 @@ export function IdeaPhase() {
             </div>
             <CopyButton value={prompts?.idea.prompt ?? ""} label="Copy" variant="solid" />
           </div>
-
-          <PhaseSectionFooter next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
       {/* ── SECTION 2: BRAND DNA ─────────────────────────────────────── */}
       {activeSection === "brand" && (
         <div className="space-y-6">
+          {/* Brand Identity & Vector Assets */}
           <div className="rounded-xl glass p-6">
-            <h3 className="font-semibold text-lg">Brand DNA & Tokens</h3>
+            <div className="mb-4">
+              <h3 className="font-semibold text-lg">Brand Identity & Assets</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Upload your brand icon mark and horizontal wordmark. These are embedded directly into design specifications and generated view layouts.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <BrandAssetUploader
+                label="Brand Mark / Logo"
+                description="Square app icon, favicon mark, or avatar"
+                assetUrl={data.brand.logo}
+                assetName={data.brand.logoName}
+                aspectHint="Square (1:1)"
+                recommendedSize="SVG, PNG, or WebP up to 5MB"
+                onUpload={(dataUrl, fileName) => {
+                  updateBrand({ logo: dataUrl, logoName: fileName });
+                }}
+                onRemove={() => {
+                  updateBrand({ logo: undefined, logoName: undefined });
+                }}
+              />
+              <BrandAssetUploader
+                label="Wordmark / Logotype"
+                description="Horizontal typographic logo for navbars and splash screens"
+                assetUrl={data.brand.wordmark}
+                assetName={data.brand.wordmarkName}
+                aspectHint="Horizontal (3:1 or 4:1)"
+                recommendedSize="Transparent SVG, PNG, or WebP up to 5MB"
+                onUpload={(dataUrl, fileName) => {
+                  updateBrand({ wordmark: dataUrl, wordmarkName: fileName });
+                }}
+                onRemove={() => {
+                  updateBrand({ wordmark: undefined, wordmarkName: undefined });
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Coolors.co-Style 5-Color Complete Palette Generator */}
+          <PaletteGenerator
+            palette={
+              data.brand.palette && data.brand.palette.length === 5
+                ? data.brand.palette
+                : [
+                    data.brand.primaryColor || "#8B5CF6",
+                    data.brand.secondaryColor || "#EC4899",
+                    data.brand.accentColor || "#38BDF8",
+                    data.brand.backgroundColor || "#09090B",
+                    data.brand.textColor || "#F8FAFC",
+                  ]
+            }
+            onChangePalette={(newPalette) => {
+              updateBrand({
+                palette: newPalette,
+                primaryColor: newPalette[0],
+                secondaryColor: newPalette[1],
+                accentColor: newPalette[2],
+                backgroundColor: newPalette[3],
+                textColor: newPalette[4],
+              });
+            }}
+          />
+
+          {/* Typography & Aesthetic System */}
+          <div className="rounded-xl glass p-6">
+            <h3 className="font-semibold text-lg">Typography & Aesthetics</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               Locked into the build prompt and compiled into W3C DTCG tokens (`.nx/ui/design-tokens.json`) so generated code stays visually consistent.
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {/* Primary color — swatch picker + hex/name field */}
-              <div>
-                <label htmlFor={primaryColorId} className="text-xs font-medium text-muted-foreground block">
-                  Primary accent color
-                </label>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <input
-                    type="color"
-                    aria-label="Pick primary color"
-                    value={HEX6.test(data.brand.primaryColor) ? data.brand.primaryColor : "#6366f1"}
-                    onChange={(e) => updateBrand("primaryColor", e.target.value)}
-                    className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-1"
-                  />
-                  <input
-                    id={primaryColorId}
-                    value={data.brand.primaryColor}
-                    onChange={(e) => updateBrand("primaryColor", e.target.value)}
-                    placeholder="#6366F1 or indigo"
-                    className="w-full rounded-lg border border-border bg-secondary/30 p-2.5 font-mono text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
-                  />
-                </div>
-              </div>
-
               {/* Typography */}
               <div>
                 <label htmlFor={typographyId} className="text-xs font-medium text-muted-foreground block">
@@ -622,41 +660,16 @@ export function IdeaPhase() {
                 </label>
                 <select
                   id={typographyId}
-                  value={FONTS.includes(data.brand.font as (typeof FONTS)[number]) ? data.brand.font : ""}
+                  value={data.brand.font || "Inter"}
                   onChange={(e) => updateBrand("font", e.target.value)}
                   className="mt-1.5 w-full rounded-lg border border-border bg-secondary/30 p-2.5 text-sm outline-none focus:border-ring font-mono"
                 >
-                  <option value="" disabled>
-                    Choose a font…
-                  </option>
-                  {FONTS.map((f) => (
+                  {Array.from(new Set([data.brand.font || "Inter", ...FONTS])).filter(Boolean).map((f) => (
                     <option key={f} value={f}>
                       {f}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Vibe — segmented */}
-              <div>
-                <span className="text-xs font-medium text-muted-foreground block">Vibe & Aesthetic</span>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {VIBES.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => updateBrand("vibe", v)}
-                      className={cn(
-                        "rounded-lg border px-3 py-1.5 text-xs capitalize transition-colors",
-                        data.brand.vibe === v
-                          ? "border-primary bg-primary/15 text-accent-foreground font-semibold"
-                          : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Corner radius — slider */}
@@ -678,45 +691,190 @@ export function IdeaPhase() {
                   className="mt-2.5 w-full accent-primary cursor-pointer"
                 />
               </div>
+
+              {/* Vibe — segmented */}
+              <div className="sm:col-span-2">
+                <span className="text-xs font-medium text-muted-foreground block">Vibe & Aesthetic</span>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {VIBES.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => updateBrand("vibe", v)}
+                      className={cn(
+                        "rounded-lg border px-3 py-1.5 text-xs capitalize transition-colors",
+                        data.brand.vibe === v
+                          ? "border-primary bg-primary/15 text-accent-foreground font-semibold"
+                          : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Interactive Token Live Preview Card */}
-          <div className="rounded-xl border border-border/80 bg-card/60 p-5 shadow-xs">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground block mb-3 font-semibold">
-              Live Token Sandbox
-            </span>
-            <div className="flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                style={{
-                  backgroundColor: data.brand.primaryColor || "#8B5CF6",
-                  borderRadius: data.brand.radius || "10px",
-                  fontFamily: data.brand.font || "inherit",
-                }}
-                className="px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105"
-              >
-                Primary Button
-              </button>
+          <div
+            style={{
+              backgroundColor: data.brand.backgroundColor || "#09090B",
+              borderColor: (data.brand.secondaryColor || "#27272A") + "40",
+              color: data.brand.textColor || "#F8FAFC",
+            }}
+            className="rounded-2xl border p-6 shadow-sm transition-colors overflow-hidden"
+          >
+            <div
+              className="flex items-center justify-between border-b pb-4 mb-5"
+              style={{ borderColor: (data.brand.textColor || "#F8FAFC") + "15" }}
+            >
+              <div className="flex items-center gap-3">
+                {data.brand.logo ? (
+                  <img
+                    src={data.brand.logo}
+                    alt="Logo preview"
+                    className="h-8 w-8 rounded-lg object-contain"
+                  />
+                ) : (
+                  <div
+                    style={{
+                      backgroundColor: data.brand.primaryColor || "#8B5CF6",
+                      borderRadius: data.brand.radius || "8px",
+                    }}
+                    className="flex h-8 w-8 items-center justify-center font-bold text-white text-xs shadow-xs"
+                  >
+                    Nx
+                  </div>
+                )}
+                {data.brand.wordmark ? (
+                  <img
+                    src={data.brand.wordmark}
+                    alt="Wordmark preview"
+                    className="h-7 max-w-[140px] object-contain"
+                  />
+                ) : (
+                  <span
+                    style={{ fontFamily: data.brand.font || "inherit" }}
+                    className="font-bold text-sm tracking-tight"
+                  >
+                    {data.productName || "Product Studio"}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  style={{
+                    backgroundColor: (data.brand.accentColor || "#38BDF8") + "20",
+                    color: data.brand.accentColor || "#38BDF8",
+                    borderColor: (data.brand.accentColor || "#38BDF8") + "40",
+                    borderRadius: data.brand.radius || "6px",
+                  }}
+                  className="rounded-md border px-2 py-0.5 text-[11px] font-mono font-semibold"
+                >
+                  {data.brand.vibe || "v1.0"}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div
                 style={{
                   borderRadius: data.brand.radius || "10px",
-                  borderColor: data.brand.primaryColor || "#8B5CF6",
+                  borderColor: (data.brand.secondaryColor || "#27272A") + "50",
+                  backgroundColor: "rgba(255,255,255,0.03)",
                 }}
-                className="border px-4 py-2 text-xs font-mono bg-card"
+                className="border p-4 flex flex-col justify-between"
               >
-                Border Radius: {data.brand.radius || "10px"}
+                <div>
+                  <h4 style={{ fontFamily: data.brand.font || "inherit" }} className="text-xs font-semibold mb-1">
+                    Primary CTA Action
+                  </h4>
+                  <p className="text-[11px] opacity-70 mb-4">
+                    Derived using primary token {data.brand.primaryColor || "#8B5CF6"}.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    backgroundColor: data.brand.primaryColor || "#8B5CF6",
+                    borderRadius: data.brand.radius || "8px",
+                    fontFamily: data.brand.font || "inherit",
+                    color: "#FFFFFF",
+                  }}
+                  className="w-full py-2 text-xs font-semibold shadow-xs hover:opacity-95 transition-opacity"
+                >
+                  Get Started Now
+                </button>
               </div>
-              <span
-                style={{ fontFamily: data.brand.font || "inherit" }}
-                className="text-sm font-medium text-foreground"
+
+              <div
+                style={{
+                  borderRadius: data.brand.radius || "10px",
+                  borderColor: (data.brand.secondaryColor || "#27272A") + "50",
+                  backgroundColor: "rgba(255,255,255,0.03)",
+                }}
+                className="border p-4 flex flex-col justify-between"
               >
-                Typography: {data.brand.font || "Default"}
-              </span>
+                <div>
+                  <h4 style={{ fontFamily: data.brand.font || "inherit" }} className="text-xs font-semibold mb-1">
+                    Secondary Surface
+                  </h4>
+                  <p className="text-[11px] opacity-70 mb-4">
+                    Derived using secondary token {data.brand.secondaryColor || "#EC4899"}.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    borderColor: data.brand.secondaryColor || "#EC4899",
+                    color: data.brand.secondaryColor || "#EC4899",
+                    borderRadius: data.brand.radius || "8px",
+                    fontFamily: data.brand.font || "inherit",
+                  }}
+                  className="w-full border py-2 text-xs font-semibold hover:bg-white/5 transition-colors"
+                >
+                  Learn More
+                </button>
+              </div>
+
+              <div
+                style={{
+                  borderRadius: data.brand.radius || "10px",
+                  borderColor: (data.brand.secondaryColor || "#27272A") + "50",
+                  backgroundColor: "rgba(255,255,255,0.03)",
+                }}
+                className="border p-4 flex flex-col justify-between"
+              >
+                <div>
+                  <h4 style={{ fontFamily: data.brand.font || "inherit" }} className="text-xs font-semibold mb-1">
+                    Design System Specs
+                  </h4>
+                  <p className="text-[11px] opacity-70 mb-3 font-mono">
+                    Font: {data.brand.font || "Inter"}<br />
+                    Radius: {data.brand.radius || "8px"}<br />
+                    Contrast: WCAG AA
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {(data.brand.palette || [
+                    data.brand.primaryColor || "#8B5CF6",
+                    data.brand.secondaryColor || "#EC4899",
+                    data.brand.accentColor || "#38BDF8",
+                    data.brand.backgroundColor || "#09090B",
+                    data.brand.textColor || "#F8FAFC",
+                  ]).map((col, i) => (
+                    <div
+                      key={i}
+                      style={{ backgroundColor: col }}
+                      className="h-5 flex-1 rounded-sm border border-white/10"
+                      title={col}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-
-          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -724,7 +882,6 @@ export function IdeaPhase() {
       {activeSection === "stack" && (
         <div className="space-y-6">
           <TechStackPhase />
-          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -732,7 +889,6 @@ export function IdeaPhase() {
       {activeSection === "schema" && (
         <div className="space-y-6">
           <SchemaVisualizer data={data} onUpdateSchema={updateSchema} className="mt-0" />
-          <PhaseSectionFooter prev={prevSection} next={nextSection} onNavigate={setActiveSection} />
         </div>
       )}
 
@@ -788,11 +944,11 @@ export function IdeaPhase() {
             </div>
           )}
 
-          <PhaseSectionFooter
-            prev={prevSection}
-            onNavigate={setActiveSection}
-            finalAction={continueButton}
-          />
+          {continueButton && (
+            <div className="flex justify-end pt-4">
+              {continueButton}
+            </div>
+          )}
         </div>
       )}
     </>

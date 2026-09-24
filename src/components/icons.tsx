@@ -23,6 +23,10 @@ export {
   User as UserIcon,
   Settings as SettingsIcon,
   Lock as LockIcon,
+  Unlock as UnlockIcon,
+  Upload as UploadIcon,
+  Image as ImageIcon,
+  Shuffle as ShuffleIcon,
   
   // Content & Files
   Folder as FolderIcon,
@@ -108,6 +112,8 @@ export {
   FileType as FileDocIcon,
   BadgeCheck as BadgeCheckIcon,
   Maximize2 as ExpandIcon,
+  Minimize2 as ShrinkIcon,
+  Scan as ScanIcon,
   Wand2 as WandIcon,
   Pencil as PencilIcon,
   Wrench as WrenchIcon,
@@ -115,6 +121,7 @@ export {
   Database as DatabaseIcon,
   CreditCard as CreditCardIcon,
   AlertTriangle as AlertTriangleIcon,
+  AlertCircle as AlertCircleIcon,
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
   Minus as MinusIcon,
