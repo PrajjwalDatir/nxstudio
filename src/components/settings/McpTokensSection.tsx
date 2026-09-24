@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/lib/use-subscription";
 import {
   KeyRoundIcon,
   PlusIcon,
@@ -10,7 +12,8 @@ import {
   TrashIcon,
   TerminalIcon,
   ShieldCheckIcon,
-  AlertTriangleIcon,
+  LockIcon,
+  XIcon,
 } from "@/components/icons";
 
 export interface PatToken {
@@ -46,28 +49,19 @@ function generatePatTokenString(): { fullToken: string; prefix: string; id: stri
   return { fullToken, prefix, id };
 }
 
-export function McpTokensSection() {
-  const [tokens, setTokens] = useState<PatToken[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [tokenName, setTokenName] = useState("");
-  const [expiresIn, setExpiresIn] = useState("90 days");
-  const [activeTab, setActiveTab] = useState<"cursor" | "claude" | "windsurf">("cursor");
-  const [copiedSnippet, setCopiedSnippet] = useState(false);
-  const [newlyCreatedToken, setNewlyCreatedToken] = useState<string | null>(null);
-  const [copiedNewToken, setCopiedNewToken] = useState(false);
+export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous?: boolean } = {}) {
+  const sub = useSubscription();
+  const isAnonymous = propIsAnonymous !== undefined ? propIsAnonymous : sub.isAnonymous;
+  const [showSignInDialog, setShowSignInDialog] = useState(false);
 
-  // Hydrate tokens from localStorage on mount
-  useEffect(() => {
+  const [tokens, setTokens] = useState<PatToken[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as PatToken[];
-        if (Array.isArray(parsed)) {
-          setTokens(parsed);
-          return;
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
-      // Default demo token if none exists
       const demoToken: PatToken = {
         id: "tok_demo_primary",
         name: "Cursor IDE Agent",
@@ -76,12 +70,19 @@ export function McpTokensSection() {
         expiresIn: "Never",
         lastUsedAt: "Just now",
       };
-      setTokens([demoToken]);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([demoToken]));
+      return [demoToken];
     } catch {
-      // Fallback in case of storage restriction
+      return [];
     }
-  }, []);
+  });
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [tokenName, setTokenName] = useState("");
+  const [expiresIn, setExpiresIn] = useState("90 days");
+  const [activeTab, setActiveTab] = useState<"cursor" | "claude" | "windsurf">("cursor");
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
+  const [newlyCreatedToken, setNewlyCreatedToken] = useState<string | null>(null);
+  const [copiedNewToken, setCopiedNewToken] = useState(false);
 
   const saveTokens = (updated: PatToken[]) => {
     setTokens(updated);
@@ -94,6 +95,10 @@ export function McpTokensSection() {
 
   const handleCreateToken = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAnonymous) {
+      setShowSignInDialog(true);
+      return;
+    }
     const name = tokenName.trim() || "Agent Client";
     const { fullToken, prefix, id } = generatePatTokenString();
 
@@ -113,11 +118,13 @@ export function McpTokensSection() {
   };
 
   const handleRevokeToken = (id: string) => {
+    if (isAnonymous) {
+      setShowSignInDialog(true);
+      return;
+    }
     const updated = tokens.filter((t) => t.id !== id);
     saveTokens(updated);
   };
-
-  const activeTokenSample = newlyCreatedToken || (tokens[0] ? `${tokens[0].tokenPrefix}` : "nx_pat_YOUR_TOKEN");
 
   const getIdeSnippet = () => {
     const host = typeof window !== "undefined" ? window.location.origin : "https://nxstudio.dev";
@@ -145,7 +152,8 @@ export function McpTokensSection() {
           {
             mcpServers: {
               nxstudio: {
-                url: `${host}/api/mcp?token=${displayToken}`,
+                command: "npx",
+                args: ["-y", "mcp-remote", `${host}/api/mcp?token=${displayToken}`],
               },
             },
           },
@@ -172,6 +180,10 @@ export function McpTokensSection() {
   };
 
   const copyToClipboard = (text: string, isNewToken = false) => {
+    if (isAnonymous) {
+      setShowSignInDialog(true);
+      return;
+    }
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(text);
       if (isNewToken) {
@@ -192,9 +204,17 @@ export function McpTokensSection() {
             <KeyRoundIcon className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="font-semibold tracking-tight text-foreground">
-              Model Context Protocol (MCP) Access Tokens
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold tracking-tight text-foreground">
+                Model Context Protocol (MCP) Access Tokens
+              </h2>
+              {isAnonymous && (
+                <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                  <LockIcon className="h-3 w-3" />
+                  Sign in required
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               Personal Access Tokens authenticate autonomous agents to stream schemas, DAGs, and report telemetry.
             </p>
@@ -203,15 +223,43 @@ export function McpTokensSection() {
 
         {!isGenerating && (
           <Button
-            onClick={() => setIsGenerating(true)}
+            onClick={() => {
+              if (isAnonymous) {
+                setShowSignInDialog(true);
+                return;
+              }
+              setIsGenerating(true);
+            }}
             size="sm"
             className="h-8 gap-1.5 self-start text-xs sm:self-center"
           >
-            <PlusIcon className="h-3.5 w-3.5" />
+            {isAnonymous ? <LockIcon className="h-3.5 w-3.5" /> : <PlusIcon className="h-3.5 w-3.5" />}
             Generate New Token
           </Button>
         )}
       </div>
+
+      {/* Anonymous Lock Alert Row */}
+      {isAnonymous && (
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5">
+          <div className="flex items-start gap-2.5">
+            <LockIcon className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <span className="font-semibold text-amber-300">Sign in to use Model Context Protocol (MCP)</span>
+              <p className="text-muted-foreground mt-0.5">
+                Guest sessions cannot generate tokens to connect Cursor, Claude Code, or Windsurf. Sign in with GitHub to link your agent fleet.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setShowSignInDialog(true)}
+            className="h-8 text-xs bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0 cursor-pointer"
+          >
+            Sign in to use MCP
+          </Button>
+        </div>
+      )}
 
       {/* New Token One-Time Alert */}
       {newlyCreatedToken && (
@@ -340,7 +388,7 @@ export function McpTokensSection() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleRevokeToken(token.id)}
-                className="h-8 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 gap-1"
+                className="h-8 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 gap-1 cursor-pointer"
               >
                 <TrashIcon className="h-3.5 w-3.5" />
                 Revoke
@@ -401,7 +449,7 @@ export function McpTokensSection() {
             size="sm"
             variant="secondary"
             onClick={() => copyToClipboard(getIdeSnippet())}
-            className="absolute top-2 right-2 h-7 gap-1.5 px-2.5 text-xs bg-secondary/80 hover:bg-secondary"
+            className="absolute top-2 right-2 h-7 gap-1.5 px-2.5 text-xs bg-secondary/80 hover:bg-secondary cursor-pointer"
           >
             {copiedSnippet ? (
               <>
@@ -417,6 +465,47 @@ export function McpTokensSection() {
           </Button>
         </div>
       </div>
+
+      {/* Dialog for Anonymous Users */}
+      {showSignInDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <button
+              onClick={() => setShowSignInDialog(false)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-1 rounded-md cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 mb-4">
+              <LockIcon className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Sign in to use Model Context Protocol (MCP)</h3>
+            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+              Personal Access Tokens connect your local AI IDE agents (Cursor, Claude Code, Windsurf) to your project context, live PostgreSQL/Prisma schemas, and Topological DAGs.
+            </p>
+            <p className="mt-2 text-xs text-amber-300/90 font-medium">
+              Sign in with GitHub to generate and manage your MCP access tokens.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-2.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSignInDialog(false)}
+                className="text-xs cursor-pointer"
+              >
+                Dismiss
+              </Button>
+              <Link
+                href="/login?redirectTo=/settings"
+                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+              >
+                Sign in with GitHub
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
