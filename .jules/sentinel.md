@@ -23,3 +23,8 @@
 **Learning:** URL sanitization needs to account for browser-specific normalization behaviors, particularly around path separators. A check for `//` is insufficient if the browser resolves `/\` to the same effect.
 **Prevention:** Always check and reject paths starting with `/\` (e.g., `!path.startsWith("/\\")`) in addition to checking `//` when validating relative paths.
 
+
+## 2024-03-20 - GitHub Repository and Branch Path Traversal Prevention
+**Vulnerability:** In `src/lib/github-server.ts`, the `REPO_REGEX` (`/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/`) permitted directory traversal components (`.` and `..`) as legitimate repository names or owners. Although there are some path traversal checks in other locations, preventing `..` at the repository validation level enhances defense-in-depth and prevents potential SSRF or path traversal vulnerabilities when making internal API calls to GitHub if `..` slips through.
+**Learning:** `REPO_REGEX` allowed dots and therefore permitted strings like `../test` or `test/..`, which were previously unchecked in `validateRepoAndBranch`.
+**Prevention:** Implement an explicit check for `.` and `..` in the `owner` and `name` components after splitting the repository string in `validateRepoAndBranch` to strictly enforce valid GitHub repository identifiers.
