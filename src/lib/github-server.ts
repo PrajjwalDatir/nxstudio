@@ -19,6 +19,8 @@ function validateRepoAndBranch(repo: string, branch: string): { owner: string; n
   if (!cleanRepo || !REPO_REGEX.test(cleanRepo)) return null;
   if (!branch || branch.includes("..") || branch.includes("\0")) return null;
   const [owner, name] = cleanRepo.split("/");
+  // Prevent Path Traversal by rejecting parts that represent a directory traversal
+  if (owner === "." || owner === ".." || name === "." || name === "..") return null;
   return { owner, name };
 }
 

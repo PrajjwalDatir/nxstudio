@@ -23,3 +23,8 @@
 **Learning:** URL sanitization needs to account for browser-specific normalization behaviors, particularly around path separators. A check for `//` is insufficient if the browser resolves `/\` to the same effect.
 **Prevention:** Always check and reject paths starting with `/\` (e.g., `!path.startsWith("/\\")`) in addition to checking `//` when validating relative paths.
 
+
+## 2024-05-18 - [CRITICAL] Prevent Path Traversal in GitHub API Integration
+**Vulnerability:** A Path Traversal / SSRF vulnerability was found in the GitHub server utility `src/lib/github-server.ts`. The repository name validation regex (`/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/`) permitted the exact sequences `.` and `..` for the owner or repo name. Because `encodeURIComponent` does not encode `.` or `..`, passing values like `foo/..` directly into API URL interpolations (e.g., `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/issues...`) allowed directory traversal to arbitrary endpoints within the target API.
+**Learning:** URL-encoding `.` and `..` does nothing. Secondary checks are strictly required for path components even when allowed by a "safe" alphanumeric regex that includes `.`.
+**Prevention:** Explicitly check for and reject parts that equal `.` or `..` after splitting a validated path, or use `.includes('..')` when dealing with string identifiers passed to external APIs.
