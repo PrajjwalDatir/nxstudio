@@ -1143,6 +1143,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                               addField(table.id);
                             }}
                             title="Add column"
+                            aria-label="Add column"
                             className="rounded-lg p-1 text-muted-foreground hover:bg-background hover:text-foreground transition-colors"
                           >
                             <PlusIcon className="h-3.5 w-3.5" />
@@ -1153,6 +1154,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                               deleteTable(table.id);
                             }}
                             title="Delete table"
+                            aria-label="Delete table"
                             className="rounded-lg p-1 text-muted-foreground hover:bg-red-500/10 hover:text-red-400 transition-colors"
                           >
                             <TrashIcon className="h-3.5 w-3.5" />
@@ -1262,6 +1264,15 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                                         : "Primary Key"
                                       : "Make Primary Key"
                                   }
+                                  aria-label={
+                                    field.isPrimary
+                                      ? isSolePk
+                                        ? "Sole Primary Key (Mandatory)"
+                                        : isReferencedByFk
+                                        ? "Primary Key (Referenced by Foreign Key)"
+                                        : "Primary Key"
+                                      : "Make Primary Key"
+                                  }
                                   className={cn(
                                     "px-1 text-[9px] font-mono font-semibold transition-colors",
                                     field.isPrimary
@@ -1292,6 +1303,13 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                                       ? "Cannot delete: Sole Primary Key of table"
                                       : isReferencedByFk
                                       ? "Cannot delete: Referenced by a Foreign Key"
+                                      : "Delete column"
+                                  }
+                                  aria-label={
+                                    isSolePk
+                                      ? "Cannot delete the only Primary Key"
+                                      : isReferencedByFk
+                                      ? "Cannot delete column referenced by Foreign Key"
                                       : "Delete column"
                                   }
                                   className={cn(
@@ -1367,6 +1385,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     }}
                     className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                     title="Cancel (Esc)"
+                    aria-label="Cancel (Esc)"
                   >
                     <XIcon className="h-3.5 w-3.5" />
                   </button>
@@ -1378,6 +1397,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     type="button"
                     onClick={() => handleZoom(-0.15)}
                     title="Zoom out (-)"
+                    aria-label="Zoom out (-)"
                     className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   >
                     <ZoomOutIcon className="h-3.5 w-3.5" />
@@ -1386,6 +1406,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     type="button"
                     onClick={resetView}
                     title="Reset zoom to 100%"
+                    aria-label="Reset zoom to 100%"
                     className="px-1.5 text-center font-mono text-[11px] font-medium text-foreground hover:text-lilac transition-colors"
                   >
                     {Math.round(zoom * 100)}%
@@ -1394,6 +1415,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     type="button"
                     onClick={() => handleZoom(0.15)}
                     title="Zoom in (+)"
+                    aria-label="Zoom in (+)"
                     className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   >
                     <ZoomInIcon className="h-3.5 w-3.5" />
@@ -1406,6 +1428,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     type="button"
                     onClick={fitView}
                     title="Fit all tables into view"
+                    aria-label="Fit all tables into view"
                     className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   >
                     <ScanIcon className="h-3 w-3 text-lilac" />
@@ -1420,6 +1443,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                     onClick={() => setIsAddingTable(true)}
                     className="flex items-center gap-1 rounded-full bg-secondary/80 hover:bg-secondary border border-border/80 px-2.5 py-1 text-xs font-medium text-foreground transition-all shadow-2xs hover:border-lilac/40"
                     title="Add a new schema table"
+                    aria-label="Add a new schema table"
                   >
                     <PlusIcon className="h-3 w-3 text-lilac" />
                     <span className="text-[11px]">Table</span>
