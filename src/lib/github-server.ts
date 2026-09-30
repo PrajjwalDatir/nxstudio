@@ -16,7 +16,9 @@ const REPO_REGEX = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
 
 function validateRepoAndBranch(repo: string, branch: string): { owner: string; name: string } | null {
   const cleanRepo = normalizeGitHubRepo(repo);
-  if (!cleanRepo || !REPO_REGEX.test(cleanRepo)) return null;
+  // Security: Check for ".." explicitly because encodeURIComponent does not encode "." or ".."
+  // and the regex allows them, which could lead to path traversal if passed unescaped to APIs.
+  if (!cleanRepo || !REPO_REGEX.test(cleanRepo) || cleanRepo.includes("..")) return null;
   if (!branch || branch.includes("..") || branch.includes("\0")) return null;
   const [owner, name] = cleanRepo.split("/");
   return { owner, name };

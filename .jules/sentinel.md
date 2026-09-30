@@ -23,3 +23,7 @@
 **Learning:** URL sanitization needs to account for browser-specific normalization behaviors, particularly around path separators. A check for `//` is insufficient if the browser resolves `/\` to the same effect.
 **Prevention:** Always check and reject paths starting with `/\` (e.g., `!path.startsWith("/\\")`) in addition to checking `//` when validating relative paths.
 
+## 2026-10-01 - Path Traversal in validateRepoAndBranch via RegEx Bypass
+**Vulnerability:** Found that user-controlled inputs in `validateRepoAndBranch` function in `src/lib/github-server.ts` allowed `..` due to an oversight in the regex (`/^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$/`) which matches periods, but doesn't exclude traversal sequences. This allows a path traversal vulnerability.
+**Learning:** Even with a restricted regex pattern that allows `.` and `-`, explicitly check for `..` or other known path traversal indicators when dealing with file paths or external API parameters.
+**Prevention:** Use an explicit secondary string check like `.includes('..')` along with regex validations that permit periods.
