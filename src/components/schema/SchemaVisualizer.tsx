@@ -272,8 +272,8 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
 
   // Pure calculation of field socket world coordinates
   const getFieldSocketPos = useCallback(
-    (tableId: string, fieldId: string, side: "left" | "right"): { x: number; y: number } => {
-      const tableIndex = schema.tables.findIndex((t) => t.id === tableId);
+    (tableId: string, fieldId: string, side: "left" | "right", providedTableIndex?: number): { x: number; y: number } => {
+      const tableIndex = providedTableIndex ?? schema.tables.findIndex((t) => t.id === tableId);
       const table = schema.tables[tableIndex];
       if (!table) return { x: 0, y: 0 };
       const tPos = getTablePos(table, tableIndex);
@@ -287,10 +287,15 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
 
   // Calculate Bezier Arrow Paths between tables
   const calculatedArrows = useMemo(() => {
+    // Pre-compute table indices in a single O(N) pass to avoid O(N*M) lookups inside the loop
+    const tableIndices = new Map<string, number>();
+    for (let i = 0; i < schema.tables.length; i++) {
+      tableIndices.set(schema.tables[i].id, i);
+    }
     return schema.relations
       .map((rel) => {
-        const sourceTableIndex = schema.tables.findIndex((t) => t.id === rel.sourceTableId);
-        const targetTableIndex = schema.tables.findIndex((t) => t.id === rel.targetTableId);
+        const sourceTableIndex = tableIndices.get(rel.sourceTableId) ?? -1;
+        const targetTableIndex = tableIndices.get(rel.targetTableId) ?? -1;
         const sourceTable = schema.tables[sourceTableIndex];
         const targetTable = schema.tables[targetTableIndex];
 
@@ -304,8 +309,8 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
         const sourceSide: "left" | "right" = isSourceLeft ? "right" : "left";
         const targetSide: "left" | "right" = isSourceLeft ? "left" : "right";
 
-        const start = getFieldSocketPos(rel.sourceTableId, rel.sourceFieldId, sourceSide);
-        const end = getFieldSocketPos(rel.targetTableId, rel.targetFieldId, targetSide);
+        const start = getFieldSocketPos(rel.sourceTableId, rel.sourceFieldId, sourceSide, sourceTableIndex);
+        const end = getFieldSocketPos(rel.targetTableId, rel.targetFieldId, targetSide, targetTableIndex);
 
         const dx = Math.max(Math.abs(end.x - start.x) * 0.45, 40);
         const cp1X = isSourceLeft ? start.x + dx : start.x - dx;

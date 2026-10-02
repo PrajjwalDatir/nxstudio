@@ -14,3 +14,6 @@
 **Learning:** Using `.filter()` inside the callback of a `.map()` mapping over an array (e.g. `items.map(i => otherArray.filter(o => o.id === i.id))`) causes an O(N*M) runtime complexity. When performed inside a React `useMemo`, this can be a sneaky performance bottleneck blocking main thread renders as datasets grow.
 **Action:** Use a single O(N) pass to construct a `Map` that groups items by key (using `.push()` to an array for each key), then query the `Map` in O(1) time within the `.map()` loop.
 
+## 2026-08-07 - O(N*M) lookups in React Callbacks
+**Learning:** React callbacks or hooks (like `useCallback` or `useMemo`) that internally query large arrays (using `.find` or `.findIndex`) can easily become silent O(N*M) bottlenecks when invoked inside a rendering loop (e.g., calculating connections between numerous dynamic elements).
+**Action:** When a callback iterates or is called iteratively, modify its signature to accept optional pre-computed indices (`providedTableIndex?: number`) so callers with pre-built Maps can bypass redundant O(N) searches while preserving backward compatibility.
