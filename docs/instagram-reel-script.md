@@ -5,7 +5,7 @@
 ---
 
 ### Title Overlay
-The unspoken pipeline of 'building a fully autonomous local AI agent using MCP in 10 minutes.'
+The unspoken pipeline of 'building an autonomous local AI agent using MCP in 10 minutes.'
 
 ---
 
