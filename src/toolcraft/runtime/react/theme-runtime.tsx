@@ -71,6 +71,16 @@ function writeStoredThemePreference(themePreference: ToolcraftThemePreference): 
 }
 
 function getInitialThemePreference(): ToolcraftThemePreference {
+  if (typeof document !== "undefined") {
+    if (document.documentElement.classList.contains("light")) return "light";
+    if (document.documentElement.classList.contains("dark")) return "dark";
+    try {
+      const appTheme = window.localStorage.getItem("theme");
+      if (appTheme === "light" || appTheme === "dark") return appTheme;
+    } catch {
+      // ignore
+    }
+  }
   return readStoredThemePreference() ?? TOOLCRAFT_DEFAULT_THEME_PREFERENCE;
 }
 
@@ -105,6 +115,21 @@ export function ToolcraftThemeProvider({
   React.useEffect(() => {
     setThemePreference(themePreference);
   }, [setThemePreference, themePreference]);
+
+  // Synchronize with document.documentElement (.light / .dark) class changes from nx-studio's ThemeToggle
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const syncTheme = () => {
+      const isLight = document.documentElement.classList.contains("light");
+      const nextTheme = isLight ? "light" : "dark";
+      setResolvedTheme(nextTheme);
+      setThemePreferenceState(nextTheme);
+    };
+    syncTheme();
+    const observer = new MutationObserver(() => syncTheme());
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   React.useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {

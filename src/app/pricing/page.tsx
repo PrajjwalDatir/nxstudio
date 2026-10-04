@@ -157,13 +157,7 @@ export default function PricingPage() {
 
                     <AuthButton
                       source={`pricing_${plan.name.toLowerCase()}`}
-                      className={`mt-6 flex h-10 w-full items-center justify-center rounded-lg font-mono text-xs font-semibold uppercase tracking-wider transition-colors ${
-                        plan.highlighted
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : plan.vip
-                            ? "bg-foreground text-background hover:bg-foreground/90"
-                            : "border border-primary/40 text-foreground hover:bg-primary/10"
-                      }`}
+                      className="mt-6 flex h-10 w-full items-center justify-center rounded-lg font-mono text-xs font-semibold uppercase tracking-wider transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                     >
                       {plan.cta}
                     </AuthButton>

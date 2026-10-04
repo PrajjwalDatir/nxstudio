@@ -157,7 +157,7 @@ export function DriftDiffModal({
                 onClick={() => setActiveTab("diff")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                   activeTab === "diff"
-                    ? "bg-foreground text-background shadow-xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -167,7 +167,7 @@ export function DriftDiffModal({
                 onClick={() => setActiveTab("timeline")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                   activeTab === "timeline"
-                    ? "bg-foreground text-background shadow-xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >

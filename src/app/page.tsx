@@ -104,7 +104,7 @@ export default function LandingPage() {
               </p>
               <AuthButton
                 source="closing"
-                className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_0_0_1px_rgba(196,181,253,0.4),0_16px_40px_-16px_rgba(196,181,253,0.8)] transition-transform hover:-translate-y-0.5"
+                className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[0_0_0_1px_rgba(139,92,246,0.5),0_16px_40px_-16px_rgba(139,92,246,0.7)] transition-all hover:-translate-y-0.5 hover:bg-primary/90"
               >
                 Start building for free
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

@@ -668,13 +668,13 @@ export function BuildPhase() {
                       key={tab.id}
                       onClick={() => setSelectedCategory(tab.id)}
                       className={`relative z-10 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                        active ? "text-background font-semibold" : "text-muted-foreground hover:text-foreground"
+                        active ? "text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {active && (
                         <motion.div
                           layoutId="gallery-category-pill"
-                          className="absolute inset-0 z-[-1] rounded-full bg-foreground shadow-sm"
+                          className="absolute inset-0 z-[-1] rounded-full bg-primary shadow-sm"
                           transition={{ type: "spring", stiffness: 450, damping: 35 }}
                         />
                       )}

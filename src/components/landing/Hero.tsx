@@ -151,7 +151,7 @@ export function Hero() {
                 href="https://www.indiehackers.com/nxstudio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full bg-[#C4B5FD] px-4 py-2 text-sm font-bold text-[#1B1030] shadow-sm transition-all hover:-translate-y-0.5 hover:brightness-105"
+                className="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/60 px-4 py-2 text-sm font-semibold text-foreground shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/90"
               >
                 <span>Featured on</span>
                 <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
@@ -163,7 +163,7 @@ export function Hero() {
                 className="inline-flex shrink-0 items-center transition-transform hover:-translate-y-0.5"
               >
                 <img
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1216560&theme=light"
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1216560&theme=neutral"
                   alt="nxstudio - Product context for AI IDE | Product Hunt"
                   width={250}
                   height={54}

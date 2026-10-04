@@ -128,11 +128,7 @@ export function PricingGrid({
                 ) : (
                   <Button
                     onClick={() => onSelectTier?.(plan.id as "pro_10")}
-                    className={`w-full font-mono text-xs uppercase tracking-wider ${
-                      plan.vip
-                        ? "bg-foreground text-background hover:bg-foreground/90"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
-                    }`}
+                    className="w-full font-mono text-xs uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {plan.cta}
                   </Button>

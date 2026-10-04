@@ -224,22 +224,22 @@ const buttonVariants = cva(
               "aria-expanded:bg-transparent aria-expanded:text-[color:var(--foreground)] aria-pressed:bg-transparent aria-pressed:text-[color:var(--foreground)] data-open:bg-transparent data-open:text-[color:var(--foreground)] data-popup-open:bg-transparent data-popup-open:text-[color:var(--foreground)] data-[state=open]:bg-transparent data-[state=open]:text-[color:var(--foreground)] data-[pressed]:bg-transparent data-[pressed]:text-[color:var(--foreground)]",
           },
         )}`,
-        send: `bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)] !text-[color:color-mix(in_oklab,var(--background)_80%,transparent)] hover:!text-[color:color-mix(in_oklab,var(--background)_80%,transparent)] active:!text-[color:color-mix(in_oklab,var(--background)_80%,transparent)] [&_svg:not([data-slot='primitive-arrow-icon'])]:opacity-100 hover:[&_svg:not([data-slot='primitive-arrow-icon'])]:opacity-100 active:[&_svg:not([data-slot='primitive-arrow-icon'])]:opacity-100 data-[size=icon]:[&_svg:not([data-slot='primitive-arrow-icon'])]:!opacity-100 data-[size=icon]:hover:[&_svg:not([data-slot='primitive-arrow-icon'])]:!opacity-100 data-[size=icon]:active:[&_svg:not([data-slot='primitive-arrow-icon'])]:!opacity-100 ${interactiveStateClassName(
+        send: `bg-[color:var(--primary)] text-[color:var(--primary-foreground)] shadow-xs ${interactiveStateClassName(
           {
             active:
-              "active:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)]",
+              "active:bg-[color:color-mix(in_oklab,var(--primary)_82%,black)]",
             hover:
-              "hover:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)]",
+              "hover:bg-[color:color-mix(in_oklab,var(--primary)_88%,black)]",
             persistent:
-              "aria-expanded:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)] aria-pressed:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)] data-open:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)] data-popup-open:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)] data-[state=open]:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)] data-[pressed]:bg-[color:color-mix(in_oklab,var(--foreground)_80%,transparent)]",
+              "aria-expanded:bg-[color:color-mix(in_oklab,var(--primary)_88%,black)] aria-pressed:bg-[color:color-mix(in_oklab,var(--primary)_82%,black)] data-open:bg-[color:color-mix(in_oklab,var(--primary)_88%,black)] data-popup-open:bg-[color:color-mix(in_oklab,var(--primary)_88%,black)] data-[state=open]:bg-[color:color-mix(in_oklab,var(--primary)_88%,black)] data-[pressed]:bg-[color:color-mix(in_oklab,var(--primary)_82%,black)]",
           },
         )}`,
-        stop: `bg-[color:var(--foreground)] !text-[color:color-mix(in_oklab,var(--background)_90%,transparent)] hover:!text-[color:color-mix(in_oklab,var(--background)_90%,transparent)] active:!text-[color:color-mix(in_oklab,var(--background)_90%,transparent)] [&_svg:not([data-slot='primitive-arrow-icon'])]:opacity-100 hover:[&_svg:not([data-slot='primitive-arrow-icon'])]:opacity-100 active:[&_svg:not([data-slot='primitive-arrow-icon'])]:opacity-100 data-[size=icon]:[&_svg:not([data-slot='primitive-arrow-icon'])]:!opacity-100 data-[size=icon]:hover:[&_svg:not([data-slot='primitive-arrow-icon'])]:!opacity-100 data-[size=icon]:active:[&_svg:not([data-slot='primitive-arrow-icon'])]:!opacity-100 ${interactiveStateClassName(
+        stop: `bg-[color:var(--destructive)] text-[color:var(--destructive-foreground)] shadow-xs ${interactiveStateClassName(
           {
-            active: "active:bg-[color:var(--foreground)]",
-            hover: "hover:bg-[color:var(--foreground)]",
+            active: "active:bg-[color:color-mix(in_oklab,var(--destructive)_82%,black)]",
+            hover: "hover:bg-[color:color-mix(in_oklab,var(--destructive)_88%,black)]",
             persistent:
-              "aria-expanded:bg-[color:var(--foreground)] aria-pressed:bg-[color:var(--foreground)] data-open:bg-[color:var(--foreground)] data-popup-open:bg-[color:var(--foreground)] data-[state=open]:bg-[color:var(--foreground)] data-[pressed]:bg-[color:var(--foreground)]",
+              "aria-expanded:bg-[color:var(--destructive)] aria-pressed:bg-[color:var(--destructive)] data-open:bg-[color:var(--destructive)] data-popup-open:bg-[color:var(--destructive)] data-[state=open]:bg-[color:var(--destructive)] data-[pressed]:bg-[color:var(--destructive)]",
           },
         )}`,
         ghost: `bg-clip-border text-[color:var(--foreground)] ${interactiveStateClassName(

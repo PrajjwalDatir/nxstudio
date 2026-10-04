@@ -208,7 +208,7 @@ export default function ContextDirectoryPage() {
                 onClick={() => setFilter("all")}
                 className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
                   filter === "all"
-                    ? "bg-foreground text-background shadow-xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -231,7 +231,7 @@ export default function ContextDirectoryPage() {
                   onClick={() => setFilter("extra")}
                   className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
                     filter === "extra"
-                      ? "bg-emerald-500 text-white shadow-xs font-semibold"
+                      ? "bg-emerald-600 text-white shadow-xs font-semibold"
                       : "text-emerald-400 hover:bg-emerald-500/10"
                   }`}
                 >
@@ -242,7 +242,7 @@ export default function ContextDirectoryPage() {
                 onClick={() => setFilter("unchanged")}
                 className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
                   filter === "unchanged"
-                    ? "bg-foreground text-background shadow-xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -333,7 +333,7 @@ export default function ContextDirectoryPage() {
                     onClick={() => setActiveTab("diff")}
                     className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                       activeTab === "diff"
-                        ? "bg-foreground text-background shadow-xs font-semibold"
+                        ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -343,7 +343,7 @@ export default function ContextDirectoryPage() {
                     onClick={() => setActiveTab("timeline")}
                     className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                       activeTab === "timeline"
-                        ? "bg-foreground text-background shadow-xs font-semibold"
+                        ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >

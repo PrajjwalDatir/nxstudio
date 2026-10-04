@@ -93,7 +93,7 @@ export function NxContextDirectoryModal({
                 onClick={() => setFilter("all")}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   filter === "all"
-                    ? "bg-foreground text-background shadow-xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -116,7 +116,7 @@ export function NxContextDirectoryModal({
                   onClick={() => setFilter("extra")}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     filter === "extra"
-                      ? "bg-emerald-500 text-white shadow-xs font-semibold"
+                      ? "bg-emerald-600 text-white shadow-xs font-semibold"
                       : "text-emerald-400 hover:bg-emerald-500/10"
                   }`}
                 >
@@ -127,7 +127,7 @@ export function NxContextDirectoryModal({
                 onClick={() => setFilter("unchanged")}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   filter === "unchanged"
-                    ? "bg-foreground text-background shadow-xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >

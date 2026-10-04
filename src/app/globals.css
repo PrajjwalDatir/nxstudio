@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "../toolcraft/toolcraft.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -56,32 +56,31 @@
   --background: #08080A;
   --foreground: #FAFAFA;
 
-  /* Soft lilac primary — a pastel glow against the near-black canvas reads
-   * more refined than a fully-saturated violet; dark ink keeps the button
-   * text legible against something this light. */
+  /* Violet Primary — signature brand accent */
   --lilac: #C4B5FD;
-  --primary: #C4B5FD;
-  --primary-foreground: #1B1030;
+  --primary: #8B5CF6;
+  --primary-foreground: #FFFFFF;
 
   /* Cards & surfaces — slightly lifted from the canvas */
-  --card: #121214;
+  --card: #101012;
   --card-foreground: #FAFAFA;
-  --popover: #161618;
+  --popover: #141416;
   --popover-foreground: #FAFAFA;
 
   /* Secondary — elevated surface */
-  --secondary: #1C1C20;
+  --secondary: #16161A;
   --secondary-foreground: #FAFAFA;
 
   /* Muted */
-  --muted: #1C1C20;
-  --muted-foreground: #8B8B93;
+  --muted: #16161A;
+  --muted-foreground: #8E8E98;
 
   /* Accent — subtle violet tint used for selected states */
   --accent: #1E1633;
   --accent-foreground: #C4B5FD;
 
   --destructive: #EF4444;
+  --destructive-foreground: #FAFAFA;
   --border: #26262B;
   --input: #26262B;
   --ring: #8B5CF6;
@@ -95,52 +94,129 @@
 
   --sidebar: #0B0B0D;
   --sidebar-foreground: #E4E4E7;
-  --sidebar-primary: #C4B5FD;
-  --sidebar-primary-foreground: #1B1030;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #1A1A1E;
   --sidebar-accent-foreground: #C4B5FD;
   --sidebar-border: #1F1F23;
-  --sidebar-ring: #C4B5FD;
+  --sidebar-ring: #8B5CF6;
 }
 
 /* Light Theme overrides */
-html.light,
-html.light [data-toolcraft-theme],
-html.light [data-toolcraft-theme='dark'] {
+html.light {
   --background: #FFFFFF;
   --foreground: #09090B;
 
-  /* Same lilac as dark mode — one brand accent, not a per-theme swap. */
   --lilac: #C4B5FD;
-  --primary: #C4B5FD;
-  --primary-foreground: #1B1030;
+  --primary: #7C3AED;
+  --primary-foreground: #FFFFFF;
 
-  --card: #F4F4F6;
+  --card: #F9F9FB;
   --card-foreground: #09090B;
   --popover: #FFFFFF;
   --popover-foreground: #09090B;
 
-  --secondary: #F4F4F6;
+  --secondary: #F0EFF4;
   --secondary-foreground: #18181B;
 
   --muted: #F4F4F6;
   --muted-foreground: #646470;
 
-  --accent: #F4F4F6;
-  --accent-foreground: #1B1030;
+  --accent: #EDE9FE;
+  --accent-foreground: #5B21B6;
 
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
   --border: #E4E4E7;
   --input: #E4E4E7;
-  --ring: #C4B5FD;
+  --ring: #8B5CF6;
 
-  --sidebar: #F4F4F6;
+  --sidebar: #F9F9FB;
   --sidebar-foreground: #18181B;
-  --sidebar-primary: #C4B5FD;
-  --sidebar-primary-foreground: #1B1030;
-  --sidebar-accent: rgba(196, 181, 253, 0.25);
-  --sidebar-accent-foreground: #1B1030;
+  --sidebar-primary: #7C3AED;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EDE9FE;
+  --sidebar-accent-foreground: #5B21B6;
   --sidebar-border: #E4E4E7;
-  --sidebar-ring: #C4B5FD;
+  --sidebar-ring: #8B5CF6;
+}
+
+/* Toolcraft editor theme mapping: seamlessly inherit nx-studio tokens */
+[data-toolcraft-theme='dark'][data-toolcraft-theme],
+html.dark [data-toolcraft-theme],
+html.dark [data-toolcraft-theme='dark'] {
+  --background: var(--background);
+  --foreground: var(--foreground);
+  --card: var(--card);
+  --card-foreground: var(--card-foreground);
+  --popover: var(--popover);
+  --popover-foreground: var(--popover-foreground);
+  --primary: var(--primary);
+  --primary-foreground: var(--primary-foreground);
+  --secondary: var(--secondary);
+  --secondary-foreground: var(--secondary-foreground);
+  --muted: var(--muted);
+  --muted-foreground: var(--muted-foreground);
+  --accent: var(--accent);
+  --accent-foreground: var(--accent-foreground);
+  --border: var(--border);
+  --input: var(--input);
+  --ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+html.light [data-toolcraft-theme],
+html.light [data-toolcraft-theme='light'] {
+  --background: var(--background);
+  --foreground: var(--foreground);
+  --card: var(--card);
+  --card-foreground: var(--card-foreground);
+  --popover: var(--popover);
+  --popover-foreground: var(--popover-foreground);
+  --primary: var(--primary);
+  --primary-foreground: var(--primary-foreground);
+  --secondary: var(--secondary);
+  --secondary-foreground: var(--secondary-foreground);
+  --muted: var(--muted);
+  --muted-foreground: var(--muted-foreground);
+  --accent: var(--accent);
+  --accent-foreground: var(--accent-foreground);
+  --border: var(--border);
+  --input: var(--input);
+  --ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 html.light .hero-glow::before {
