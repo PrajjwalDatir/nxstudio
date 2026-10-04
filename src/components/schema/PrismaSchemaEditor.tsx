@@ -194,8 +194,8 @@ export function PrismaSchemaEditor({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-all shadow-xs",
               isDirty
-                ? "bg-lilac text-white hover:bg-lilac/90 shadow-md shadow-lilac/25 active:scale-95"
-                : "border border-lilac/40 bg-lilac/10 text-lilac hover:bg-lilac/20"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/25 active:scale-95"
+                : "border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
             )}
             title="Save custom Prisma schema (⌘S)"
           >
@@ -204,7 +204,7 @@ export function PrismaSchemaEditor({
             <kbd
               className={cn(
                 "hidden sm:inline-block rounded px-1 py-0.2 text-[9px] font-mono",
-                isDirty ? "bg-black/20 text-white" : "bg-black/10 text-lilac"
+                isDirty ? "bg-black/20 text-white" : "bg-primary/20 text-primary"
               )}
             >
               ⌘S

@@ -103,7 +103,7 @@ export function PaletteGenerator({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <SparklesIcon className="h-4 w-4 text-lilac shrink-0" />
+            <SparklesIcon className="h-4 w-4 text-primary shrink-0" />
             <h3 className="text-sm font-semibold text-foreground">Color Palette Generator</h3>
             <span className="hidden sm:inline-block rounded-md border border-border bg-secondary/50 px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
               Press Space to shuffle
@@ -119,7 +119,7 @@ export function PaletteGenerator({
           <select
             value={harmonyMode}
             onChange={(e) => setHarmonyMode(e.target.value as PaletteHarmonyMode)}
-            className="h-8 rounded-lg border border-border bg-secondary/30 px-2 text-xs font-medium text-foreground outline-none focus:border-lilac cursor-pointer"
+            className="h-8 rounded-lg border border-border bg-secondary/30 px-2 text-xs font-medium text-foreground outline-none focus:border-primary cursor-pointer"
             title="Color Harmony Algorithm"
           >
             <option value="smart">Smart SaaS Harmony</option>
@@ -140,7 +140,7 @@ export function PaletteGenerator({
               if (found) applyPreset(found.colors);
               e.target.value = "";
             }}
-            className="h-8 rounded-lg border border-border bg-secondary/30 px-2 text-xs font-medium text-muted-foreground hover:text-foreground outline-none focus:border-lilac cursor-pointer"
+            className="h-8 rounded-lg border border-border bg-secondary/30 px-2 text-xs font-medium text-muted-foreground hover:text-foreground outline-none focus:border-primary cursor-pointer"
             title="Load iconic brand presets"
           >
             <option value="" disabled>
@@ -157,7 +157,7 @@ export function PaletteGenerator({
           <button
             type="button"
             onClick={handleGenerate}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-lilac px-3 text-xs font-semibold text-white shadow-sm hover:bg-lilac/90 active:scale-95 transition-all"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
             title="Generate new palette (Spacebar)"
           >
             <ShuffleIcon className="h-3.5 w-3.5" />

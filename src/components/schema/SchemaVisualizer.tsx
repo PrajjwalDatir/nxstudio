@@ -790,7 +790,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
               onClick={() => setActiveTab("erd")}
               className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "erd"
-                  ? "bg-background text-foreground shadow-xs"
+                  ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -801,7 +801,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
               onClick={() => setActiveTab("sql")}
               className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "sql"
-                  ? "bg-background text-foreground shadow-xs"
+                  ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -812,7 +812,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
               onClick={() => setActiveTab("prisma")}
               className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "prisma"
-                  ? "bg-background text-foreground shadow-xs"
+                  ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -827,7 +827,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
               className="flex items-center gap-1 rounded-lg border border-border bg-secondary/40 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all shadow-2xs"
               title="Add new schema table"
             >
-              <PlusIcon className="h-3.5 w-3.5 text-lilac" />
+              <PlusIcon className="h-3.5 w-3.5 text-primary" />
               <span className="hidden sm:inline">Add Table</span>
             </button>
           )}
@@ -870,15 +870,15 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
               <button
                 key={tmpl.name}
                 onClick={() => loadTemplate(tmpl.schema)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-lilac/50 transition-all shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/50 transition-all shadow-xs"
               >
-                <SparklesIcon className="h-3 w-3 text-lilac" />
+                <SparklesIcon className="h-3 w-3 text-primary" />
                 {tmpl.name}
               </button>
             ))}
             <button
               onClick={() => setIsAddingTable(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-lilac/40 bg-lilac/10 px-3 py-1.5 text-xs font-medium text-lilac hover:bg-lilac/20 transition-all"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-all"
             >
               <PlusIcon className="h-3 w-3" />
               New Table
@@ -892,7 +892,7 @@ export function SchemaVisualizer({ data, onUpdateSchema, className }: SchemaVisu
                 value={newTableName}
                 onChange={(e) => setNewTableName(e.target.value)}
                 placeholder="Table name (e.g. users)..."
-                className="h-8 flex-1 rounded-lg border border-lilac/60 bg-background px-3 text-xs outline-none focus:ring-1 focus:ring-lilac font-mono"
+                className="h-8 flex-1 rounded-lg border border-primary/60 bg-background px-3 text-xs outline-none focus:ring-1 focus:ring-primary font-mono"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addTable();

@@ -94,7 +94,9 @@ export function TechStackPhase() {
                 aria-pressed={on}
                 className={cn(
                   "relative flex flex-col gap-1 rounded-xl border-2 p-4 text-left transition-all",
-                  on ? "border-primary bg-accent/40" : "border-border hover:border-primary/50"
+                  on
+                    ? "border-primary bg-primary/10 shadow-[0_0_20px_-8px_rgba(139,92,246,0.35)]"
+                    : "border-border hover:border-primary/50"
                 )}
               >
                 <span
@@ -105,7 +107,7 @@ export function TechStackPhase() {
                 >
                   <CheckIcon className="h-3 w-3" />
                 </span>
-                <Icon className={cn("h-6 w-6", on ? "text-accent-foreground" : "text-muted-foreground")} />
+                <Icon className={cn("h-6 w-6", on ? "text-primary" : "text-muted-foreground")} />
                 <span className="mt-1 font-medium">{opt.label}</span>
                 <span className="text-xs text-muted-foreground">{opt.description}</span>
               </button>
@@ -131,10 +133,12 @@ export function TechStackPhase() {
                 aria-pressed={on}
                 className={cn(
                   "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
-                  on ? "border-primary bg-accent/30" : "border-border hover:border-primary/40"
+                  on
+                    ? "border-primary bg-primary/10 shadow-[0_0_16px_-8px_rgba(139,92,246,0.25)]"
+                    : "border-border hover:border-primary/40"
                 )}
               >
-                <Icon className={cn("mt-0.5 h-4.5 w-4.5 shrink-0", on ? "text-accent-foreground" : "text-muted-foreground")} />
+                <Icon className={cn("mt-0.5 h-4.5 w-4.5 shrink-0", on ? "text-primary" : "text-muted-foreground")} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{opt.label}</span>
                   <span className="block text-xs text-muted-foreground">{opt.description}</span>

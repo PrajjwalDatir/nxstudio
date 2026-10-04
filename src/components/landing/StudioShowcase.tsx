@@ -263,8 +263,8 @@ export function StudioShowcase() {
                       key={v}
                       onClick={() => setVibe(v)}
                       aria-pressed={vibe === v}
-                      className={`rounded-md py-1 text-[11px] font-medium transition-colors ${
-                        vibe === v ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                      className={`rounded-md py-1 text-[11px] font-medium transition-all ${
+                        vibe === v ? "bg-primary text-primary-foreground font-semibold shadow-xs" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {v}
@@ -284,9 +284,9 @@ export function StudioShowcase() {
                       key={e}
                       onClick={() => setEngine(e)}
                       aria-pressed={engine === e}
-                      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all ${
                         engine === e
-                          ? "border-primary/40 bg-primary/15 text-foreground"
+                          ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
                           : "border-border text-muted-foreground hover:text-foreground"
                       }`}
                     >

@@ -702,9 +702,9 @@ export function IdeaPhase() {
                       type="button"
                       onClick={() => updateBrand("vibe", v)}
                       className={cn(
-                        "rounded-lg border px-3 py-1.5 text-xs capitalize transition-colors",
+                        "rounded-lg border px-3 py-1.5 text-xs capitalize transition-all",
                         data.brand.vibe === v
-                          ? "border-primary bg-primary/15 text-accent-foreground font-semibold"
+                          ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
                           : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
                       )}
                     >

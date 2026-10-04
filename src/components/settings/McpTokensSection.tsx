@@ -254,7 +254,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
           <Button
             size="sm"
             onClick={() => setShowSignInDialog(true)}
-            className="h-8 text-xs bg-amber-500 hover:bg-amber-600 text-black font-semibold shrink-0 cursor-pointer"
+            className="h-8 text-xs bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold shrink-0 cursor-pointer"
           >
             Sign in to use MCP
           </Button>
@@ -412,7 +412,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
               onClick={() => setActiveTab("cursor")}
               className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "cursor"
-                  ? "bg-primary/20 text-primary font-semibold"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -422,7 +422,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
               onClick={() => setActiveTab("claude")}
               className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "claude"
-                  ? "bg-primary/20 text-primary font-semibold"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -432,7 +432,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
               onClick={() => setActiveTab("windsurf")}
               className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "windsurf"
-                  ? "bg-primary/20 text-primary font-semibold"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >

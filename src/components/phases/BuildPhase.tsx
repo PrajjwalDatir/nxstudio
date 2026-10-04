@@ -215,9 +215,9 @@ function IterateSection() {
                   setSelectedIssue(iss);
                   setChangeText("");
                 }}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                   selectedIssue?.number === iss.number
-                    ? "border-primary bg-primary/15 text-accent-foreground"
+                    ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -521,9 +521,9 @@ export function BuildPhase() {
                     type="button"
                     onClick={() => setAgentTarget(opt.id)}
                     aria-pressed={active}
-                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
                       active
-                        ? "border-primary bg-primary/15 text-accent-foreground font-semibold"
+                        ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
                         : "border-border bg-secondary/30 text-muted-foreground hover:text-foreground"
                     }`}
                   >

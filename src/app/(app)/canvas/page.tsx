@@ -90,7 +90,7 @@ export default function CanvasPage() {
                 "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors outline-none",
                 filter === "all"
                   ? "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
-                  : "border-primary/40 bg-primary/10 text-accent-foreground"
+                  : "border-primary bg-primary text-primary-foreground font-medium shadow-xs"
               )}
             >
               <FilterIcon className="h-4 w-4" />

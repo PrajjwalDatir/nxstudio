@@ -85,7 +85,7 @@ export function BrandAssetUploader({
               title="Preview on dark surface"
               className={cn(
                 "rounded px-1.5 py-0.5 text-[10px] transition-colors",
-                previewBg === "dark" ? "bg-background text-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-foreground"
+                previewBg === "dark" ? "bg-primary text-primary-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <MoonIcon className="h-2.5 w-2.5" />
@@ -96,7 +96,7 @@ export function BrandAssetUploader({
               title="Preview on light surface"
               className={cn(
                 "rounded px-1.5 py-0.5 text-[10px] transition-colors",
-                previewBg === "light" ? "bg-background text-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-foreground"
+                previewBg === "light" ? "bg-primary text-primary-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <SunIcon className="h-2.5 w-2.5" />
@@ -107,7 +107,7 @@ export function BrandAssetUploader({
               title="Preview with transparency grid"
               className={cn(
                 "rounded px-1.5 py-0.5 text-[10px] transition-colors font-mono",
-                previewBg === "checker" ? "bg-background text-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-foreground"
+                previewBg === "checker" ? "bg-primary text-primary-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-foreground"
               )}
             >
               ▦

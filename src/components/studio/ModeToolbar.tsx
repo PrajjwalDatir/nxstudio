@@ -80,13 +80,13 @@ export function ModeToolbar() {
             aria-pressed={active}
             className={cn(
               "relative flex h-9 items-center gap-2 rounded-xl px-2 text-xs font-medium transition-colors cursor-pointer pointer-events-auto z-10 md:px-3",
-              active ? "text-accent-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+              active ? "text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {active && (
               <motion.div
                 layoutId="mode-header-pill"
-                className="absolute inset-0 rounded-xl bg-primary/20 border border-primary/35 shadow-[0_0_12px_rgba(139,92,246,0.3)] z-0"
+                className="absolute inset-0 rounded-xl bg-primary shadow-[0_0_14px_rgba(139,92,246,0.35)] z-0"
                 transition={{ type: "spring", stiffness: 450, damping: 32 }}
               />
             )}
