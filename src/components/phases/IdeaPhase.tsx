@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useId } from "react";
+import { useRef, useState, useId, useEffect } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useSpeechInput } from "@/lib/use-speech-input";
 import { useCompiledPrompts } from "@/lib/use-compiled-prompts";
@@ -426,7 +426,43 @@ export function IdeaPhase() {
   } = useWorkspace();
   const { prompts } = useCompiledPrompts();
   const [selectedExample, setSelectedExample] = useState<ExampleBrief | null>(null);
-  const [activeSection, setActiveSection] = useState<string>("vision");
+  const [activeSection, setActiveSectionState] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "");
+      if (["vision", "brand", "stack", "schema", "review"].includes(hash)) {
+        return hash;
+      }
+      const saved = localStorage.getItem("nx_brief_active_section");
+      if (saved && ["vision", "brand", "stack", "schema", "review"].includes(saved)) {
+        return saved;
+      }
+    }
+    return "vision";
+  });
+
+  const setActiveSection = (section: string) => {
+    setActiveSectionState(section);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nx_brief_active_section", section);
+    }
+  };
+
+  // Failsafe draft sync: if any question is empty on mount but a local draft exists, restore it immediately
+  useEffect(() => {
+    if (!activeId) return;
+    const draftKey = `nx_draft_idea_${activeId}`;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        QUESTIONS.forEach((q) => {
+          if (!data.idea[q.field]?.trim() && draft[q.field]?.trim()) {
+            updateIdea(q.field, draft[q.field]);
+          }
+        });
+      }
+    } catch {}
+  }, [activeId]);
 
   const answered = QUESTIONS.filter((q) => data.idea[q.field].trim().length > 0).length;
   const percent = Math.round((answered / QUESTIONS.length) * 100);

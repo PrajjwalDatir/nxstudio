@@ -127,7 +127,19 @@ function IterateSection() {
   const { data, activeId, github, addIteration, markIterationShipped, applyWorkspacePatch } =
     useWorkspace();
   const { result: syncResult } = useSync();
-  const [changeText, setChangeText] = useState("");
+  const [changeText, setChangeTextState] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("nx_build_change_text") || "";
+    }
+    return "";
+  });
+
+  const setChangeText = (text: string) => {
+    setChangeTextState(text);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("nx_build_change_text", text);
+    }
+  };
   const [selectedIssue, setSelectedIssue] = useState<GhIssue | null>(null);
   const [state, setState] = useState<ScopeState>({ status: "idle" });
   const [shipErrors, setShipErrors] = useState<Record<string, string>>({});
@@ -395,7 +407,26 @@ export function BuildPhase() {
   const doneCount = BUILD_STEPS.filter((s) => isStepDone("build", s.id)).length;
   const status = doneCount >= BUILD_STEPS.length ? "complete" : "in-progress";
 
-  const [activeSection, setActiveSection] = useState<string>("checklist");
+  const [activeSection, setActiveSectionState] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "");
+      if (["checklist", "scaffold", "mcp", "refine", "iterate"].includes(hash)) {
+        return hash;
+      }
+      const saved = localStorage.getItem("nx_build_active_section");
+      if (saved && ["checklist", "scaffold", "mcp", "refine", "iterate"].includes(saved)) {
+        return saved;
+      }
+    }
+    return "checklist";
+  });
+
+  const setActiveSection = (section: string) => {
+    setActiveSectionState(section);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nx_build_active_section", section);
+    }
+  };
 
   const BUILD_SECTIONS: PhaseSectionItem[] = [
     {

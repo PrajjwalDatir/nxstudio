@@ -8,6 +8,7 @@ const NAMESPACE = "nx-studio";
 type StorageKey =
   | "projects"
   | "activeProject"
+  | "collections"
   | "workspace"
   | "project"
   | "builder"

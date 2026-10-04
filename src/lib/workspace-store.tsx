@@ -54,6 +54,186 @@ function initStore(initial: Project[], collections: Collection[]): Store {
   return { projects: [p], collections, activeId: p.id };
 }
 
+/**
+ * Synchronous local storage persistence to prevent form and project loss on page refresh.
+ * Writes to both 'nx-studio:' namespaced keys and raw fallback keys for maximum compatibility.
+ */
+function saveProjectsLocally(
+  projects: Project[],
+  activeId?: string,
+  collections?: Collection[]
+) {
+  if (typeof window === "undefined") return;
+  try {
+    const payload = { projects, updatedAt: Date.now() };
+    const serialized = JSON.stringify(payload);
+    localStorage.setItem("nx-studio:projects", serialized);
+    localStorage.setItem("projects", serialized);
+
+    if (activeId) {
+      localStorage.setItem("nx-studio:activeProject", JSON.stringify(activeId));
+      localStorage.setItem("activeProject", JSON.stringify(activeId));
+    }
+    if (collections && collections.length > 0) {
+      const colPayload = JSON.stringify({ collections });
+      localStorage.setItem("nx-studio:collections", colPayload);
+      localStorage.setItem("collections", colPayload);
+    }
+  } catch (e) {
+    console.error("Failed to save projects to localStorage:", e);
+  }
+}
+
+function getLocalStoredProjects(): { projects: Project[]; updatedAt?: number } | null {
+  if (typeof window === "undefined") return null;
+  const keys = ["nx-studio:projects", "projects"];
+  for (const key of keys) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      let list: any[] = [];
+      let updatedAt: number | undefined;
+
+      if (Array.isArray(parsed)) {
+        list = parsed;
+      } else if (parsed && Array.isArray(parsed.projects)) {
+        list = parsed.projects;
+        updatedAt = parsed.updatedAt;
+      }
+
+      if (list.length > 0) {
+        const projects = list.map((p: any) => {
+          const name = p.data?.productName || p.name || "Product";
+          return {
+            ...newProject(name),
+            ...p,
+            data: hydrateData(p.data, name),
+            github: { repo: p.github?.repo ?? null, branch: p.github?.branch ?? "main" },
+            dueDates: p.dueDates ?? {},
+          };
+        });
+        return { projects, updatedAt };
+      }
+    } catch (e) {
+      console.error(`Error reading ${key} from localStorage:`, e);
+    }
+  }
+  return null;
+}
+
+function getLocalStoredCollections(): Collection[] | null {
+  if (typeof window === "undefined") return null;
+  const keys = ["nx-studio:collections", "collections"];
+  for (const key of keys) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (parsed && Array.isArray(parsed.collections) && parsed.collections.length > 0) return parsed.collections;
+    } catch {}
+  }
+  return null;
+}
+
+function getLocalDraftIdea(projectId: string): Partial<IdeaData> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(`nx_draft_idea_${projectId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
+function mergeProjectData(serverProj: Project, localProj?: Project): Project {
+  let mergedData = { ...serverProj.data };
+
+  if (localProj?.data) {
+    const sData = serverProj.data;
+    const lData = localProj.data;
+
+    // Merge Idea questions: preserve typed answers if server has empty or stale fields
+    const ideaFields: (keyof IdeaData)[] = ["problem", "targetUsers", "currentSolutions", "differentiation"];
+    const mergedIdea = { ...sData.idea };
+    for (const f of ideaFields) {
+      const sVal = sData.idea?.[f] || "";
+      const lVal = lData.idea?.[f] || "";
+      if (lVal.trim().length > 0 && (!sVal.trim() || lVal.trim() !== sVal.trim())) {
+        mergedIdea[f] = lVal;
+      }
+    }
+
+    // Merge Brand: preserve custom brand if server has defaults
+    const mergedBrand = { ...sData.brand, ...lData.brand };
+    if (!lData.brand?.logo && sData.brand?.logo) {
+      mergedBrand.logo = sData.brand.logo;
+      mergedBrand.logoName = sData.brand.logoName;
+    }
+
+    // Merge Tech: surfaces and capabilities
+    const mergedTech = {
+      surfaces: (lData.tech?.surfaces?.length ? lData.tech.surfaces : sData.tech?.surfaces) || [],
+      capabilities: (lData.tech?.capabilities?.length ? lData.tech.capabilities : sData.tech?.capabilities) || [],
+    };
+
+    // Merge Schema
+    const mergedSchema = (lData.schema?.tables?.length ? lData.schema : sData.schema) || { tables: [], relations: [] };
+
+    // Merge Checklist
+    const mergedChecklist = { ...sData.checklist, ...lData.checklist };
+
+    // Merge Custom stages & Iterations
+    const mergedCustomStages = lData.customStages?.length ? lData.customStages : (sData.customStages || []);
+    const mergedIterations = lData.iterations?.length ? lData.iterations : (sData.iterations || []);
+
+    const mergedProductName =
+      lData.productName && lData.productName !== "Product 1"
+        ? lData.productName
+        : sData.productName || "Product 1";
+
+    mergedData = {
+      ...sData,
+      ...lData,
+      productName: mergedProductName,
+      idea: mergedIdea,
+      brand: mergedBrand,
+      tech: mergedTech,
+      schema: mergedSchema,
+      checklist: mergedChecklist,
+      customStages: mergedCustomStages,
+      iterations: mergedIterations,
+      schemaDraft: lData.schemaDraft || sData.schemaDraft,
+      briefInsights: lData.briefInsights || sData.briefInsights,
+      designNotes: lData.designNotes || sData.designNotes || "",
+    };
+  }
+
+  // Also check explicit draft for this server project id or local project id
+  const draft =
+    getLocalDraftIdea(serverProj.id) ||
+    (localProj && localProj.id !== serverProj.id ? getLocalDraftIdea(localProj.id) : null);
+  if (draft) {
+    const ideaFields: (keyof IdeaData)[] = ["problem", "targetUsers", "currentSolutions", "differentiation"];
+    const mergedIdea = { ...mergedData.idea };
+    for (const f of ideaFields) {
+      const dVal = draft[f] || "";
+      if (dVal.trim().length > 0 && (!mergedIdea[f]?.trim() || dVal.trim().length >= mergedIdea[f].trim().length)) {
+        mergedIdea[f] = dVal;
+      }
+    }
+    mergedData.idea = mergedIdea;
+  }
+
+  return {
+    ...serverProj,
+    data: mergedData,
+    dueDates: { ...(localProj?.dueDates || {}), ...(serverProj.dueDates || {}) },
+    github: serverProj.github?.repo ? serverProj.github : (localProj?.github || serverProj.github),
+    collectionId: serverProj.collectionId ?? localProj?.collectionId ?? null,
+  };
+}
+
 /** How long we wait after the last edit before writing to Supabase. */
 const SAVE_DEBOUNCE_MS = 700;
 
@@ -245,31 +425,73 @@ export function WorkspaceProvider({
     initialCollectionsRef.current = initialCollections;
   }, [initialProjects, initialCollections]);
 
-  // Hydrate device-local bits (active project, legacy migration) once on mount.
+  // Hydrate device-local bits (active project, localStorage backup, merging) once on mount.
   useEffect(() => {
-    // Seed savedRef with what the server already persisted.
-    const saved = new Map<string, string>();
-    for (const p of initialProjectsRef.current) saved.set(p.id, serializeProject(p));
-    savedRef.current = saved;
+    // 1. Read existing local storage projects and collections
+    const localData = getLocalStoredProjects();
+    const localProjects = localData?.projects || [];
+    const localCollections = getLocalStoredCollections() || [];
 
-    const savedCollections = new Map<string, string>();
-    for (const c of initialCollectionsRef.current) savedCollections.set(c.id, serializeCollection(c));
-    savedCollectionsRef.current = savedCollections;
+    let finalProjects: Project[] = [];
+    let finalCollections: Collection[] =
+      initialCollectionsRef.current.length > 0
+        ? initialCollectionsRef.current
+        : localCollections.length > 0
+        ? localCollections
+        : [];
 
-    // One-time migration: if the account has no projects yet but this browser
-    // has a legacy localStorage workspace, import it (the reconciler uploads it).
+    const storedActive =
+      getStoredValue<string | null>("activeProject", null) ||
+      (() => {
+        try {
+          const raw = localStorage.getItem("activeProject");
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })();
+
     if (initialProjectsRef.current.length === 0) {
-      const legacy = getStoredValue<{ projects?: Project[] } | null>("projects", null);
-      if (legacy?.projects?.length) {
-        const migrated = legacy.projects.map((p) => ({
-          ...newProject(p.data?.productName || "Product"),
-          ...p,
-          data: hydrateData(p.data, p.data?.productName || "Product"),
-          github: { repo: p.github?.repo ?? null, branch: p.github?.branch ?? "main" },
-          dueDates: p.dueDates ?? {},
-        }));
-        setTimeout(() => setStore((s) => ({ ...s, projects: migrated, activeId: migrated[0].id })), 0);
+      // Server returned no projects (guest session, new user, or offline)
+      if (localProjects.length > 0) {
+        finalProjects = localProjects.map((p) => {
+          const draft = getLocalDraftIdea(p.id);
+          if (draft) {
+            return {
+              ...p,
+              data: {
+                ...p.data,
+                idea: { ...p.data.idea, ...draft },
+              },
+            };
+          }
+          return p;
+        });
+      } else {
+        // Brand new workspace: check if draft exists for default project
+        const p = newProject("Product 1");
+        const draft = getLocalDraftIdea(p.id) || getLocalDraftIdea("p_default");
+        if (draft) {
+          p.data.idea = { ...p.data.idea, ...draft };
+        }
+        finalProjects = [p];
       }
+    } else {
+      // Server has projects: merge with local projects and drafts to protect in-flight user edits
+      const mergedServerProjects = initialProjectsRef.current.map((serverProj) => {
+        const matchingLocal = localProjects.find(
+          (lp) =>
+            lp.id === serverProj.id ||
+            lp.data.productName.toLowerCase() === serverProj.data.productName.toLowerCase()
+        );
+        return mergeProjectData(serverProj, matchingLocal);
+      });
+
+      // Keep any locally created projects that aren't yet on the server
+      const serverIds = new Set(initialProjectsRef.current.map((p) => p.id));
+      const extraLocalProjects = localProjects.filter((lp) => !serverIds.has(lp.id));
+
+      finalProjects = [...mergedServerProjects, ...extraLocalProjects];
     }
 
     // Combine projects created during an anonymous guest session after signing in with GitHub
@@ -282,49 +504,39 @@ export function WorkspaceProvider({
             ? parsed
             : (parsed as { projects?: unknown[] })?.projects || [];
           if (rawList.length > 0) {
-            setTimeout(() => {
-              setStore((prev) => {
-                const existingNames = new Set(
-                  prev.projects.map((p) => p.data.productName.trim().toLowerCase())
-                );
-                const toAdd: Project[] = [];
+            const existingNames = new Set(
+              finalProjects.map((p) => p.data.productName.trim().toLowerCase())
+            );
+            const toAdd: Project[] = [];
 
-                for (const raw of rawList) {
-                  const item = raw as Record<string, unknown>;
-                  let proj: Project;
-                  if ("github_repo" in item) {
-                    proj = rowToProject(item as unknown as ProjectRow);
-                  } else {
-                    const typed = item as unknown as Project;
-                    proj = {
-                      ...newProject(typed.data?.productName || "Product"),
-                      ...typed,
-                      data: hydrateData(typed.data, typed.data?.productName || "Product"),
-                      github: { repo: typed.github?.repo ?? null, branch: typed.github?.branch ?? "main" },
-                      dueDates: typed.dueDates ?? {},
-                    };
-                  }
+            for (const raw of rawList) {
+              const item = raw as Record<string, unknown>;
+              let proj: Project;
+              if ("github_repo" in item) {
+                proj = rowToProject(item as unknown as ProjectRow);
+              } else {
+                const typed = item as unknown as Project;
+                proj = {
+                  ...newProject(typed.data?.productName || "Product"),
+                  ...typed,
+                  data: hydrateData(typed.data, typed.data?.productName || "Product"),
+                  github: { repo: typed.github?.repo ?? null, branch: typed.github?.branch ?? "main" },
+                  dueDates: typed.dueDates ?? {},
+                };
+              }
 
-                  const nameKey = proj.data.productName.trim().toLowerCase();
-                  if (!existingNames.has(nameKey) || prev.projects.length === 0) {
-                    toAdd.push({
-                      ...proj,
-                      id: `p_${Math.random().toString(36).slice(2, 10)}`,
-                    });
-                  }
-                }
+              const nameKey = proj.data.productName.trim().toLowerCase();
+              if (!existingNames.has(nameKey) || finalProjects.length === 0) {
+                toAdd.push({
+                  ...proj,
+                  id: `p_${Math.random().toString(36).slice(2, 10)}`,
+                });
+              }
+            }
 
-                if (toAdd.length > 0) {
-                  const combined = [...prev.projects, ...toAdd];
-                  return {
-                    ...prev,
-                    projects: combined,
-                    activeId: toAdd[toAdd.length - 1].id,
-                  };
-                }
-                return prev;
-              });
-            }, 0);
+            if (toAdd.length > 0) {
+              finalProjects = [...finalProjects, ...toAdd];
+            }
           }
         } catch (e) {
           console.error("Failed to merge anonymous projects:", e);
@@ -334,16 +546,39 @@ export function WorkspaceProvider({
       }
     }
 
-    // Restore the active-project preference (kept per-device, not in Supabase).
-    const storedActive = getStoredValue<string | null>("activeProject", null);
-    if (storedActive) {
-      setTimeout(() => setStore((s) =>
-        s.projects.some((p) => p.id === storedActive) ? { ...s, activeId: storedActive } : s
-      ), 0);
+    // Determine active project preference
+    let finalActiveId = finalProjects[0]?.id || "";
+    if (storedActive && finalProjects.some((p) => p.id === storedActive)) {
+      finalActiveId = storedActive;
     }
 
-    setTimeout(() => setIsHydrated(true), 0);
+    // Seed savedRef with initial server data so reconciler flushes merged local changes to Supabase
+    const saved = new Map<string, string>();
+    for (const p of initialProjectsRef.current) saved.set(p.id, serializeProject(p));
+    savedRef.current = saved;
+
+    const savedCollections = new Map<string, string>();
+    for (const c of initialCollectionsRef.current) savedCollections.set(c.id, serializeCollection(c));
+    savedCollectionsRef.current = savedCollections;
+
+    // Immediately persist resolved state locally
+    saveProjectsLocally(finalProjects, finalActiveId, finalCollections);
+
+    // Apply to React store
+    setStore({
+      projects: finalProjects,
+      collections: finalCollections,
+      activeId: finalActiveId,
+    });
+
+    setIsHydrated(true);
   }, []);
+
+  // Synchronous localStorage persistence on every store change
+  useEffect(() => {
+    if (!isHydrated) return;
+    saveProjectsLocally(store.projects, store.activeId, store.collections);
+  }, [store, isHydrated]);
 
   // Debounced autosave: collapse bursts of edits into a single write per project.
   useEffect(() => {
@@ -378,10 +613,14 @@ export function WorkspaceProvider({
 
   /* --- helpers to mutate the active project's data --- */
   const patchActive = useCallback((fn: (p: Project) => Project) => {
-    setStore((s) => ({
-      ...s,
-      projects: s.projects.map((p) => (p.id === s.activeId ? fn(p) : p)),
-    }));
+    setStore((s) => {
+      const nextProjects = s.projects.map((p) => (p.id === s.activeId ? fn(p) : p));
+      saveProjectsLocally(nextProjects, s.activeId, s.collections);
+      return {
+        ...s,
+        projects: nextProjects,
+      };
+    });
   }, []);
 
   const patchData = useCallback(
@@ -490,8 +729,18 @@ export function WorkspaceProvider({
   );
 
   const updateIdea = useCallback(
-    <K extends keyof IdeaData>(field: K, value: IdeaData[K]) =>
-      patchData((d) => ({ ...d, idea: { ...d.idea, [field]: value } })),
+    <K extends keyof IdeaData>(field: K, value: IdeaData[K]) => {
+      if (typeof window !== "undefined" && storeRef.current.activeId) {
+        try {
+          const draftKey = `nx_draft_idea_${storeRef.current.activeId}`;
+          const currentProj = storeRef.current.projects.find((p) => p.id === storeRef.current.activeId);
+          const currentIdea = currentProj?.data.idea || { problem: "", targetUsers: "", currentSolutions: "", differentiation: "" };
+          const nextIdea = { ...currentIdea, [field]: value };
+          localStorage.setItem(draftKey, JSON.stringify(nextIdea));
+        } catch {}
+      }
+      patchData((d) => ({ ...d, idea: { ...d.idea, [field]: value } }));
+    },
     [patchData]
   );
 
