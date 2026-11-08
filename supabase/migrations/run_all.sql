@@ -575,3 +575,77 @@ drop trigger if exists check_collections_access_before_insert on public.collecti
 create trigger check_collections_access_before_insert
   before insert on public.collections
   for each row execute function public.enforce_collections_access_trigger();
+
+
+-- >>> 0011_mcp_tokens.sql <<<
+-- Model Context Protocol (MCP) authentication and agent telemetry
+
+create table if not exists public.mcp_tokens (
+  id            text primary key,
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  name          text not null default 'Agent Client',
+  token_hash    text not null unique,
+  token_prefix  text not null,
+  expires_at    timestamptz,
+  last_used_at  timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index if not exists mcp_tokens_user_id_idx on public.mcp_tokens (user_id, created_at desc);
+create index if not exists mcp_tokens_hash_idx on public.mcp_tokens (token_hash);
+
+alter table public.mcp_tokens enable row level security;
+
+drop policy if exists "select own mcp tokens" on public.mcp_tokens;
+create policy "select own mcp tokens"
+  on public.mcp_tokens for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "insert own mcp tokens" on public.mcp_tokens;
+create policy "insert own mcp tokens"
+  on public.mcp_tokens for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "update own mcp tokens" on public.mcp_tokens;
+create policy "update own mcp tokens"
+  on public.mcp_tokens for update to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "delete own mcp tokens" on public.mcp_tokens;
+create policy "delete own mcp tokens"
+  on public.mcp_tokens for delete to authenticated
+  using (auth.uid() = user_id);
+
+create table if not exists public.mcp_agent_progress (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  project_id    text references public.projects (id) on delete cascade,
+  node_id       text not null,
+  status        text not null check (status in ('pending', 'in_progress', 'completed', 'failed')),
+  agent_id      text,
+  notes         text,
+  commit_hash   text,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists mcp_agent_progress_proj_node_idx on public.mcp_agent_progress (project_id, node_id, created_at desc);
+create index if not exists mcp_agent_progress_user_idx on public.mcp_agent_progress (user_id, created_at desc);
+
+alter table public.mcp_agent_progress enable row level security;
+
+drop policy if exists "select own mcp progress" on public.mcp_agent_progress;
+create policy "select own mcp progress"
+  on public.mcp_agent_progress for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "insert own mcp progress" on public.mcp_agent_progress;
+create policy "insert own mcp progress"
+  on public.mcp_agent_progress for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "delete own mcp progress" on public.mcp_agent_progress;
+create policy "delete own mcp progress"
+  on public.mcp_agent_progress for delete to authenticated
+  using (auth.uid() = user_id);
