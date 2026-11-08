@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/lib/use-subscription";
@@ -23,6 +23,7 @@ export interface PatToken {
   createdAt: string;
   expiresIn: string;
   lastUsedAt?: string;
+  expiresAt?: string | null;
 }
 
 const STORAGE_KEY = "nx_mcp_pat_tokens";
@@ -77,12 +78,42 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [tokenName, setTokenName] = useState("");
   const [expiresIn, setExpiresIn] = useState("90 days");
   const [activeTab, setActiveTab] = useState<"cursor" | "claude" | "windsurf">("cursor");
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [newlyCreatedToken, setNewlyCreatedToken] = useState<string | null>(null);
   const [copiedNewToken, setCopiedNewToken] = useState(false);
+
+  // Fetch tokens from backend for authenticated users
+  useEffect(() => {
+    if (isAnonymous) return;
+    let cancelled = false;
+    setIsLoading(true);
+
+    fetch("/api/mcp/tokens")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.tokens && Array.isArray(data.tokens)) {
+          setTokens(data.tokens);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.tokens));
+          } catch {}
+        }
+      })
+      .catch((err) => {
+        console.warn("[MCP] Could not sync tokens with server, using local cache:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAnonymous]);
 
   const saveTokens = (updated: PatToken[]) => {
     setTokens(updated);
@@ -93,15 +124,40 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
     }
   };
 
-  const handleCreateToken = (e: React.FormEvent) => {
+  const handleCreateToken = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isAnonymous) {
       setShowSignInDialog(true);
       return;
     }
-    const name = tokenName.trim() || "Agent Client";
-    const { fullToken, prefix, id } = generatePatTokenString();
 
+    const name = tokenName.trim() || "Agent Client";
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/mcp/tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, expiresIn }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const updated = [data.tokenInfo, ...tokens.filter((t) => t.id !== data.tokenInfo.id)];
+        saveTokens(updated);
+        setNewlyCreatedToken(data.token);
+        setTokenName("");
+        setIsGenerating(false);
+        return;
+      }
+    } catch (err) {
+      console.warn("[MCP] Failed to create token on server, falling back to local creation:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+
+    // Fallback if network or DB fails
+    const { fullToken, prefix, id } = generatePatTokenString();
     const newToken: PatToken = {
       id,
       name,
@@ -117,13 +173,21 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
     setIsGenerating(false);
   };
 
-  const handleRevokeToken = (id: string) => {
+  const handleRevokeToken = async (id: string) => {
     if (isAnonymous) {
       setShowSignInDialog(true);
       return;
     }
     const updated = tokens.filter((t) => t.id !== id);
     saveTokens(updated);
+
+    try {
+      await fetch(`/api/mcp/tokens?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.warn("[MCP] Error revoking token on server:", err);
+    }
   };
 
   const getIdeSnippet = () => {
@@ -340,8 +404,8 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
               <option value="Never">Never expires</option>
             </select>
             <div className="flex items-center gap-2">
-              <Button type="submit" size="sm" className="h-9">
-                Generate
+              <Button type="submit" size="sm" className="h-9" disabled={isSubmitting}>
+                {isSubmitting ? "Generating..." : "Generate"}
               </Button>
               <Button
                 type="button"

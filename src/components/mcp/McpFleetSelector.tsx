@@ -99,20 +99,26 @@ const MCP_REGISTRY: McpServerDef[] = [
     badge: "Core OS",
     docsUrl: "https://nxstudio.app",
     icon: NxStudioMcpIcon,
-    cursorConfig: () => ({
-      command: "npx",
-      args: ["-y", "mcp-remote", "https://nxstudio.dev/api/mcp"],
-      env: {
-        NX_API_KEY: "${NX_API_KEY}",
-      },
-    }),
-    claudeConfig: () => ({
-      command: "npx",
-      args: ["-y", "mcp-remote", "https://nxstudio.dev/api/mcp"],
-      env: {
-        NX_API_KEY: "${NX_API_KEY}",
-      },
-    }),
+    cursorConfig: () => {
+      const host = typeof window !== "undefined" ? window.location.origin : "https://nxstudio.dev";
+      return {
+        command: "npx",
+        args: ["-y", "mcp-remote", `${host}/api/mcp`],
+        env: {
+          NX_API_KEY: "${NX_API_KEY}",
+        },
+      };
+    },
+    claudeConfig: () => {
+      const host = typeof window !== "undefined" ? window.location.origin : "https://nxstudio.dev";
+      return {
+        command: "npx",
+        args: ["-y", "mcp-remote", `${host}/api/mcp`],
+        env: {
+          NX_API_KEY: "${NX_API_KEY}",
+        },
+      };
+    },
   },
   {
     id: "github",
