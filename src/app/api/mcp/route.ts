@@ -6,104 +6,22 @@ import {
   compilePrismaSchema,
   diffNx,
 } from "@/lib/nx-compiler";
-import { newWorkspaceData } from "@/lib/projects";
 import { WorkspaceData, WorkflowDag } from "@/lib/types";
+import {
+  validateMcpToken,
+  fetchUserWorkspaceForMcp,
+  recordAgentProgress,
+  getCanonicalProductOsWorkspace,
+  AgentProgressReport,
+} from "@/lib/mcp-server";
 
 export const dynamic = "force-dynamic";
 
 /**
- * In-memory telemetry and progress store for agents reporting back
- * to the Product OS canvas.
+ * In-memory telemetry cache for agents reporting back to the Product OS canvas,
+ * alongside persistent database storage in public.mcp_agent_progress.
  */
-interface AgentProgressReport {
-  nodeId: string;
-  status: "pending" | "in_progress" | "completed" | "failed";
-  agentId?: string;
-  notes?: string;
-  commitHash?: string;
-  timestamp: string;
-}
-
 const progressReports: AgentProgressReport[] = [];
-
-/**
- * Canonical fallback workspace data for unauthenticated queries or demo projects.
- * Guaranteed to have rich relational schema, brand DNA, tech stack, and Topological DAG.
- */
-function getCanonicalProductOsWorkspace(name = "Nx Studio Product OS"): WorkspaceData {
-  const base = newWorkspaceData(name);
-  base.idea = {
-    problem: "Autonomous AI agents drift and hallucinate without structured, language-independent product context.",
-    targetUsers: "Engineers and founders building full-stack products with AI IDEs and autonomous agent fleets.",
-    currentSolutions: "Fragile freeform markdown prompts, un-versioned chat snippets, manual copy-pasting.",
-    differentiation: "A dedicated Product OS compiling W3C DTCG tokens, Topological DAGs, and DDL schemas served natively over MCP.",
-  };
-  base.brand = {
-    vibe: "Cyber-Physical, Architectural, High-Precision",
-    primaryColor: "#A855F7",
-    radius: "0.5rem (rounded-lg)",
-    font: "Geist Sans / Geist Mono",
-  };
-  base.tech = {
-    surfaces: ["web", "ios"],
-    capabilities: ["auth", "database", "ai"],
-  };
-  base.schema = {
-    tables: [
-      {
-        id: "tbl_users",
-        name: "users",
-        fields: [
-          { id: "f_id", name: "id", type: "uuid", isPrimary: true, isNullable: false },
-          { id: "f_email", name: "email", type: "string", isUnique: true, isNullable: false },
-          { id: "f_name", name: "name", type: "string", isNullable: true },
-          { id: "f_created_at", name: "created_at", type: "datetime", isNullable: false, defaultValue: "now()" },
-        ],
-      },
-      {
-        id: "tbl_workspaces",
-        name: "workspaces",
-        fields: [
-          { id: "f_ws_id", name: "id", type: "uuid", isPrimary: true, isNullable: false },
-          { id: "f_ws_name", name: "name", type: "string", isNullable: false },
-          { id: "f_ws_owner", name: "owner_id", type: "uuid", isNullable: false },
-          { id: "f_ws_created_at", name: "created_at", type: "datetime", isNullable: false, defaultValue: "now()" },
-        ],
-      },
-      {
-        id: "tbl_tasks",
-        name: "tasks",
-        fields: [
-          { id: "f_task_id", name: "id", type: "uuid", isPrimary: true, isNullable: false },
-          { id: "f_task_ws", name: "workspace_id", type: "uuid", isNullable: false },
-          { id: "f_task_title", name: "title", type: "string", isNullable: false },
-          { id: "f_task_status", name: "status", type: "string", isNullable: false, defaultValue: "'pending'" },
-          { id: "f_task_assigned", name: "assigned_agent", type: "string", isNullable: true },
-        ],
-      },
-    ],
-    relations: [
-      {
-        id: "rel_user_workspaces",
-        sourceTableId: "tbl_workspaces",
-        sourceFieldId: "f_ws_owner",
-        targetTableId: "tbl_users",
-        targetFieldId: "f_id",
-        type: "1:N",
-      },
-      {
-        id: "rel_ws_tasks",
-        sourceTableId: "tbl_tasks",
-        sourceFieldId: "f_task_ws",
-        targetTableId: "tbl_workspaces",
-        targetFieldId: "f_ws_id",
-        type: "1:N",
-      },
-    ],
-  };
-  base.selectedMcpServers = ["nxstudio", "github", "postgres", "linear"];
-  return base;
-}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -119,7 +37,7 @@ export async function OPTIONS() {
 }
 
 /**
- * GET handler: Model Context Protocol SSE (Server-Sent Events) Stream
+ * GET handler: Model Context Protocol SSE (Server-Sent Events) Stream & Server Discovery
  */
 export async function GET(request: NextRequest) {
   const acceptHeader = request.headers.get("accept") || "";
@@ -129,11 +47,14 @@ export async function GET(request: NextRequest) {
 
   // Validate token if supplied
   const token = authHeader?.replace(/^Bearer\s+/i, "") || queryToken;
-  if (token && !token.startsWith("nx_pat_") && token !== "nx_demo_pat" && token !== "test_pat") {
-    return NextResponse.json(
-      { error: "Invalid Personal Access Token format. Expected 'nx_pat_...'" },
-      { status: 401, headers: CORS_HEADERS }
-    );
+  if (token) {
+    const authResult = await validateMcpToken(token);
+    if (!authResult.valid) {
+      return NextResponse.json(
+        { error: authResult.error || "Invalid Personal Access Token" },
+        { status: 401, headers: CORS_HEADERS }
+      );
+    }
   }
 
   // If client wants SSE stream
@@ -141,11 +62,7 @@ export async function GET(request: NextRequest) {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            `event: endpoint\ndata: /api/mcp\n\n`
-          )
-        );
+        controller.enqueue(encoder.encode(`event: endpoint\ndata: /api/mcp\n\n`));
       },
     });
 
@@ -218,9 +135,13 @@ const MCP_TOOLS = [
           type: "string",
           description: "Optional project identifier.",
         },
-        phase: {
+        stage: {
+          type: "number",
+          description: "Optional filter by execution stage number (0 = foundation, 1 = architecture, etc.).",
+        },
+        role: {
           type: "string",
-          description: "Optional filter by phase (e.g. 'foundation', 'features', 'hardening').",
+          description: "Optional filter by agent role (e.g. 'Database Architect', 'Frontend Engineer').",
         },
       },
     },
@@ -252,6 +173,10 @@ const MCP_TOOLS = [
       type: "object",
       required: ["nodeId", "status"],
       properties: {
+        projectId: {
+          type: "string",
+          description: "Optional project identifier.",
+        },
         nodeId: {
           type: "string",
           description: "ID of the DAG node being updated (e.g. 'init_schema', 'core_auth').",
@@ -284,6 +209,10 @@ const MCP_TOOLS = [
       type: "object",
       required: ["files"],
       properties: {
+        projectId: {
+          type: "string",
+          description: "Optional project identifier.",
+        },
         files: {
           type: "array",
           description: "Array of files from the repository to check for architectural drift.",
@@ -308,12 +237,13 @@ const MCP_TOOLS = [
 ];
 
 /**
- * Handle execution of specific tools
+ * Handle execution of specific MCP tools against real workspace data
  */
-function handleToolCall(
+async function handleToolCall(
   name: string,
   args: Record<string, unknown> = {},
-  workspace: WorkspaceData
+  workspace: WorkspaceData,
+  userId: string | null
 ) {
   switch (name) {
     case "nx_get_context": {
@@ -458,6 +388,7 @@ function handleToolCall(
       const agentId = args.agentId ? String(args.agentId) : "unknown-agent";
       const notes = args.notes ? String(args.notes) : "";
       const commitHash = args.commitHash ? String(args.commitHash) : undefined;
+      const projectId = args.projectId ? String(args.projectId) : undefined;
 
       if (!nodeId || !status) {
         throw new Error("Missing required parameters: nodeId and status");
@@ -472,7 +403,11 @@ function handleToolCall(
         timestamp: new Date().toISOString(),
       };
 
+      // In-memory cache
       progressReports.push(report);
+
+      // Persistent DB storage
+      await recordAgentProgress(userId, projectId, report);
 
       return {
         content: [
@@ -553,120 +488,127 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Token validation
+  // Token authentication
   const authHeader = request.headers.get("authorization");
   const url = new URL(request.url);
   const queryToken = url.searchParams.get("token");
   const token = authHeader?.replace(/^Bearer\s+/i, "") || queryToken;
 
-  if (token && !token.startsWith("nx_pat_") && token !== "nx_demo_pat" && token !== "test_pat") {
+  const authResult = await validateMcpToken(token);
+  if (!authResult.valid) {
     return NextResponse.json(
       {
         jsonrpc: "2.0",
         id: (body as { id?: string | number })?.id ?? null,
         error: {
           code: -32000,
-          message: "Unauthorized: Invalid Personal Access Token format. Generate an 'nx_pat_...' token in Settings.",
+          message: authResult.error || "Unauthorized: Invalid Personal Access Token. Generate a token in Settings.",
         },
       },
       { status: 401, headers: CORS_HEADERS }
     );
   }
 
+  const userId = authResult.userId;
+
   // Process single or batch JSON-RPC request
   const isBatch = Array.isArray(body);
   const requests = isBatch ? (body as Array<Record<string, unknown>>) : [body as Record<string, unknown>];
 
-  const defaultWorkspace = getCanonicalProductOsWorkspace();
+  const responses = await Promise.all(
+    requests.map(async (req) => {
+      const id = req.id ?? null;
+      const method = req.method;
+      const params = (req.params as Record<string, unknown>) || {};
 
-  const responses = requests.map((req) => {
-    const id = req.id ?? null;
-    const method = req.method;
-    const params = (req.params as Record<string, unknown>) || {};
-
-    try {
-      switch (method) {
-        case "initialize": {
-          return {
-            jsonrpc: "2.0",
-            id,
-            result: {
-              protocolVersion: "2024-11-05",
-              capabilities: {
-                tools: {
-                  listChanged: false,
+      try {
+        switch (method) {
+          case "initialize": {
+            return {
+              jsonrpc: "2.0",
+              id,
+              result: {
+                protocolVersion: "2024-11-05",
+                capabilities: {
+                  tools: {
+                    listChanged: false,
+                  },
                 },
+                serverInfo: {
+                  name: "nxstudio-product-os",
+                  version: "1.0.0",
+                },
+                instructions:
+                  "Nx Studio Product OS MCP Server provides real-time architectural context, Topological DAGs, relational DDL schemas, and bidirectional drift tracking for autonomous agents.",
               },
-              serverInfo: {
-                name: "nxstudio-product-os",
-                version: "1.0.0",
+            };
+          }
+
+          case "notifications/initialized": {
+            return null; // Notifications produce no JSON-RPC response
+          }
+
+          case "ping": {
+            return {
+              jsonrpc: "2.0",
+              id,
+              result: {},
+            };
+          }
+
+          case "tools/list": {
+            return {
+              jsonrpc: "2.0",
+              id,
+              result: {
+                tools: MCP_TOOLS,
               },
-              instructions:
-                "Nx Studio Product OS MCP Server provides real-time architectural context, Topological DAGs, relational DDL schemas, and bidirectional drift tracking for autonomous agents.",
-            },
-          };
-        }
+            };
+          }
 
-        case "notifications/initialized": {
-          return null; // Notifications produce no JSON-RPC response
-        }
+          case "tools/call": {
+            const toolName = String(params.name || "");
+            const toolArgs = (params.arguments as Record<string, unknown>) || {};
+            const requestedProjectId = toolArgs.projectId as string | undefined;
 
-        case "ping": {
-          return {
-            jsonrpc: "2.0",
-            id,
-            result: {},
-          };
-        }
+            // Fetch live user project or fallback to canonical demo workspace
+            const workspace = await fetchUserWorkspaceForMcp(userId, requestedProjectId);
+            const toolResult = await handleToolCall(toolName, toolArgs, workspace, userId);
 
-        case "tools/list": {
-          return {
-            jsonrpc: "2.0",
-            id,
-            result: {
-              tools: MCP_TOOLS,
-            },
-          };
-        }
+            return {
+              jsonrpc: "2.0",
+              id,
+              result: {
+                ...toolResult,
+                isError: false,
+              },
+            };
+          }
 
-        case "tools/call": {
-          const toolName = String(params.name || "");
-          const toolArgs = (params.arguments as Record<string, unknown>) || {};
-          const toolResult = handleToolCall(toolName, toolArgs, defaultWorkspace);
-
-          return {
-            jsonrpc: "2.0",
-            id,
-            result: {
-              ...toolResult,
-              isError: false,
-            },
-          };
+          default: {
+            return {
+              jsonrpc: "2.0",
+              id,
+              error: {
+                code: -32601,
+                message: `Method not found: ${method}`,
+              },
+            };
+          }
         }
-
-        default: {
-          return {
-            jsonrpc: "2.0",
-            id,
-            error: {
-              code: -32601,
-              message: `Method not found: ${method}`,
-            },
-          };
-        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return {
+          jsonrpc: "2.0",
+          id,
+          error: {
+            code: -32000,
+            message,
+          },
+        };
       }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        jsonrpc: "2.0",
-        id,
-        error: {
-          code: -32000,
-          message,
-        },
-      };
-    }
-  });
+    })
+  );
 
   // Filter out null responses from notifications
   const nonNullResponses = responses.filter(Boolean);
