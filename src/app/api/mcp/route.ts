@@ -6,14 +6,13 @@ import {
   compilePrismaSchema,
   diffNx,
 } from "@/lib/nx-compiler";
-import { WorkspaceData, WorkflowDag } from "@/lib/types";
+import { WorkspaceData, WorkflowDag, AgentProgressReport } from "@/lib/types";
 import {
   validateMcpToken,
   fetchUserWorkspaceForMcp,
   recordAgentProgress,
-  getCanonicalProductOsWorkspace,
-  AgentProgressReport,
 } from "@/lib/mcp-server";
+import { MCP_TOOLS, executeTool } from "@/lib/mcp/core-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -87,13 +86,7 @@ export async function GET(request: NextRequest) {
         sse: "/api/mcp",
         rpc: "/api/mcp",
       },
-      tools: [
-        "nx_get_context",
-        "nx_get_dag",
-        "nx_get_schema",
-        "nx_report_progress",
-        "nx_check_drift",
-      ],
+      tools: MCP_TOOLS.map((t) => t.name),
       description: "Nx Studio Product OS MCP Server - Serving structured context, DAGs, and DDLs to autonomous agents.",
     },
     { headers: CORS_HEADERS }
@@ -103,7 +96,7 @@ export async function GET(request: NextRequest) {
 /**
  * Available MCP Tools declarations conforming to Model Context Protocol specification
  */
-const MCP_TOOLS = [
+const _DEPRECATED_MCP_TOOLS = [
   {
     name: "nx_get_context",
     description:
@@ -239,7 +232,7 @@ const MCP_TOOLS = [
 /**
  * Handle execution of specific MCP tools against real workspace data
  */
-async function handleToolCall(
+async function _handleToolCall(
   name: string,
   args: Record<string, unknown> = {},
   workspace: WorkspaceData,
@@ -573,7 +566,13 @@ export async function POST(request: NextRequest) {
 
             // Fetch live user project or fallback to canonical demo workspace
             const workspace = await fetchUserWorkspaceForMcp(userId, requestedProjectId);
-            const toolResult = await handleToolCall(toolName, toolArgs, workspace, userId);
+            const toolResult = await executeTool(toolName, toolArgs, workspace, {
+              progressReports,
+              onProgressReport: async (report) => {
+                progressReports.push(report);
+                await recordAgentProgress(userId, requestedProjectId, report);
+              },
+            });
 
             return {
               jsonrpc: "2.0",

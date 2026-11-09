@@ -1,11 +1,17 @@
 {
   "name": "nx-studio",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
+  "bin": {
+    "nx-studio": "./bin/cli.js",
+    "nx-mcp": "./bin/mcp.js"
+  },
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
+    "test": "node --test tests/*.test.mjs",
     "lint": "eslint",
     "generate:og-image": "node scripts/generate-og-image.mjs"
   },
