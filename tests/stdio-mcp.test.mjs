@@ -25,10 +25,17 @@ describe("Stdio MCP Binary Runner (bin/mcp.js)", () => {
     });
 
     const receivedLines = [];
-    rl.on("line", (line) => {
-      if (line.trim()) {
-        receivedLines.push(JSON.parse(line.trim()));
-      }
+    const twoLinesReceived = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Timeout waiting for stdio responses")), 5000);
+      rl.on("line", (line) => {
+        if (line.trim()) {
+          receivedLines.push(JSON.parse(line.trim()));
+          if (receivedLines.length >= 2) {
+            clearTimeout(timeout);
+            resolve();
+          }
+        }
+      });
     });
 
     // Send Initialize Request
@@ -53,8 +60,8 @@ describe("Stdio MCP Binary Runner (bin/mcp.js)", () => {
       }) + "\n"
     );
 
-    // Wait for responses
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Wait for both lines to be received
+    await twoLinesReceived;
 
     child.kill();
 
