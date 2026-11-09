@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isLocalMode } from "@/lib/supabase/config";
 import { ShellLoader } from "@/components/shell/ShellLoader";
 import { WorkspaceData } from "./workspace-data";
 
@@ -17,6 +18,17 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // In offline local mode, automatically authenticate as the local developer
+  if (isLocalMode) {
+    return (
+      <Suspense fallback={<ShellLoader />}>
+        <WorkspaceData userId="local-developer" email="developer@localhost" isAnonymous={false}>
+          {children}
+        </WorkspaceData>
+      </Suspense>
+    );
+  }
+
   // Defense in depth: the middleware already gates this route, but we re-verify
   // server-side so a Server Component never renders for an unauthenticated user.
   const supabase = await createClient();

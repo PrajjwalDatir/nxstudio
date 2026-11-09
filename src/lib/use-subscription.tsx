@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { isLocalMode } from "@/lib/supabase/config";
 import {
   AccessState,
   PlanTier,
@@ -27,6 +28,20 @@ interface Loaded {
 
 /** Fetch the current user's subscription from the client. */
 async function loadSubscriptionClient(): Promise<Loaded> {
+  if (isLocalMode) {
+    return {
+      subscription: {
+        provider: "local",
+        status: "active",
+        plan_id: "pro_10",
+        current_end: null,
+        current_period_end: null,
+      },
+      email: "developer@localhost",
+      isAnonymous: false,
+    };
+  }
+
   const supabase = createClient();
   const {
     data: { user },

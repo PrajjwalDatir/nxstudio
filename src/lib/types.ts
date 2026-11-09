@@ -279,3 +279,13 @@ export type NxDriftKind =
   | "divergence"
   | "content";
 
+export interface AgentProgressReport {
+  nodeId: string;
+  status: "pending" | "in_progress" | "completed" | "failed";
+  agentId?: string;
+  notes?: string;
+  commitHash?: string;
+  timestamp?: string;
+}
+
+

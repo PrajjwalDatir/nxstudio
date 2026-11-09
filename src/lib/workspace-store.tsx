@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import { getStoredValue, setStoredValue } from "./storage";
 import { createClient } from "@/lib/supabase/client";
+import { isLocalMode } from "@/lib/supabase/config";
 import { CustomStage, IdeaData, IterationEntry, ProductSchema, TechStackInput, WorkspaceData, BrandDNA } from "./types";
 import { mergeNxIntoWorkspace } from "./nx-compiler";
 import { isBriefInsightsStale } from "./staleness";
@@ -375,6 +376,9 @@ export function WorkspaceProvider({
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    // In offline local mode, persistence is handled locally via localStorage and .nx/
+    if (isLocalMode) return;
+
     const supabase = createClient();
     const { projects, collections } = storeRef.current;
     const currentIds = new Set(projects.map((p) => p.id));

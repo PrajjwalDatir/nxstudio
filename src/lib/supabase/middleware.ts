@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabaseUrl, supabasePublishableKey } from "./config";
+import { supabaseUrl, supabasePublishableKey, isLocalMode } from "./config";
 
 /**
  * Paths reachable without an authenticated session. `/api/webhooks` is public
@@ -25,6 +25,11 @@ function isPublic(pathname: string): boolean {
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+
+  // In offline local mode, bypass cloud auth and allow direct local access
+  if (isLocalMode) {
+    return supabaseResponse;
+  }
 
   /**
    * Fast path for the marketing page. Almost everyone hitting "/" is signed

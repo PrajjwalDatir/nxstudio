@@ -9,6 +9,8 @@ import { AppShell } from "@/components/shell/AppShell";
 import { SubscriptionProvider } from "@/lib/use-subscription";
 import { getUser as getGhUser } from "@/lib/github-server";
 import type { GitHubStatus } from "@/lib/github-types";
+import { isLocalMode } from "@/lib/supabase/config";
+import { loadLocalWorkspace } from "@/lib/local-workspace";
 
 /**
  * GitHub connection status rarely changes and costs a full round trip to the
@@ -47,6 +49,32 @@ export async function WorkspaceData({
     token ? getCachedGhUser(token) : Promise.resolve(null),
   ]);
 
+  let projects = initialProjects;
+  let subscription = initialSubscription;
+
+  if (isLocalMode) {
+    subscription = {
+      provider: "local",
+      status: "active",
+      plan_id: "pro_10",
+      current_end: null,
+      current_period_end: null,
+    };
+    if (projects.length === 0) {
+      const localWs = loadLocalWorkspace();
+      projects = [
+        {
+          id: "proj_local",
+          createdAt: new Date().toISOString(),
+          data: localWs,
+          github: { repo: null, branch: "main" },
+          dueDates: {},
+          collectionId: null,
+        },
+      ];
+    }
+  }
+
   let initialGitHubStatus: GitHubStatus = { connected: false };
   if (ghUser) {
     initialGitHubStatus = {
@@ -59,12 +87,12 @@ export async function WorkspaceData({
 
   return (
     <SubscriptionProvider
-      initialSubscription={initialSubscription}
+      initialSubscription={subscription}
       initialEmail={email}
       initialIsAnonymous={isAnonymous}
     >
       <WorkspaceProvider
-        initialProjects={initialProjects}
+        initialProjects={projects}
         initialCollections={initialCollections}
         userId={userId}
         initialGitHubStatus={initialGitHubStatus}

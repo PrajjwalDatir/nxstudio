@@ -9,12 +9,14 @@
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 export const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error(
-    "Missing Supabase env vars. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env."
-  );
-}
+export const isCloudConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
 
-// Re-export as non-optional strings for call sites (the check above guarantees them).
-export const supabaseUrl: string = SUPABASE_URL;
-export const supabasePublishableKey: string = SUPABASE_PUBLISHABLE_KEY;
+export const isLocalMode =
+  process.env.NX_LOCAL_MODE === "1" ||
+  !isCloudConfigured ||
+  (process.env.NODE_ENV !== "production" && !isCloudConfigured);
+
+// In cloud/production mode, require Supabase credentials. In local/offline mode, provide safe fallbacks.
+export const supabaseUrl: string = SUPABASE_URL || "https://local-placeholder.supabase.co";
+export const supabasePublishableKey: string = SUPABASE_PUBLISHABLE_KEY || "local-placeholder-anon-key";
+

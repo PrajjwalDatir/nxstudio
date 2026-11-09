@@ -1,6 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isLocalMode } from "@/lib/supabase/config";
 import { Subscription } from "./use-subscription";
 
 /**
@@ -12,6 +13,16 @@ import { Subscription } from "./use-subscription";
  * function; RLS is replaced here by the explicit `user_id` filter.
  */
 export async function fetchSubscriptionServer(userId: string): Promise<Subscription | null> {
+  if (isLocalMode || !process.env.SUPABASE_SECRET_KEY) {
+    return {
+      provider: "local",
+      status: "active",
+      plan_id: "pro_10",
+      current_end: null,
+      current_period_end: null,
+    };
+  }
+
   return unstable_cache(
     async () => {
       const admin = createAdminClient();
