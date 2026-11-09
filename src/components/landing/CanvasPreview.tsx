@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
  */
 
 const TEAM = [
-  { initials: "PD", name: "nx-studio", role: "Owner" },
+  { initials: "NX", name: "Core Architect", role: "Maintainer" },
   { initials: "AK", name: "Anya Kapoor", role: "Design" },
   { initials: "RS", name: "Rahul Seth", role: "Engineering" },
   { initials: "MJ", name: "Mira Jain", role: "Growth" },

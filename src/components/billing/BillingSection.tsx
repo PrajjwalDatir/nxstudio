@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const SUPPORT_EMAIL = "support@nxstudio.dev";
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
 
 function fmt(date: string | null): string {
   return date ? new Date(date).toLocaleDateString() : "";

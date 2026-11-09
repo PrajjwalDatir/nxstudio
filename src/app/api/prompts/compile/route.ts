@@ -6,7 +6,7 @@ import { hydrateData } from "@/lib/projects";
 import { AgentTarget, WorkspaceData } from "@/lib/types";
 
 export const runtime = "nodejs";
-const SUPPORT_EMAIL = "support@nxstudio.dev";
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
 
 export const POST = withAuthApiHandler<{ data?: Partial<WorkspaceData>; agentTarget?: AgentTarget }>(
   async (_req, user, body) => {

@@ -12,8 +12,8 @@ export interface TemporalCommit {
   content?: string;
 }
 
-const REPO_OWNER = "nx-studio";
-const REPO_NAME = "nxstudio";
+const REPO_OWNER = process.env.GITHUB_REPO_OWNER || "nx-studio";
+const REPO_NAME = process.env.GITHUB_REPO_NAME || "nx-studio";
 
 /**
  * Fetch commit history for a specific file in the repository.

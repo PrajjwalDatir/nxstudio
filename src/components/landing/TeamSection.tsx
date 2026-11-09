@@ -16,12 +16,12 @@ interface Member {
 
 const MEMBERS: Member[] = [
   {
-    name: "nxstudio",
-    role: "Founder & Engineering",
-    location: "India",
+    name: "Nx Studio Maintainers",
+    role: "Core Architecture & Engineering",
+    location: "Global / Open Source",
     blurb:
       "Architects nxstudio's core compiler, .nx/ bundle engine, and WebGL canvas. Engineers the technical pipeline that translates founder specs into agent-ready context.",
-    photo: null, // Uses the branded generated avatar. Drop /public/team/avatar.jpg to override.
+    photo: null,
   },
 ];
 
@@ -63,10 +63,10 @@ export function TeamSection({ index = "06" }: { index?: string }) {
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <SectionKicker index={index} align="center">
-            Founder
+            Team
           </SectionKicker>
           <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Built by nxstudio.
+            Built for developers & agents.
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
             Engineering the compiler, canvas, and context pipeline for developers and AI agents.

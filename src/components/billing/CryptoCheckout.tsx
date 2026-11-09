@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/phases/CopyButton";
 import { LoaderIcon, CheckCircleIcon, ZapIcon } from "@/components/icons";
 
-const SUPPORT_EMAIL = "support@nxstudio.dev";
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
 
 interface PayRequest {
   reference: string;

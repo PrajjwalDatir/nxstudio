@@ -39,17 +39,16 @@ export const siteConfig = {
   locale: "en_US",
 
   // ── People / entity ────────────────────────────────────────────────────
-  authorName: "nx-studio",
+  authorName: "Nx Studio Contributors",
   authorUrl: "https://nxstudio.dev",
   /** Twitter/X handle for twitter:creator + social links. */
   twitterHandle: "@nxstudio_dev",
   /**
    * Public contact address surfaced on the site + legal pages.
-   * TODO(founder): swap for a support alias if you don't want a personal inbox.
    */
-  contactEmail: "support@nxstudio.dev",
+  contactEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev",
   /** Legal entity named in the Terms / Privacy pages. */
-  legalEntity: "nxstudio (operated by nx-studio)",
+  legalEntity: "nxstudio contributors",
 
   links: {
     x: "https://x.com/nxstudio_dev",

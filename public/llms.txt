@@ -54,4 +54,4 @@ concrete, buildable spec and prompt without hand-writing the plan.
 - Privacy Policy: https://nxstudio.dev/privacy
 - Terms of Service: https://nxstudio.dev/terms
 - Refunds & Billing: https://nxstudio.dev/refund
-- Maker: nx-studio — https://x.com/nxstudio_dev
+- Maker: Nx Studio Community — https://x.com/nxstudio_dev

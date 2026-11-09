@@ -148,7 +148,7 @@ export function Hero() {
               className="reveal-rise mb-4 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
             >
               <a
-                href="https://www.indiehackers.com/nxstudio"
+                href="https://github.com/nxstudio/nx-studio"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/60 px-4 py-2 text-sm font-semibold text-foreground shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/90"

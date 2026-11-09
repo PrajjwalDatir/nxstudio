@@ -10,7 +10,7 @@ import { markReferralConverted } from "@/lib/referrals-server";
 // @solana/web3.js needs the Node runtime. Do not switch to edge.
 export const runtime = "nodejs";
 
-const SUPPORT_EMAIL = "support@nxstudio.dev";
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
 
 /**
  * Verify a crypto payment and extend the subscription. Uses the reference stored
