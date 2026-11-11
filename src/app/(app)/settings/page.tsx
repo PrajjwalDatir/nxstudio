@@ -119,7 +119,7 @@ export default function SettingsPage() {
                 Connect
               </Button>
               <a
-                href="https://github.com/settings/tokens/new?scopes=repo&description=nxstudio"
+                href="https://github.com/settings/tokens/new?scopes=repo"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"

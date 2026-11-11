@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useIsMobile } from "./use-is-mobile";
 import { CanvasPreview } from "./CanvasPreview";
 import { ArrowRightIcon, GithubIcon } from "@/components/icons";
-import { IndieHackersMark } from "./brand-icons";
 import { FIRST_LINE, pickLine, type DialogueTrigger } from "./machine-dialogue";
 import { AuthButton } from "./AuthOverlay";
 import { useInView } from "./use-in-view";
@@ -142,31 +141,6 @@ export function Hero() {
 
           {/* Copy — right rail on desktop, top on mobile */}
           <div className="relative z-10 text-center md:text-left max-w-2xl lg:max-w-3xl pointer-events-auto md:col-start-2 md:order-2">
-            {/* Top Proof Badges — Indie Hackers + Product Hunt */}
-            <div
-              style={{ animationDelay: "0.12s" }}
-              className="reveal-rise mb-4 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
-            >
-              <span className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/60 px-4 py-2 text-sm font-semibold text-foreground shadow-xs">
-                <span>Featured on</span>
-                <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
-              </span>
-              <a
-                href="https://www.producthunt.com/products/nxstudio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-nxstudio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex shrink-0 items-center transition-transform hover:-translate-y-0.5"
-              >
-                <img
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1216560&theme=neutral"
-                  alt="nxstudio - Product context for AI IDE | Product Hunt"
-                  width={250}
-                  height={54}
-                  className="h-[34px] w-auto sm:h-9"
-                />
-              </a>
-            </div>
-
             <h1
               style={{ animationDelay: "0.28s" }}
               className="reveal-rise text-3xl font-extrabold leading-[1.2] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.6rem]"

@@ -118,21 +118,6 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
           <p>© {new Date().getFullYear()} nxstudio. All rights reserved.</p>
-          <a
-            href={siteConfig.links.productHuntReview}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Review nxstudio on Product Hunt"
-            className="inline-flex shrink-0 items-center transition-transform hover:-translate-y-0.5"
-          >
-            <img
-              src="https://api.producthunt.com/widgets/embed-image/v1/product_review.svg?product_id=1287513&theme=light"
-              alt="nxstudio - Product context for AI IDE | Product Hunt"
-              width={250}
-              height={54}
-              className="h-9 w-auto"
-            />
-          </a>
           <p>
             Built by{" "}
             {siteConfig.authorUrl ? (

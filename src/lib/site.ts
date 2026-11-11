@@ -53,8 +53,6 @@ export const siteConfig = {
   links: {
     x: process.env.NEXT_PUBLIC_X_URL || "",
     author: process.env.NEXT_PUBLIC_AUTHOR_URL || "",
-    productHuntReview:
-      "https://www.producthunt.com/products/nxstudio/reviews/new?utm_source=badge-product_review&utm_medium=badge&utm_source=badge-nxstudio",
   },
 
   /** The AI coding agents nxstudio's build prompt is designed to pair with. */

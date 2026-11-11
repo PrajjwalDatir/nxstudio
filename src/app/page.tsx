@@ -10,7 +10,7 @@ import { ClosingScene } from "@/components/landing/ClosingScene";
 import { AuthProvider, AuthButton } from "@/components/landing/AuthOverlay";
 import { ReferralCapture } from "@/components/referral/ReferralCapture";
 import { ArrowRightIcon } from "@/components/icons";
-import { IdeBadgeFlipper, LaunchBadgeFlipper } from "@/components/landing/IdeFlipper";
+import { IdeBadgeFlipper } from "@/components/landing/IdeFlipper";
 import { UserCountBadge } from "@/components/landing/UserCountBadge";
 
 export const metadata: Metadata = {
@@ -28,10 +28,10 @@ export default function LandingPage() {
       <main>
         <Hero />
 
-        {/* ── Integration, Launch & Community Badges Strip ────────────────── */}
+        {/* ── Integration & Community Badges Strip ──────────────────────── */}
         <section className="relative z-10 py-6 px-5 sm:px-6">
           <div className="mx-auto max-w-6xl">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* Card 1: Use with (Animated IDE Flipper) */}
               <div className="glass flex flex-col items-center justify-between gap-3 rounded-2xl px-5 py-3.5 sm:flex-row sm:gap-4">
                 <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
@@ -42,18 +42,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Card 2: Launched on (Animated Badge Flipper: Product Hunt & Launchstag) */}
+              {/* Card 2: Community (Real User Count) */}
               <div className="glass flex flex-col items-center justify-between gap-3 rounded-2xl px-5 py-3.5 sm:flex-row sm:gap-4">
-                <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
-                  Launched on
-                </p>
-                <div className="flex items-center justify-center">
-                  <LaunchBadgeFlipper />
-                </div>
-              </div>
-
-              {/* Card 3: Community (Real User Count) */}
-              <div className="glass flex flex-col items-center justify-between gap-3 rounded-2xl px-5 py-3.5 sm:flex-row sm:gap-4 sm:col-span-2 md:col-span-1">
                 <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
                   Community
                 </p>
