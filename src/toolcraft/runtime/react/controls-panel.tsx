@@ -980,13 +980,27 @@ function countControlsByType(
   sections: readonly ToolcraftControlSectionSchema[],
   type: string,
 ): number {
-  return sections.reduce(
-    (count, section) =>
-      count +
-      Object.values(section.controls).filter((control) => control.type === type)
-        .length,
-    0,
-  );
+  // OPTIMIZATION: Avoid allocating intermediate arrays with Object.values().filter().length
+  // inside the rendering pass. Instead, loop over the controls manually to count occurrences.
+  // This reduces memory pressure and garbage collection overhead.
+  let count = 0;
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i];
+
+    if (section && section.controls) {
+      for (const controlId in section.controls) {
+        if (
+          Object.prototype.hasOwnProperty.call(section.controls, controlId) &&
+          section.controls[controlId]?.type === type
+        ) {
+          count += 1;
+        }
+      }
+    }
+  }
+
+  return count;
 }
 
 function shouldCommitTextControlOnBlur(control: ToolcraftControlSchema): boolean {
@@ -1242,11 +1256,19 @@ function isToggleParameterLayoutGroup(
     return false;
   }
 
-  const controls = layoutGroup.controls.map((controlId) => controlsById[controlId]);
-  const booleanControlCount = controls.filter((control) => isBooleanControl(control)).length;
-  const parameterControlCount = controls.filter((control) => !isBooleanControl(control)).length;
+  // OPTIMIZATION: Avoid .map().filter().length chains to prevent allocating temporary
+  // arrays in this frequently called check. Directly access and verify the two items.
+  const firstControlId = layoutGroup.controls[0];
+  const secondControlId = layoutGroup.controls[1];
 
-  return booleanControlCount === 1 && parameterControlCount === 1;
+  if (!firstControlId || !secondControlId) {
+    return false;
+  }
+
+  const isFirstBoolean = isBooleanControl(controlsById[firstControlId]);
+  const isSecondBoolean = isBooleanControl(controlsById[secondControlId]);
+
+  return isFirstBoolean !== isSecondBoolean;
 }
 
 function shouldHideToggleParameterControlLabel({
