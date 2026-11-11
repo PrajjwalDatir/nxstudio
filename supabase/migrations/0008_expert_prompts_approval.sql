@@ -101,10 +101,3 @@ drop policy if exists "Experts and Admins can submit prompt templates" on public
 create policy "Experts and Admins can submit prompt templates"
   on public.prompt_templates for insert
   with check (auth.uid() is not null and public.is_expert_or_admin(auth.uid()));
-
--- 7. SQL Query to grant admin role to your account (RUN THIS QUERY ONCE IN SUPABASE SQL EDITOR):
--- insert into public.user_roles (user_id, role)
--- select id, 'admin'
--- from auth.users
--- where email = 'admin@example.com'
--- on conflict (user_id) do update set role = 'admin';
