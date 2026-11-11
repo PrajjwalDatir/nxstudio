@@ -270,7 +270,7 @@ function SortablePreviewTile({
         isDragging &&
           "z-10 cursor-grabbing opacity-90 shadow-[0_12px_24px_color-mix(in_oklab,var(--background)_55%,transparent)]",
       )}
-      data-file-upload-preview-key={itemKey}
+      data-file-upload-preview-id={itemKey}
       data-preview-dragging={isDragging ? "true" : undefined}
       data-selected={selected ? "true" : undefined}
       data-slot="file-upload-preview-item"
@@ -348,7 +348,7 @@ function SortableFileRow({
         isDragging &&
           "z-10 cursor-grabbing bg-[color:color-mix(in_oklab,var(--foreground)_5%,transparent)] opacity-90",
       )}
-      data-file-upload-preview-key={itemKey}
+      data-file-upload-preview-id={itemKey}
       data-preview-dragging={isDragging ? "true" : undefined}
       data-slot="file-upload-file-item"
       onClick={(event) => {
