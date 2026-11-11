@@ -2,11 +2,13 @@ import Link from "next/link";
 import { NxLogo, ArrowLeftIcon } from "@/components/icons";
 import { LegalSidebar } from "./LegalSidebar";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { ReworkBanner } from "@/components/shell/ReworkBanner";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/70 backdrop-blur-xl">
+        <ReworkBanner />
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5" aria-label="nxstudio home">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card">

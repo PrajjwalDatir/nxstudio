@@ -7,6 +7,7 @@ import { ImportProjectDialog } from "@/components/canvas/ImportProjectDialog";
 import { WorkspaceData, ProductSchema } from "@/lib/types";
 import { newWorkspaceData, newProject } from "@/lib/projects";
 import { WorkspaceProvider } from "@/lib/workspace-store";
+import { ReworkBanner } from "@/components/shell/ReworkBanner";
 
 function WorkbenchContent() {
   const [data, setData] = useState<WorkspaceData>(() => ({
@@ -131,6 +132,7 @@ export default function WorkbenchPage() {
 
   return (
     <WorkspaceProvider initialProjects={[project]} userId="workbench-demo-user">
+      <ReworkBanner />
       <WorkbenchContent />
     </WorkspaceProvider>
   );

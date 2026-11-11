@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAuthOverlay } from "./AuthOverlay";
 import { runRadialThemeTransition } from "./theme-transition";
 import { lampOrigin } from "./lamp-origin";
+import { ReworkBanner } from "@/components/shell/ReworkBanner";
 
 // True once hydrated on the client, false during SSR — no effect-driven
 // setState needed, so no cascading render on mount.
@@ -109,8 +110,10 @@ export function LandingNav() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 px-4 pt-3 sm:pt-4">
-      <nav
+    <header className="sticky top-0 z-50">
+      <ReworkBanner />
+      <div className="px-4 pt-3 sm:pt-4">
+        <nav
         className={cn(
           "mx-auto flex h-14 max-w-4xl items-center justify-between rounded-full border pl-4 pr-2 transition-all duration-300 backdrop-blur-xl",
           scrolled || open
@@ -189,6 +192,7 @@ export function LandingNav() {
           </div>
         </div>
       )}
+      </div>
     </header>
   );
 }

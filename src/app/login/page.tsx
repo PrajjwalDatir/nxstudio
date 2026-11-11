@@ -11,6 +11,7 @@ import { GitHubSignIn } from "./github-signin";
 import { CanvasPreview } from "@/components/landing/CanvasPreview";
 import { pageMetadata } from "@/lib/site";
 import { getSafeRedirectUrl } from "@/lib/security/redirect";
+import { ReworkBanner } from "@/components/shell/ReworkBanner";
 
 export const metadata: Metadata = pageMetadata({
   path: "/login",
@@ -37,7 +38,9 @@ export default async function LoginPage({
   const safeRedirect = getSafeRedirectUrl(redirectTo, "/canvas");
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <ReworkBanner />
+      <div className="flex flex-1">
       {/* Form Side - Left */}
       <div className="relative flex w-full flex-col items-center justify-center px-8 py-12 bg-card border-r border-border lg:w-[45%] xl:px-12">
         <div className="mx-auto flex w-full max-w-[340px] flex-col items-center text-center z-10 pb-24">
@@ -112,6 +115,7 @@ export default async function LoginPage({
             <CanvasPreview />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

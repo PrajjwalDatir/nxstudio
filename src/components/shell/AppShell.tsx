@@ -6,6 +6,7 @@ import { Topbar } from "@/components/shell/Topbar";
 import { ReferralClaim } from "@/components/referral/ReferralClaim";
 import { MascotNudge } from "@/components/shell/MascotNudge";
 import { ShellLoader } from "@/components/shell/ShellLoader";
+import { ReworkBanner } from "@/components/shell/ReworkBanner";
 
 /**
  * Gates the app shell on store hydration. The server (and the first client
@@ -43,6 +44,7 @@ export function AppShell({
       </a>
       <Sidebar userEmail={userEmail} isAnonymous={isAnonymous} />
       <div className="flex flex-1 flex-col overflow-hidden">
+        <ReworkBanner />
         <Topbar />
         <main id="main-content" className="flex-1 overflow-y-auto">{children}</main>
       </div>

@@ -1,4 +1,5 @@
 import { NxLogo } from "@/components/icons";
+import { ReworkBanner } from "@/components/shell/ReworkBanner";
 
 /**
  * Neutral loading frame shown both as the Suspense fallback while the
@@ -7,8 +8,11 @@ import { NxLogo } from "@/components/icons";
  */
 export function ShellLoader() {
   return (
-    <div className="flex h-screen items-center justify-center bg-background">
-      <NxLogo className="h-8 w-8 text-primary/40" />
+    <div className="flex h-screen flex-col bg-background">
+      <ReworkBanner />
+      <div className="flex flex-1 items-center justify-center">
+        <NxLogo className="h-8 w-8 text-primary/40" />
+      </div>
     </div>
   );
 }
