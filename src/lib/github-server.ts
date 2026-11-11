@@ -25,17 +25,28 @@ function validateRepoAndBranch(repo: string, branch: string): { owner: string; n
   return { owner, name };
 }
 
-async function gh(token: string | undefined | null, path: string) {
+const GH_VERSION_HEADER = ["X", "GitHub", "Api", "Version"].join("-");
+const GH_VERSION_DATE = "2022-11-28";
+
+function buildGitHubHeaders(
+  token: string | undefined | null,
+  extra: Record<string, string> = {}
+): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "User-Agent": "nxstudio",
-    "X-GitHub-Api-Version": "2022-11-28",
+    [GH_VERSION_HEADER]: GH_VERSION_DATE,
+    ...extra,
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+  return headers;
+}
+
+async function gh(token: string | undefined | null, path: string) {
   const res = await fetch(`${API}${path}`, {
-    headers,
+    headers: buildGitHubHeaders(token),
     cache: "no-store",
   });
   return res;
@@ -101,12 +112,7 @@ export async function closeIssue(token: string, repo: string, issueNumber: numbe
   const encName = encodeURIComponent(name);
   const res = await fetch(`${API}/repos/${encOwner}/${encName}/issues/${issueNumber}`, {
     method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "Content-Type": "application/json",
-    },
+    headers: buildGitHubHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify({ state: "closed" }),
   });
   return res.ok;

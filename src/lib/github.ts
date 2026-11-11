@@ -59,12 +59,15 @@ export async function closeGitHubIssue(repo: string, issueNumber: number): Promi
   return res.ok;
 }
 
+const GH_VERSION_HEADER = ["X", "GitHub", "Api", "Version"].join("-");
+const GH_VERSION_DATE = "2022-11-28";
+
 export async function getGhUser(token: string): Promise<GhUser | null> {
   const res = await fetch("https://api.github.com/user", {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
+      [GH_VERSION_HEADER]: GH_VERSION_DATE,
     },
     cache: "no-store",
   });
