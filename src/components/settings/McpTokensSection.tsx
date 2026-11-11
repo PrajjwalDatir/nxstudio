@@ -63,15 +63,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
         const parsed = JSON.parse(stored) as PatToken[];
         if (Array.isArray(parsed)) return parsed;
       }
-      const demoToken: PatToken = {
-        id: "tok_demo_primary",
-        name: "Cursor IDE Agent",
-        tokenPrefix: "nx_pat_7a2f...9c4b",
-        createdAt: new Date().toISOString().split("T")[0],
-        expiresIn: "Never",
-        lastUsedAt: "Just now",
-      };
-      return [demoToken];
+      return [];
     } catch {
       return [];
     }
@@ -192,7 +184,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
 
   const getIdeSnippet = () => {
     const host = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-    const displayToken = newlyCreatedToken || "nx_pat_YOUR_TOKEN";
+    const displayToken = newlyCreatedToken || "<YOUR_TOKEN>";
 
     switch (activeTab) {
       case "cursor":

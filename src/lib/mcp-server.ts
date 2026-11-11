@@ -199,11 +199,6 @@ export async function validateMcpToken(
 
   const cleanToken = token.trim().replace(/^Bearer\s+/i, "");
 
-  // Support demo / test tokens for unauthenticated sandbox or test suites
-  if (cleanToken === "nx_demo_pat" || cleanToken === "test_pat") {
-    return { valid: true, userId: null, isDemo: true };
-  }
-
   if (!cleanToken.startsWith("nx_pat_")) {
     return { valid: false, userId: null, isDemo: false, error: "Invalid token format. Expected 'nx_pat_...'" };
   }
@@ -220,8 +215,7 @@ export async function validateMcpToken(
 
     if (error) {
       console.warn("[MCP] Database error while validating token:", error);
-      // Fallback: If DB table is not yet migrated, accept valid format in demo fallback mode
-      return { valid: true, userId: null, isDemo: true };
+      return { valid: false, userId: null, isDemo: false, error: "Unauthorized: Token validation failed" };
     }
 
     if (!data) {
@@ -242,8 +236,8 @@ export async function validateMcpToken(
 
     return { valid: true, userId: data.user_id, isDemo: false };
   } catch (err) {
-    console.warn("[MCP] Exception while validating token, using demo fallback:", err);
-    return { valid: true, userId: null, isDemo: true };
+    console.warn("[MCP] Exception while validating token:", err);
+    return { valid: false, userId: null, isDemo: false, error: "Unauthorized: Token validation failed" };
   }
 }
 
