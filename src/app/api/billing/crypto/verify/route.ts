@@ -6,11 +6,12 @@ import { verifyPayment } from "@/lib/solana/client";
 import { solana } from "@/lib/solana/config";
 import { deriveAccessState } from "@/lib/billing";
 import { markReferralConverted } from "@/lib/referrals-server";
+import { siteConfig } from "@/lib/site";
 
 // @solana/web3.js needs the Node runtime. Do not switch to edge.
 export const runtime = "nodejs";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
+const SUPPORT_EMAIL = siteConfig.contactEmail;
 
 /**
  * Verify a crypto payment and extend the subscription. Uses the reference stored

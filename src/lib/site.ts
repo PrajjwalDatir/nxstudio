@@ -17,7 +17,7 @@ function resolveSiteUrl(): string {
   if (explicit) return explicit.replace(/\/$/, "");
   const vercel = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL;
   if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
-  return "https://nxstudio.dev";
+  return "http://localhost:3000";
 }
 
 export const siteConfig = {
@@ -39,20 +39,20 @@ export const siteConfig = {
   locale: "en_US",
 
   // ── People / entity ────────────────────────────────────────────────────
-  authorName: "Nx Studio Contributors",
-  authorUrl: "https://nxstudio.dev",
+  authorName: "Contributors",
+  authorUrl: process.env.NEXT_PUBLIC_AUTHOR_URL || "",
   /** Twitter/X handle for twitter:creator + social links. */
-  twitterHandle: "@nxstudio_dev",
+  twitterHandle: process.env.NEXT_PUBLIC_TWITTER_HANDLE || "",
   /**
    * Public contact address surfaced on the site + legal pages.
    */
-  contactEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev",
+  contactEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@example.com",
   /** Legal entity named in the Terms / Privacy pages. */
   legalEntity: "nxstudio contributors",
 
   links: {
-    x: "https://x.com/nxstudio_dev",
-    author: "https://nxstudio.dev",
+    x: process.env.NEXT_PUBLIC_X_URL || "",
+    author: process.env.NEXT_PUBLIC_AUTHOR_URL || "",
     productHuntReview:
       "https://www.producthunt.com/products/nxstudio/reviews/new?utm_source=badge-product_review&utm_medium=badge&utm_source=badge-nxstudio",
   },

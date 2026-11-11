@@ -12,15 +12,15 @@ export interface TemporalCommit {
   content?: string;
 }
 
-const REPO_OWNER = process.env.GITHUB_REPO_OWNER || "nx-studio";
-const REPO_NAME = process.env.GITHUB_REPO_NAME || "nx-studio";
+const REPO_OWNER = process.env.GITHUB_REPO_OWNER || "";
+const REPO_NAME = process.env.GITHUB_REPO_NAME || "";
 
 /**
  * Fetch commit history for a specific file in the repository.
  */
 export async function fetchFileCommits(path: string): Promise<TemporalCommit[]> {
   // Security: Prevent path traversal
-  if (path.includes("..")) return [];
+  if (!REPO_OWNER || !REPO_NAME || path.includes("..")) return [];
 
   try {
     const cleanPath = path.startsWith("/") ? path.slice(1) : path;
@@ -73,7 +73,7 @@ export async function fetchFileCommits(path: string): Promise<TemporalCommit[]> 
  */
 export async function fetchFileContentAtSha(sha: string, path: string): Promise<string | null> {
   // Security: Prevent path traversal and properly URL-encode segments
-  if (sha.includes("..") || path.includes("..")) return null;
+  if (!REPO_OWNER || !REPO_NAME || sha.includes("..") || path.includes("..")) return null;
 
   try {
     const cleanPath = path.startsWith("/") ? path.slice(1) : path;

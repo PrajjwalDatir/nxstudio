@@ -108,7 +108,7 @@ jobs:
           GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "nx-studio-agent[bot]"
-          git config user.email "bot@nxstudio.ai"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "fix/issue-\${{ github.event.issue.number }}"
           git add .
           git commit -m "fix: autonomous resolution for issue #\${{ github.event.issue.number }}"

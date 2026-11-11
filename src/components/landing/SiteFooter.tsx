@@ -45,15 +45,17 @@ export function SiteFooter() {
             {siteConfig.tagline} Describe your vision, get a production-ready build prompt.
           </p>
           <div className="mt-5 flex items-center gap-2">
-            <a
-              href={siteConfig.links.x}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="nxstudio on X"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-            >
-              <XMark className="h-4 w-4" />
-            </a>
+            {siteConfig.links.x && (
+              <a
+                href={siteConfig.links.x}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="nxstudio on X"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              >
+                <XMark className="h-4 w-4" />
+              </a>
+            )}
             <a
               href={`mailto:${siteConfig.contactEmail}`}
               aria-label="Email nxstudio"
@@ -89,16 +91,18 @@ export function SiteFooter() {
             Connect
           </h3>
           <ul className="mt-4 space-y-2.5">
-            <li>
-              <a
-                href={siteConfig.links.x}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {siteConfig.twitterHandle}
-              </a>
-            </li>
+            {siteConfig.links.x && siteConfig.twitterHandle && (
+              <li>
+                <a
+                  href={siteConfig.links.x}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {siteConfig.twitterHandle}
+                </a>
+              </li>
+            )}
             <li>
               <a
                 href={`mailto:${siteConfig.contactEmail}`}
@@ -131,14 +135,18 @@ export function SiteFooter() {
           </a>
           <p>
             Built by{" "}
-            <a
-              href={siteConfig.authorUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground/80 transition-colors hover:text-foreground"
-            >
-              {siteConfig.authorName}
-            </a>
+            {siteConfig.authorUrl ? (
+              <a
+                href={siteConfig.authorUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 transition-colors hover:text-foreground"
+              >
+                {siteConfig.authorName}
+              </a>
+            ) : (
+              <span className="text-foreground/80">{siteConfig.authorName}</span>
+            )}
           </p>
         </div>
       </div>

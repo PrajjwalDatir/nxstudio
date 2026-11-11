@@ -173,7 +173,7 @@ export function compileMotionSpec(data: WorkspaceData): string {
   }
 
   const spec = {
-    $schema: "https://nxstudio.dev/schemas/motion.v1.json",
+    $schema: "https://example.com/schemas/motion.v1.json",
     preset,
     speed,
     kinematics: {

@@ -106,5 +106,5 @@ create policy "Experts and Admins can submit prompt templates"
 -- insert into public.user_roles (user_id, role)
 -- select id, 'admin'
 -- from auth.users
--- where email = 'admin@nxstudio.dev'
+-- where email = 'admin@example.com'
 -- on conflict (user_id) do update set role = 'admin';

@@ -4,9 +4,10 @@ import { getAccessForUser } from "@/lib/billing-server";
 import { compilePromptsForProject } from "@/lib/prompts-server";
 import { hydrateData } from "@/lib/projects";
 import { AgentTarget, WorkspaceData } from "@/lib/types";
+import { siteConfig } from "@/lib/site";
 
 export const runtime = "nodejs";
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
+const SUPPORT_EMAIL = siteConfig.contactEmail;
 
 export const POST = withAuthApiHandler<{ data?: Partial<WorkspaceData>; agentTarget?: AgentTarget }>(
   async (_req, user, body) => {

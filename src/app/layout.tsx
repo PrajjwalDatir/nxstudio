@@ -26,7 +26,11 @@ export const metadata: Metadata = {
   description: siteConfig.description,
   applicationName: siteConfig.name,
   keywords: [...siteConfig.keywords],
-  authors: [{ name: siteConfig.authorName, url: siteConfig.authorUrl }],
+  authors: [
+    siteConfig.authorUrl
+      ? { name: siteConfig.authorName, url: siteConfig.authorUrl }
+      : { name: siteConfig.authorName },
+  ],
   creator: siteConfig.authorName,
   publisher: siteConfig.name,
   category: "technology",
@@ -51,8 +55,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.title,
     description: siteConfig.description,
-    site: siteConfig.twitterHandle,
-    creator: siteConfig.twitterHandle,
+    ...(siteConfig.twitterHandle
+      ? { site: siteConfig.twitterHandle, creator: siteConfig.twitterHandle }
+      : {}),
     images: [siteConfig.ogImage],
   },
   robots: {
@@ -116,7 +121,7 @@ function StructuredData() {
         author: {
           "@type": "Person",
           name: siteConfig.authorName,
-          url: siteConfig.authorUrl,
+          ...(siteConfig.authorUrl ? { url: siteConfig.authorUrl } : {}),
         },
       },
       {
@@ -128,7 +133,7 @@ function StructuredData() {
         publisher: {
           "@type": "Person",
           name: siteConfig.authorName,
-          url: siteConfig.authorUrl,
+          ...(siteConfig.authorUrl ? { url: siteConfig.authorUrl } : {}),
         },
       },
     ],

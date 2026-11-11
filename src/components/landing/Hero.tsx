@@ -147,15 +147,10 @@ export function Hero() {
               style={{ animationDelay: "0.12s" }}
               className="reveal-rise mb-4 flex flex-wrap items-center justify-center gap-2.5 md:justify-start"
             >
-              <a
-                href="https://github.com/nxstudio/nx-studio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/60 px-4 py-2 text-sm font-semibold text-foreground shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/90"
-              >
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/60 px-4 py-2 text-sm font-semibold text-foreground shadow-xs">
                 <span>Featured on</span>
                 <IndieHackersMark className="h-4 w-4 rounded shrink-0" />
-              </a>
+              </span>
               <a
                 href="https://www.producthunt.com/products/nxstudio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-nxstudio"
                 target="_blank"

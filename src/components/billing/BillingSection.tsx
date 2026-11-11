@@ -9,8 +9,9 @@ import { CheckCircleIcon, ZapIcon, LockIcon, LoaderIcon } from "@/components/ico
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { siteConfig } from "@/lib/site";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
+const SUPPORT_EMAIL = siteConfig.contactEmail;
 
 function fmt(date: string | null): string {
   return date ? new Date(date).toLocaleDateString() : "";

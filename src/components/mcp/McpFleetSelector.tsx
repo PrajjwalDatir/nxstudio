@@ -16,7 +16,7 @@ interface McpServerDef {
   name: string;
   category: "product-os" | "developer" | "data" | "search" | "ops";
   tagline: string;
-  docsUrl: string;
+  docsUrl?: string;
   badge?: string;
   cursorConfig: (projectName: string) => Record<string, unknown>;
   claudeConfig: (projectName: string) => Record<string, unknown>;
@@ -97,10 +97,9 @@ const MCP_REGISTRY: McpServerDef[] = [
     category: "product-os",
     tagline: "Topological DAG, W3C Design Tokens, Kinematics & Drift Synchronization",
     badge: "Core OS",
-    docsUrl: "https://nxstudio.app",
     icon: NxStudioMcpIcon,
     cursorConfig: () => {
-      const host = typeof window !== "undefined" ? window.location.origin : "https://nxstudio.dev";
+      const host = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
       return {
         command: "npx",
         args: ["-y", "mcp-remote", `${host}/api/mcp`],
@@ -110,7 +109,7 @@ const MCP_REGISTRY: McpServerDef[] = [
       };
     },
     claudeConfig: () => {
-      const host = typeof window !== "undefined" ? window.location.origin : "https://nxstudio.dev";
+      const host = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
       return {
         command: "npx",
         args: ["-y", "mcp-remote", `${host}/api/mcp`],
@@ -402,16 +401,18 @@ export function McpFleetSelector() {
 
               <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-[10px] text-muted-foreground">
                 <span className="font-mono uppercase">{srv.category}</span>
-                <a
-                  href={srv.docsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 hover:text-foreground"
-                >
-                  <span>Docs</span>
-                  <ExternalLinkIcon className="h-2.5 w-2.5" />
-                </a>
+                {srv.docsUrl && (
+                  <a
+                    href={srv.docsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1 hover:text-foreground"
+                  >
+                    <span>Docs</span>
+                    <ExternalLinkIcon className="h-2.5 w-2.5" />
+                  </a>
+                )}
               </div>
             </div>
           );

@@ -2,7 +2,6 @@
 
 > nxstudio is a founder-mode build tool that turns a product brief into a
 > derived tech stack and one production-ready build prompt for AI coding agents.
-> Hosted at https://nxstudio.dev
 
 nxstudio compresses the messy pre-build phase — "I have an idea, what do I
 actually build and how do I tell an AI to build it?" — into a short, guided
@@ -45,13 +44,12 @@ concrete, buildable spec and prompt without hand-writing the plan.
 
 ## Links
 
-- Product / landing: https://nxstudio.dev
-- Pricing: https://nxstudio.dev/pricing
-- FAQ: https://nxstudio.dev/faq
-- About: https://nxstudio.dev/about
-- Sign in: https://nxstudio.dev/login
-- Contact: https://nxstudio.dev/contact
-- Privacy Policy: https://nxstudio.dev/privacy
-- Terms of Service: https://nxstudio.dev/terms
-- Refunds & Billing: https://nxstudio.dev/refund
-- Maker: Nx Studio Community — https://x.com/nxstudio_dev
+- Product / landing: `/`
+- Pricing: `/pricing`
+- FAQ: `/faq`
+- About: `/about`
+- Sign in: `/login`
+- Contact: `/contact`
+- Privacy Policy: `/privacy`
+- Terms of Service: `/terms`
+- Refunds & Billing: `/refund`

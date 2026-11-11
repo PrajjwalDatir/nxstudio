@@ -5,8 +5,9 @@ import { CryptoCheckout } from "./CryptoCheckout";
 import { RazorpayCheckout } from "./RazorpayCheckout";
 import { PricingGrid } from "./PricingGrid";
 import { XIcon, ZapIcon } from "@/components/icons";
+import { siteConfig } from "@/lib/site";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
+const SUPPORT_EMAIL = siteConfig.contactEmail;
 
 export function PremiumDialog({
   open,

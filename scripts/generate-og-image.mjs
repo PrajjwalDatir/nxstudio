@@ -11,7 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const targetUrl = process.env.OG_IMAGE_URL || process.env.SITE_URL || "https://nxstudio.dev";
+const targetUrl = process.env.OG_IMAGE_URL || process.env.SITE_URL || "http://localhost:3000";
 const ogImagePath = path.join(rootDir, "public/opengraph-image.png");
 const twitterImagePath = path.join(rootDir, "public/twitter-image.png");
 

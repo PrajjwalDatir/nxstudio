@@ -800,7 +800,7 @@ export function CanvasPreview() {
           </div>
           <div className="mx-auto flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-3 py-1 font-mono text-[11px] text-muted-foreground">
             <LockIcon className="h-3 w-3" />
-            nxstudio.dev{MAIN_NAV_ITEMS.find((i) => i.id === activeId)?.href ?? "/canvas"}
+            {MAIN_NAV_ITEMS.find((i) => i.id === activeId)?.href ?? "/canvas"}
           </div>
           <span className="hidden rounded-md border border-border bg-secondary/50 px-2 py-1 font-mono text-[11px] text-muted-foreground sm:inline">
             ⌘K

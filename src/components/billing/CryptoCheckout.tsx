@@ -6,8 +6,9 @@ import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/phases/CopyButton";
 import { LoaderIcon, CheckCircleIcon, ZapIcon } from "@/components/icons";
+import { siteConfig } from "@/lib/site";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
+const SUPPORT_EMAIL = siteConfig.contactEmail;
 
 interface PayRequest {
   reference: string;

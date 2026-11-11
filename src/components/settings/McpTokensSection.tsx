@@ -191,7 +191,7 @@ export function McpTokensSection({ isAnonymous: propIsAnonymous }: { isAnonymous
   };
 
   const getIdeSnippet = () => {
-    const host = typeof window !== "undefined" ? window.location.origin : "https://nxstudio.dev";
+    const host = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
     const displayToken = newlyCreatedToken || "nx_pat_YOUR_TOKEN";
 
     switch (activeTab) {

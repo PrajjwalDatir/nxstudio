@@ -3,8 +3,9 @@
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoaderIcon, CreditCardIcon } from "@/components/icons";
+import { siteConfig } from "@/lib/site";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@nxstudio.dev";
+const SUPPORT_EMAIL = siteConfig.contactEmail;
 const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
 interface RazorpaySuccessResponse {
