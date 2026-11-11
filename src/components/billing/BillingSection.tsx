@@ -158,12 +158,14 @@ export function BillingSection() {
         </div>
       </div>
 
-      <p className="mt-5 text-xs text-muted-foreground">
-        Billing support or custom enterprise workflows?{" "}
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="underline text-foreground">
-          {SUPPORT_EMAIL}
-        </a>
-      </p>
+      {SUPPORT_EMAIL && (
+        <p className="mt-5 text-xs text-muted-foreground">
+          Billing support or custom enterprise workflows?{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline text-foreground">
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
+      )}
     </section>
   );
 }

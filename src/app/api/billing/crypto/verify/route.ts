@@ -46,8 +46,9 @@ export async function POST(request: Request) {
     }
     // If they pasted a reference, it must be the one we issued to them.
     if (pasted && pasted !== stored) {
+      const contactHint = SUPPORT_EMAIL ? ` Email ${SUPPORT_EMAIL} if you paid.` : "";
       return NextResponse.json(
-        { error: `That reference isn't linked to your account. Email ${SUPPORT_EMAIL} if you paid.` },
+        { error: `That reference isn't linked to your account.${contactHint}` },
         { status: 400 }
       );
     }
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
         verified: false,
         reason: result.reason,
         message: result.message,
-        support: result.reason === "invalid" ? SUPPORT_EMAIL : undefined,
+        support: result.reason === "invalid" && SUPPORT_EMAIL ? SUPPORT_EMAIL : undefined,
       });
     }
 

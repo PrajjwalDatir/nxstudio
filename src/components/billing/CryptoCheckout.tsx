@@ -159,7 +159,7 @@ export function CryptoCheckout({
           )}
           <span>
             {note}
-            {needsSupport && (
+            {needsSupport && SUPPORT_EMAIL && (
               <>
                 {" "}
                 Contact{" "}

@@ -46,7 +46,7 @@ export const siteConfig = {
   /**
    * Public contact address surfaced on the site + legal pages.
    */
-  contactEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@example.com",
+  contactEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "",
   /** Legal entity named in the Terms / Privacy pages. */
   legalEntity: "nxstudio contributors",
 

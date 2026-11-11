@@ -134,7 +134,7 @@ export function RazorpayCheckout({
       {note && (
         <p className={needsSupport ? "text-sm text-amber-400" : "text-sm text-muted-foreground"}>
           {note}
-          {needsSupport && (
+          {needsSupport && SUPPORT_EMAIL && (
             <>
               {" "}
               Contact{" "}

@@ -40,7 +40,13 @@ export default function TermsPage() {
 
       <h2>6. Contact</h2>
       <p>
-        Email <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> for legal or support inquiries.
+        {siteConfig.contactEmail ? (
+          <>
+            Email <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> for legal or support inquiries.
+          </>
+        ) : (
+          "Reach out through the project repository for legal or support inquiries."
+        )}
       </p>
     </article>
   );

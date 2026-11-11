@@ -18,15 +18,17 @@ export default function ContactPage() {
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <a
-          href={`mailto:${siteConfig.contactEmail}`}
-          className="flex items-center gap-3 rounded-xl border border-border bg-card/40 p-4 transition-colors hover:border-primary/40"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-accent-foreground border border-primary/30">
-            <MailIcon className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-medium">{siteConfig.contactEmail}</span>
-        </a>
+        {siteConfig.contactEmail && (
+          <a
+            href={`mailto:${siteConfig.contactEmail}`}
+            className="flex items-center gap-3 rounded-xl border border-border bg-card/40 p-4 transition-colors hover:border-primary/40"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-accent-foreground border border-primary/30">
+              <MailIcon className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-medium">{siteConfig.contactEmail}</span>
+          </a>
+        )}
 
         {siteConfig.links.x && siteConfig.twitterHandle && (
           <a

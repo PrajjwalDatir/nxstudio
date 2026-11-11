@@ -99,12 +99,14 @@ export function PremiumDialog({
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Need support or customized enterprise agent setup?{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline text-foreground">
-            {SUPPORT_EMAIL}
-          </a>
-        </p>
+        {SUPPORT_EMAIL && (
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Need support or customized enterprise agent setup?{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="underline text-foreground">
+              {SUPPORT_EMAIL}
+            </a>
+          </p>
+        )}
       </div>
     </div>
   );

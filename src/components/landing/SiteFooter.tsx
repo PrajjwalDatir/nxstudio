@@ -56,13 +56,15 @@ export function SiteFooter() {
                 <XMark className="h-4 w-4" />
               </a>
             )}
-            <a
-              href={`mailto:${siteConfig.contactEmail}`}
-              aria-label="Email nxstudio"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-            >
-              <MailIcon className="h-4 w-4" />
-            </a>
+            {siteConfig.contactEmail && (
+              <a
+                href={`mailto:${siteConfig.contactEmail}`}
+                aria-label="Email nxstudio"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              >
+                <MailIcon className="h-4 w-4" />
+              </a>
+            )}
           </div>
         </div>
 
@@ -103,14 +105,16 @@ export function SiteFooter() {
                 </a>
               </li>
             )}
-            <li>
-              <a
-                href={`mailto:${siteConfig.contactEmail}`}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {siteConfig.contactEmail}
-              </a>
-            </li>
+            {siteConfig.contactEmail && (
+              <li>
+                <a
+                  href={`mailto:${siteConfig.contactEmail}`}
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {siteConfig.contactEmail}
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </div>

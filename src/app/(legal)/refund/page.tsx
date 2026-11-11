@@ -25,7 +25,15 @@ export default function RefundPage() {
 
       <h2>3. Cancellation</h2>
       <p>
-        <strong>Fiat:</strong> Email <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> to stop future charges. You keep access until your current cycle ends.<br/>
+        <strong>Fiat:</strong>{" "}
+        {siteConfig.contactEmail ? (
+          <>
+            Email <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a> to stop future charges.
+          </>
+        ) : (
+          "Contact support to stop future charges."
+        )}{" "}
+        You keep access until your current cycle ends.<br/>
         <strong>Crypto:</strong> Simply don&apos;t send the next payment.
       </p>
 

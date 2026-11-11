@@ -37,7 +37,15 @@ export default function PrivacyPage() {
 
       <h2>4. Your Rights</h2>
       <p>
-        You can request to view, export, or delete your data at any time by emailing <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>. Note that on-chain crypto payment records are permanent and public.
+        You can request to view, export, or delete your data at any time
+        {siteConfig.contactEmail ? (
+          <>
+            {" "}by emailing <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
+          </>
+        ) : (
+          " via your workspace settings or repository support channel"
+        )}
+        . Note that on-chain crypto payment records are permanent and public.
       </p>
     </article>
   );
